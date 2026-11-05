@@ -1,0 +1,72 @@
+# FORNO
+
+Plataforma web de pedidos, gestión de restaurante y fidelización para la pizzería ficticia FORNO. Proyecto de demostración: los datos comerciales son de ejemplo.
+
+## Estructura
+
+| Carpeta | Contenido |
+| --- | --- |
+| `frontend/` | Aplicación Next.js (App Router, TypeScript, Tailwind) |
+| `backend/` | API REST Express + TypeScript (`/api/v1`) |
+| `docs/` | Arquitectura y decisiones técnicas |
+| `docker/` | Scripts de inicialización de PostgreSQL local |
+
+Frontend y backend son proyectos independientes, cada uno con su `package.json` y `package-lock.json`.
+
+## Requisitos previos
+
+- Node.js 22 o superior (probado con 24)
+- npm 10 o superior
+- Docker con Docker Compose
+- Git
+
+## Instalación desde un clon limpio
+
+```bash
+# 1. Base de datos local (PostgreSQL 17 en Docker)
+docker compose up -d
+
+# 2. Backend
+cd backend
+cp .env.example .env
+npm ci
+npm run dev            # http://localhost:4000/api/v1/health
+
+# 3. Frontend (en otra terminal)
+cd frontend
+cp .env.example .env.local
+npm ci
+npm run dev            # http://localhost:3000
+```
+
+En PowerShell, sustituye `cp` por `Copy-Item`.
+
+## Scripts
+
+Disponibles en `frontend/` y en `backend/`:
+
+| Comando | Acción |
+| --- | --- |
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Compilación de producción |
+| `npm run typecheck` | Comprobación de tipos |
+| `npm run lint` | ESLint |
+| `npm run format` / `format:check` | Prettier |
+| `npm test` | Pruebas con Vitest |
+
+## Base de datos local
+
+`docker compose up -d` crea dos bases en el mismo servidor PostgreSQL: `forno_dev` (desarrollo) y `forno_test` (pruebas). Las credenciales de `docker-compose.yml` son solo para uso local.
+
+```bash
+docker compose down        # detener (conserva los datos)
+docker compose down -v     # detener y borrar los datos
+```
+
+## Variables de entorno
+
+Cada proyecto incluye un `.env.example` con todas las variables y su explicación. Los archivos `.env` reales nunca se suben al repositorio.
+
+## Estado
+
+Fase 1 (configuración) completada. El plan por fases y las decisiones técnicas están en `docs/`.

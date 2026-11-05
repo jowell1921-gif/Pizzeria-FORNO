@@ -1,0 +1,53 @@
+# Dependencias
+node_modules/
+
+# Compilación
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Pruebas
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Variables de entorno (se permite únicamente la plantilla)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Cachés y temporales
+.cache/
+.eslintcache
+.turbo/
+tmp/
+*.tmp
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE y configuración personal
+.vscode/
+.idea/
+*.swp
+
+# Despliegue local
+.vercel/
+
+# Datos locales de Docker
+docker-data/
+
+# Instrucciones internas de trabajo (no forman parte del producto)
+CLAUDE.md
+.claude/
