@@ -48,6 +48,10 @@ Desktop.ini
 # Datos locales de Docker
 docker-data/
 
+# Imágenes originales de gran tamaño (se versionan solo las optimizadas de frontend/public/image)
+frontend/assets-originals/
+
 # Instrucciones internas de trabajo (no forman parte del producto)
 CLAUDE.md
+AGENTS.md
 .claude/

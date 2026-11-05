@@ -1,26 +1,414 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+/*
+ * Sistema de diseño FORNO.
+ * Colores de marca: tomate #D94A32, carbón #171717, crema #F5E6C8, dorado #D6A84B, blanco #FFFFFF.
+ *
+ * Accesibilidad (WCAG 2.2 AA): el tomate de marca da 4,22:1 con blanco, por debajo de 4,5:1.
+ * Se reserva para fondos decorativos, iconos y titulares grandes. Para botones y texto pequeño
+ * se usan --tomato-strong (blanco encima: 5,30:1) y --tomato-deep (sobre crema).
+ * Estos contrastes se comprueban en tests/design-tokens.test.ts.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --tomato: #d94a32;
+  --tomato-strong: #bf3f2a;
+  --tomato-deep: #a53320;
+  --charcoal: #171717;
+  --cream: #f5e6c8;
+  --cream-soft: #fbf5e8;
+  --gold: #d6a84b;
+  --white: #ffffff;
+  --ink-muted: #5c5148;
+
+  --background: var(--white);
+  --foreground: var(--charcoal);
+  --card: var(--white);
+  --card-foreground: var(--charcoal);
+  --popover: var(--white);
+  --popover-foreground: var(--charcoal);
+  --primary: var(--tomato-strong);
+  --primary-foreground: var(--white);
+  --secondary: var(--cream);
+  --secondary-foreground: var(--charcoal);
+  --muted: var(--cream-soft);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--cream);
+  --accent-foreground: var(--charcoal);
+  --destructive: #b42318;
+  --border: #e6d9bd;
+  --input: #cbbd9f;
+  --ring: var(--tomato-strong);
+  --radius: 0.75rem;
 }
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-tomato: var(--tomato);
+  --color-tomato-strong: var(--tomato-strong);
+  --color-tomato-deep: var(--tomato-deep);
+  --color-charcoal: var(--charcoal);
+  --color-cream: var(--cream);
+  --color-cream-soft: var(--cream-soft);
+  --color-gold: var(--gold);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-barlow-condensed), "Arial Narrow", ui-sans-serif, sans-serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading tracking-tight uppercase;
+  }
+  :focus-visible {
+    @apply outline-ring outline-2 outline-offset-2;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+  .section-y {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+}
+
+/*
+ * Animaciones.
+ *
+ * - .hero-enter / .hero-float: entrada y flotación suave de la pizza del hero.
+ * - .scroll-image: la imagen se «dibuja» al hacer scroll (de transparente y sin color a su color).
+ * - .scroll-reveal: aparición progresiva con desplazamiento para tarjetas.
+ *
+ * Las dos últimas usan animaciones guiadas por scroll de CSS (sin JavaScript). Los navegadores que
+ * no las soportan muestran el contenido sin animar. Todo se desactiva con «reducir movimiento».
+ */
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.92) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(-10px);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+}
+
+@keyframes image-draw {
+  from {
+    opacity: 0;
+    filter: grayscale(1) brightness(1.15) blur(3px);
+    clip-path: inset(100% 0 0 0);
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    clip-path: inset(0 0 0 0);
+    transform: none;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-enter {
+    animation: hero-enter 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-float {
+    animation: hero-float 6s ease-in-out infinite;
+  }
+
+  @supports (animation-timeline: view()) {
+    .scroll-image {
+      animation: image-draw linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+
+    .scroll-reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 70%;
+    }
+  }
+}
+
+/*
+ * Profundidad del hero.
+ *
+ * Capas que reaccionan al scroll con velocidades distintas (parallax): marca de agua, halo, pizza
+ * y texto. Progreso guiado por el scroll de la página durante los primeros 70vh.
+ */
+@keyframes depth-pizza {
+  to {
+    transform: translateY(70px) scale(1.18) rotate(7deg);
+  }
+}
+
+@keyframes depth-copy {
+  to {
+    transform: translateY(-44px);
+    opacity: 0.25;
+  }
+}
+
+@keyframes depth-watermark {
+  to {
+    transform: translateY(-160px) scale(1.08);
+    opacity: 0.4;
+  }
+}
+
+@keyframes depth-glow {
+  to {
+    transform: scale(1.6);
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .hero-depth,
+    .hero-copy,
+    .hero-watermark,
+    .hero-glow {
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root);
+      animation-range: 0px 70vh;
+    }
+    .hero-depth {
+      animation-name: depth-pizza;
+    }
+    .hero-copy {
+      animation-name: depth-copy;
+    }
+    .hero-watermark {
+      animation-name: depth-watermark;
+    }
+    .hero-glow {
+      animation-name: depth-glow;
+    }
+  }
+}
+
+/*
+ * Contadores animados.
+ *
+ * El número real está siempre en el HTML (.counter-text). Cuando el navegador soporta animaciones
+ * guiadas por scroll, se oculta visualmente (sigue disponible para lectores de pantalla) y se
+ * muestra un contador CSS que sube de 0 al valor final mientras se hace scroll.
+ */
+@property --count {
+  syntax: "<integer>";
+  inherits: false;
+  initial-value: 0;
+}
+
+@keyframes count-up {
+  from {
+    --count: 0;
+  }
+  to {
+    --count: var(--target);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .counter {
+      position: relative;
+      counter-reset: count var(--count);
+      animation: count-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 100%;
+    }
+    .counter::after {
+      content: counter(count);
+    }
+    .counter-text {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+}
+
+/*
+ * Interacción de tarjetas. Se usan las propiedades `translate` y `scale` (no `transform`) para
+ * no chocar con las animaciones de aparición, que animan `transform`.
+ */
+.card-interactive {
+  transition:
+    translate 220ms ease,
+    box-shadow 220ms ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card-interactive:hover {
+    translate: 0 -4px;
+    box-shadow: 0 18px 36px -18px rgb(23 23 23 / 0.35);
+  }
+  .card-interactive .card-zoom {
+    transition: scale 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .card-interactive:hover .card-zoom {
+    scale: 1.12;
+  }
+}
+
+/*
+ * Transiciones entre páginas (View Transitions API + <ViewTransition> de React).
+ * El contenido de cada página se desliza y se desenfoca según la dirección de la navegación;
+ * la cabecera permanece anclada.
+ */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+::view-transition-old(.nav-forward) {
+  --slide-offset: -80px;
+  animation:
+    160ms ease-in both page-fade reverse,
+    420ms cubic-bezier(0.65, 0, 0.35, 1) both page-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 80px;
+  animation:
+    260ms ease-out 140ms both page-fade,
+    480ms cubic-bezier(0.22, 1, 0.36, 1) both page-slide;
+}
+
+::view-transition-old(.nav-back) {
+  --slide-offset: 80px;
+  animation:
+    160ms ease-in both page-fade reverse,
+    420ms cubic-bezier(0.65, 0, 0.35, 1) both page-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -80px;
+  animation:
+    260ms ease-out 140ms both page-fade,
+    480ms cubic-bezier(0.22, 1, 0.36, 1) both page-slide;
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes page-slide {
+  from {
+    translate: var(--slide-offset) 0;
+    scale: 0.985;
+  }
+  to {
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
 }

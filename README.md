@@ -54,6 +54,15 @@ Disponibles en `frontend/` y en `backend/`:
 | `npm run format` / `format:check` | Prettier |
 | `npm test` | Pruebas con Vitest |
 
+Solo en `frontend/`:
+
+| Comando | Acción |
+| --- | --- |
+| `npx playwright install chromium` | Descarga el navegador para las pruebas E2E (una sola vez) |
+| `npm run test:e2e` | Pruebas de navegador (responsive, navegación y accesibilidad). Compila y arranca la web en el puerto 3100 |
+
+Para generar capturas de revisión visual: establece la variable `CAPTURE=1` y ejecuta `npx playwright test screenshots`. Se guardan en `frontend/test-results/screens/`.
+
 ## Base de datos local
 
 `docker compose up -d` crea dos bases en el mismo servidor PostgreSQL: `forno_dev` (desarrollo) y `forno_test` (pruebas). Las credenciales de `docker-compose.yml` son solo para uso local.
@@ -69,4 +78,4 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fase 1 (configuración) completada. El plan por fases y las decisiones técnicas están en `docs/`.
+Fases 1 (configuración) y 2 (diseño e interfaz) completadas. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
