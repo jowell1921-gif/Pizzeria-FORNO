@@ -1,0 +1,879 @@
+// Esquema de datos de FORNO.
+//
+// Convenciones
+//  - Identificadores UUID. Profile.id es el id del usuario en Supabase Auth.
+//  - Importes en Decimal(10,2), con IVA incluido salvo que se indique lo contrario.
+//  - Borrado lógico (deletedAt) en entidades de catálogo y cuentas; los pedidos nunca se borran.
+//  - Los pedidos guardan copias (snapshots) de nombres, precios e IVA: no cambian si cambia la carta.
+//
+// Reglas que Prisma no puede expresar (CHECK, índices parciales, triggers del libro de puntos,
+// inmutabilidad, totales de pedido) están en la migración «integrity_rules». Ver docs/database.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Enumeraciones ─────────────────────────────
+
+enum RoleName {
+  ADMIN
+  STAFF
+  KITCHEN
+}
+
+enum OrderType {
+  PICKUP
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  NEW
+  ACCEPTED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  ONLINE
+  CASH_PICKUP
+  CASH_DELIVERY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  CASH_PENDING
+  CASH_COLLECTED
+}
+
+enum OptionKind {
+  SIZE
+  DOUGH
+  EXTRA_INGREDIENT
+  EXTRA
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+enum PromotionKind {
+  DISCOUNT
+  COMBO
+}
+
+enum LoyaltyTransactionType {
+  EARN
+  REDEEM
+  REVERSAL
+  ADJUSTMENT
+  EXPIRATION
+}
+
+enum RedemptionStatus {
+  AVAILABLE
+  USED
+  CANCELLED
+  EXPIRED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum InvoiceType {
+  INVOICE // factura
+  RECEIPT // ticket (factura simplificada)
+}
+
+// ───────────────────────────── Usuarios ─────────────────────────────
+
+model Profile {
+  /// Mismo id que auth.users.id de Supabase.
+  id                 String    @id @db.Uuid
+  /// Siempre en minúsculas (CHECK en la migración de integridad).
+  email              String    @unique
+  fullName           String
+  phone              String?
+  /// NIF/NIE/CIF opcional, para facturas con datos fiscales.
+  taxId              String?
+  marketingConsent   Boolean   @default(false)
+  marketingConsentAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  deletedAt          DateTime?
+
+  addresses          Address[]
+  roles              UserRole[]           @relation("UserRoles")
+  rolesGranted       UserRole[]           @relation("RoleGrantedBy")
+  orders             Order[]
+  statusChanges      OrderStatusHistory[]
+  loyaltyAccount     LoyaltyAccount?
+  loyaltyAdjustments LoyaltyTransaction[]
+  rewardRedemptions  RewardRedemption[]
+  couponRedemptions  CouponRedemption[]
+  cart               Cart?
+  idempotencyRecords IdempotencyRecord[]
+  auditLogs          AuditLog[]
+  notifications      NotificationLog[]
+  coupons            Coupon[]
+}
+
+model Address {
+  id            String    @id @default(uuid()) @db.Uuid
+  userId        String    @db.Uuid
+  label         String?
+  recipientName String
+  phone         String?
+  line1         String
+  line2         String?
+  postalCode    String
+  city          String
+  province      String?
+  country       String    @default("ES")
+  notes         String?
+  /// Solo una dirección predeterminada activa por usuario (índice parcial).
+  isDefault     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model UserRole {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  role        RoleName
+  grantedById String?  @db.Uuid
+  createdAt   DateTime @default(now())
+
+  user      Profile  @relation("UserRoles", fields: [userId], references: [id], onDelete: Cascade)
+  grantedBy Profile? @relation("RoleGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, role])
+}
+
+// ───────────────────────────── Catálogo ─────────────────────────────
+
+model Category {
+  id          String    @id @default(uuid()) @db.Uuid
+  slug        String    @unique
+  name        String
+  description String?
+  sortOrder   Int       @default(0)
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  products Product[]
+
+  @@index([active, sortOrder])
+}
+
+model Product {
+  id          String    @id @default(uuid()) @db.Uuid
+  categoryId  String    @db.Uuid
+  slug        String    @unique
+  name        String
+  description String
+  /// Precio base con IVA incluido (tamaño/opciones por defecto).
+  basePrice   Decimal   @db.Decimal(10, 2)
+  /// IVA aplicable en %, por ejemplo 10.00 o 21.00.
+  taxRate     Decimal   @default(10.00) @db.Decimal(4, 2)
+  vegetarian  Boolean   @default(false)
+  available   Boolean   @default(true)
+  popular     Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  category          Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  images            ProductImage[]
+  ingredients       ProductIngredient[]
+  allergens         ProductAllergen[]
+  optionGroups      OptionGroup[]
+  orderItems        OrderItem[]
+  cartItems         CartItem[]
+  promotionProducts PromotionProduct[]
+  freeInRewards     Reward[]
+
+  @@index([categoryId, sortOrder])
+  @@index([available, deletedAt])
+}
+
+model ProductImage {
+  id        String  @id @default(uuid()) @db.Uuid
+  productId String  @db.Uuid
+  /// Ruta o URL en Supabase Storage.
+  url       String
+  /// Vacío si la imagen es decorativa.
+  alt       String  @default("")
+  sortOrder Int     @default(0)
+  /// Solo una imagen principal por producto (índice parcial).
+  isPrimary Boolean @default(false)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+model Ingredient {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique
+
+  products ProductIngredient[]
+}
+
+model ProductIngredient {
+  productId    String @db.Uuid
+  ingredientId String @db.Uuid
+  position     Int    @default(0)
+
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Restrict)
+
+  @@id([productId, ingredientId])
+}
+
+model Allergen {
+  id   String @id @default(uuid()) @db.Uuid
+  /// Código estable, por ejemplo «gluten» o «lacteos».
+  code String @unique
+  name String
+
+  products ProductAllergen[]
+}
+
+model ProductAllergen {
+  productId  String @db.Uuid
+  allergenId String @db.Uuid
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  allergen Allergen @relation(fields: [allergenId], references: [id], onDelete: Restrict)
+
+  @@id([productId, allergenId])
+}
+
+/// Grupo de opciones de un producto: tamaño, tipo de masa, ingredientes adicionales o extras.
+model OptionGroup {
+  id        String     @id @default(uuid()) @db.Uuid
+  productId String     @db.Uuid
+  name      String
+  kind      OptionKind
+  required  Boolean    @default(false)
+  minSelect Int        @default(0)
+  maxSelect Int        @default(1)
+  sortOrder Int        @default(0)
+
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options ProductOption[]
+
+  @@index([productId, sortOrder])
+}
+
+model ProductOption {
+  id         String    @id @default(uuid()) @db.Uuid
+  groupId    String    @db.Uuid
+  name       String
+  /// Suplemento (o descuento) sobre el precio base, con IVA incluido.
+  priceDelta Decimal   @default(0) @db.Decimal(10, 2)
+  isDefault  Boolean   @default(false)
+  available  Boolean   @default(true)
+  sortOrder  Int       @default(0)
+  deletedAt  DateTime?
+
+  group           OptionGroup       @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  cartItemOptions CartItemOption[]
+  orderOptions    OrderItemOption[]
+
+  @@index([groupId, sortOrder])
+}
+
+// ───────────────────────────── Carrito (sincronizado) ─────────────────────────────
+// No guarda importes: el servidor recalcula siempre los precios.
+
+model Cart {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @unique @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  Profile    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id        String  @id @default(uuid()) @db.Uuid
+  cartId    String  @db.Uuid
+  productId String  @db.Uuid
+  quantity  Int
+  notes     String?
+
+  cart    Cart             @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  options CartItemOption[]
+
+  @@index([cartId])
+}
+
+model CartItemOption {
+  cartItemId String @db.Uuid
+  optionId   String @db.Uuid
+
+  cartItem CartItem      @relation(fields: [cartItemId], references: [id], onDelete: Cascade)
+  option   ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@id([cartItemId, optionId])
+}
+
+// ───────────────────────────── Tienda y reparto ─────────────────────────────
+
+/// Una sola fila (id = 1, CHECK en la migración de integridad).
+model StoreSettings {
+  id                    Int             @id @default(1)
+  name                  String
+  legalName             String?
+  taxId                 String?
+  addressLine           String
+  postalCode            String
+  city                  String
+  phone                 String
+  email                 String
+  timezone              String          @default("Europe/Madrid")
+  currency              String          @default("EUR")
+  prepTimeMinutes       Int
+  deliveryTimeMinutes   Int
+  pickupEnabled         Boolean         @default(true)
+  deliveryEnabled       Boolean         @default(true)
+  /// Pausa temporal de pedidos.
+  ordersPaused          Boolean         @default(false)
+  pausedMessage         String?
+  enabledPaymentMethods PaymentMethod[]
+  /// Intervalo (min) de las franjas horarias seleccionables.
+  slotMinutes           Int             @default(15)
+  maxAdvanceDays        Int             @default(2)
+  /// Puntos por euro gastado. Configurable; sin valor comercial por defecto.
+  loyaltyPointsPerEuro  Decimal         @db.Decimal(8, 4)
+  /// Días hasta que caducan los puntos; null = no caducan.
+  loyaltyExpiryDays     Int?
+  updatedAt             DateTime        @updatedAt
+}
+
+/// Franja de apertura semanal. dayOfWeek ISO: 1 = lunes … 7 = domingo. Minutos desde las 00:00.
+model OpeningHours {
+  id          String  @id @default(uuid()) @db.Uuid
+  dayOfWeek   Int
+  openMinute  Int
+  closeMinute Int
+  active      Boolean @default(true)
+
+  @@index([dayOfWeek])
+}
+
+/// Festivos y horarios especiales de un día concreto (sustituyen al horario semanal).
+model SpecialOpeningHours {
+  id          String   @id @default(uuid()) @db.Uuid
+  date        DateTime @db.Date
+  closed      Boolean  @default(false)
+  openMinute  Int?
+  closeMinute Int?
+  note        String?
+
+  @@index([date])
+}
+
+model DeliveryZone {
+  id               String    @id @default(uuid()) @db.Uuid
+  name             String
+  /// Códigos postales cubiertos.
+  postalCodes      String[]
+  deliveryFee      Decimal   @db.Decimal(10, 2)
+  minimumOrder     Decimal   @default(0) @db.Decimal(10, 2)
+  estimatedMinutes Int
+  active           Boolean   @default(true)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  orders Order[]
+
+  @@index([postalCodes], type: Gin)
+}
+
+// ───────────────────────────── Promociones y cupones ─────────────────────────────
+
+model Promotion {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String
+  description    String
+  badge          String?
+  kind           PromotionKind
+  discountType   DiscountType?
+  discountValue  Decimal?      @db.Decimal(10, 2)
+  /// Precio cerrado de un combo.
+  comboPrice     Decimal?      @db.Decimal(10, 2)
+  minSubtotal    Decimal?      @db.Decimal(10, 2)
+  startsAt       DateTime?
+  endsAt         DateTime?
+  maxRedemptions Int?
+  perUserLimit   Int?
+  firstOrderOnly Boolean       @default(false)
+  conditions     String[]
+  active         Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+
+  products  PromotionProduct[]
+  coupons   Coupon[]
+  discounts OrderDiscount[]
+
+  @@index([active, startsAt, endsAt])
+}
+
+/// Productos a los que se limita una promoción (o que forman un combo).
+model PromotionProduct {
+  promotionId String @db.Uuid
+  productId   String @db.Uuid
+  quantity    Int    @default(1)
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@id([promotionId, productId])
+}
+
+model Coupon {
+  id             String    @id @default(uuid()) @db.Uuid
+  /// Siempre en mayúsculas (CHECK en la migración de integridad).
+  code           String    @unique
+  promotionId    String    @db.Uuid
+  /// Si se indica, el cupón es personal de ese usuario.
+  userId         String?   @db.Uuid
+  maxRedemptions Int?
+  perUserLimit   Int?
+  startsAt       DateTime?
+  endsAt         DateTime?
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  promotion   Promotion          @relation(fields: [promotionId], references: [id], onDelete: Restrict)
+  user        Profile?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  redemptions CouponRedemption[]
+  discounts   OrderDiscount[]
+
+  @@index([promotionId])
+}
+
+model CouponRedemption {
+  id        String   @id @default(uuid()) @db.Uuid
+  couponId  String   @db.Uuid
+  userId    String   @db.Uuid
+  /// Un pedido solo puede canjear un cupón una vez.
+  orderId   String   @unique @db.Uuid
+  createdAt DateTime @default(now())
+
+  coupon Coupon  @relation(fields: [couponId], references: [id], onDelete: Restrict)
+  user   Profile @relation(fields: [userId], references: [id], onDelete: Restrict)
+  order  Order   @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@index([couponId, userId])
+}
+
+// ───────────────────────────── Pedidos ─────────────────────────────
+
+model Order {
+  id               String      @id @default(uuid()) @db.Uuid
+  /// Número legible y correlativo para clientes y cocina.
+  orderNumber      Int         @unique @default(autoincrement())
+  userId           String      @db.Uuid
+  status           OrderStatus @default(NEW)
+  type             OrderType
+  /// Hora de recogida o entrega solicitada.
+  scheduledFor     DateTime?
+  estimatedReadyAt DateTime?
+  notes            String?
+
+  // Copia de los datos del cliente en el momento del pedido.
+  customerName  String
+  customerEmail String
+  customerPhone String?
+
+  // Copia de la dirección de entrega (solo pedidos a domicilio).
+  deliveryName       String?
+  deliveryLine1      String?
+  deliveryLine2      String?
+  deliveryPostalCode String?
+  deliveryCity       String?
+  deliveryNotes      String?
+  deliveryZoneId     String? @db.Uuid
+  deliveryZoneName   String?
+
+  // Importes (IVA incluido). total = subtotal - discountTotal + deliveryFee.
+  subtotal      Decimal @db.Decimal(10, 2)
+  discountTotal Decimal @default(0) @db.Decimal(10, 2)
+  deliveryFee   Decimal @default(0) @db.Decimal(10, 2)
+  total         Decimal @db.Decimal(10, 2)
+  /// IVA contenido en el total.
+  taxTotal      Decimal @db.Decimal(10, 2)
+  couponCode    String?
+
+  placedAt           DateTime  @default(now())
+  acceptedAt         DateTime?
+  readyAt            DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user                Profile              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  deliveryZone        DeliveryZone?        @relation(fields: [deliveryZoneId], references: [id], onDelete: SetNull)
+  items               OrderItem[]
+  statusHistory       OrderStatusHistory[]
+  payments            Payment[]
+  discounts           OrderDiscount[]
+  invoices            Invoice[]
+  couponRedemption    CouponRedemption?
+  loyaltyTransactions LoyaltyTransaction[]
+  notifications       NotificationLog[]
+  rewardRedemptions   RewardRedemption[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([status, createdAt])
+  @@index([scheduledFor])
+}
+
+model OrderItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  orderId     String  @db.Uuid
+  productId   String  @db.Uuid
+  // Copias del producto en el momento de la compra.
+  productName String
+  /// Precio unitario con opciones, IVA incluido.
+  unitPrice   Decimal @db.Decimal(10, 2)
+  quantity    Int
+  taxRate     Decimal @db.Decimal(4, 2)
+  lineTotal   Decimal @db.Decimal(10, 2)
+  /// IVA contenido en la línea.
+  taxAmount   Decimal @db.Decimal(10, 2)
+  notes       String?
+
+  order   Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product           @relation(fields: [productId], references: [id], onDelete: Restrict)
+  options OrderItemOption[]
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderItemOption {
+  id          String  @id @default(uuid()) @db.Uuid
+  orderItemId String  @db.Uuid
+  optionId    String? @db.Uuid
+  groupName   String
+  optionName  String
+  priceDelta  Decimal @default(0) @db.Decimal(10, 2)
+
+  orderItem OrderItem      @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  option    ProductOption? @relation(fields: [optionId], references: [id], onDelete: SetNull)
+
+  @@index([orderItemId])
+}
+
+/// Registro inmutable de cambios de estado.
+model OrderStatusHistory {
+  id          String       @id @default(uuid()) @db.Uuid
+  orderId     String       @db.Uuid
+  fromStatus  OrderStatus?
+  toStatus    OrderStatus
+  changedById String?      @db.Uuid
+  reason      String?
+  createdAt   DateTime     @default(now())
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  changedBy Profile? @relation(fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+}
+
+model OrderDiscount {
+  id                 String  @id @default(uuid()) @db.Uuid
+  orderId            String  @db.Uuid
+  promotionId        String? @db.Uuid
+  couponId           String? @db.Uuid
+  rewardRedemptionId String? @db.Uuid
+  /// Descripción copiada en el momento del pedido.
+  description        String
+  amount             Decimal @db.Decimal(10, 2)
+
+  order            Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  promotion        Promotion?        @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  coupon           Coupon?           @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  rewardRedemption RewardRedemption? @relation(fields: [rewardRedemptionId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+// ───────────────────────────── Pagos y facturación ─────────────────────────────
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  orderId           String        @db.Uuid
+  method            PaymentMethod
+  status            PaymentStatus
+  amount            Decimal       @db.Decimal(10, 2)
+  refundedAmount    Decimal       @default(0) @db.Decimal(10, 2)
+  currency          String        @default("EUR")
+  /// Proveedor de pago online, por ejemplo «stripe». Nulo en efectivo.
+  provider          String?
+  providerPaymentId String?
+  providerSessionId String?
+  failureReason     String?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  order  Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  events PaymentEvent[]
+
+  @@unique([provider, providerPaymentId])
+  @@unique([provider, providerSessionId])
+  @@index([orderId])
+  @@index([status])
+}
+
+/// Eventos recibidos del proveedor de pago (webhooks). Inmutable. El id del evento es único
+/// por proveedor, lo que evita procesar dos veces el mismo webhook.
+model PaymentEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  paymentId       String?  @db.Uuid
+  provider        String
+  providerEventId String
+  type            String
+  payload         Json
+  receivedAt      DateTime @default(now())
+
+  payment Payment? @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, providerEventId])
+  @@index([paymentId])
+}
+
+/// Factura o ticket. Inmutable una vez emitido.
+model Invoice {
+  id              String      @id @default(uuid()) @db.Uuid
+  orderId         String      @db.Uuid
+  type            InvoiceType
+  series          String
+  year            Int
+  number          Int
+  /// Por ejemplo «F-2026-000001».
+  invoiceNumber   String      @unique
+  issuedAt        DateTime    @default(now())
+  customerName    String
+  customerTaxId   String?
+  customerAddress String?
+  netTotal        Decimal     @db.Decimal(10, 2)
+  taxTotal        Decimal     @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  /// Desglose por tipo de IVA: [{ rate, base, tax }].
+  taxBreakdown    Json
+  createdAt       DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, type])
+  @@unique([series, year, number])
+}
+
+/// Contador de numeración correlativa por serie y año.
+model InvoiceSequence {
+  id         String @id @default(uuid()) @db.Uuid
+  series     String
+  year       Int
+  lastNumber Int    @default(0)
+
+  @@unique([series, year])
+}
+
+// ───────────────────────────── Fidelización ─────────────────────────────
+
+model LoyaltyAccount {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @db.Uuid
+  /// Solo se modifica mediante movimientos del libro (trigger). Nunca negativo.
+  balance        Int      @default(0)
+  lifetimeEarned Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         Profile              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions LoyaltyTransaction[]
+}
+
+/// Libro de movimientos de puntos. Inmutable. Un trigger aplica el movimiento al saldo con
+/// bloqueo de fila, calcula balanceAfter y rechaza saldos negativos.
+model LoyaltyTransaction {
+  id             String                 @id @default(uuid()) @db.Uuid
+  accountId      String                 @db.Uuid
+  type           LoyaltyTransactionType
+  /// Con signo: positivo suma y negativo resta.
+  points         Int
+  /// Lo calcula el trigger; el valor enviado se ignora.
+  balanceAfter   Int                    @default(0)
+  orderId        String?                @db.Uuid
+  redemptionId   String?                @db.Uuid
+  /// Obligatorio en ajustes administrativos.
+  reason         String?
+  createdById    String?                @db.Uuid
+  /// Evita registrar dos veces la misma operación.
+  idempotencyKey String?                @unique
+  createdAt      DateTime               @default(now())
+
+  account    LoyaltyAccount    @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  order      Order?            @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  redemption RewardRedemption? @relation(fields: [redemptionId], references: [id], onDelete: Restrict)
+  createdBy  Profile?          @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([accountId, createdAt])
+  @@index([orderId])
+}
+
+model Reward {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  description    String?
+  pointsCost     Int
+  /// Producto gratuito que concede la recompensa... (CHECK: exactamente uno de los dos)
+  freeProductId  String?   @db.Uuid
+  /// ...o descuento fijo en euros.
+  discountAmount Decimal?  @db.Decimal(10, 2)
+  stock          Int?
+  validFrom      DateTime?
+  validTo        DateTime?
+  active         Boolean   @default(true)
+  sortOrder      Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  freeProduct Product?           @relation(fields: [freeProductId], references: [id], onDelete: Restrict)
+  redemptions RewardRedemption[]
+
+  @@index([active, sortOrder])
+}
+
+model RewardRedemption {
+  id             String           @id @default(uuid()) @db.Uuid
+  userId         String           @db.Uuid
+  rewardId       String           @db.Uuid
+  /// Copias en el momento del canje.
+  rewardName     String
+  pointsSpent    Int
+  status         RedemptionStatus @default(AVAILABLE)
+  orderId        String?          @db.Uuid
+  idempotencyKey String?          @unique
+  expiresAt      DateTime?
+  usedAt         DateTime?
+  cancelledAt    DateTime?
+  createdAt      DateTime         @default(now())
+
+  user         Profile              @relation(fields: [userId], references: [id], onDelete: Restrict)
+  reward       Reward               @relation(fields: [rewardId], references: [id], onDelete: Restrict)
+  order        Order?               @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  transactions LoyaltyTransaction[]
+  discounts    OrderDiscount[]
+
+  @@index([userId, status])
+}
+
+// ───────────────────────────── Transversales ─────────────────────────────
+
+/// Respuestas guardadas por cabecera Idempotency-Key (pedidos y canjes).
+model IdempotencyRecord {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @db.Uuid
+  endpoint       String
+  key            String
+  /// Huella de la petición: la misma clave con otro cuerpo es un error.
+  requestHash    String
+  responseStatus Int?
+  responseBody   Json?
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, endpoint, key])
+  @@index([expiresAt])
+}
+
+/// Registro inmutable de operaciones administrativas.
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String
+  entityType String
+  entityId   String?
+  before     Json?
+  after      Json?
+  reason     String?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  actor Profile? @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+}
+
+/// Cola de notificaciones con reintentos. La clave única evita duplicar un mismo aviso.
+model NotificationLog {
+  id            String             @id @default(uuid()) @db.Uuid
+  orderId       String?            @db.Uuid
+  userId        String?            @db.Uuid
+  channel       String             @default("EMAIL")
+  template      String
+  recipient     String
+  status        NotificationStatus @default(PENDING)
+  attempts      Int                @default(0)
+  lastError     String?
+  nextAttemptAt DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  order Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  user  Profile? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([orderId, template, recipient])
+  @@index([status, nextAttemptAt])
+}

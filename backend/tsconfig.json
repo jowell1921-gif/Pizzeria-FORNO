@@ -16,6 +16,6 @@
     "resolveJsonModule": true,
     "sourceMap": true
   },
-  "include": ["src", "tests", "*.ts"],
+  "include": ["src", "tests", "prisma", "*.ts"],
   "exclude": ["node_modules", "dist"]
 }

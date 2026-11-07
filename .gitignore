@@ -55,3 +55,6 @@ frontend/assets-originals/
 CLAUDE.md
 AGENTS.md
 .claude/
+
+# Cliente de Prisma generado (se crea con npm run db:generate)
+backend/src/generated/

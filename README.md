@@ -29,7 +29,9 @@ docker compose up -d
 # 2. Backend
 cd backend
 cp .env.example .env
-npm ci
+npm ci                 # también genera el cliente de Prisma
+npm run db:deploy      # aplica las migraciones a forno_dev
+npm run db:seed        # (opcional) datos de demostración
 npm run dev            # http://localhost:4000/api/v1/health
 
 # 3. Frontend (en otra terminal)
@@ -63,6 +65,18 @@ Solo en `frontend/`:
 
 Para generar capturas de revisión visual: establece la variable `CAPTURE=1` y ejecuta `npx playwright test screenshots`. Se guardan en `frontend/test-results/screens/`.
 
+Solo en `backend/`:
+
+| Comando | Acción |
+| --- | --- |
+| `npm run db:migrate` | Crea y aplica una migración en desarrollo |
+| `npm run db:deploy` | Aplica las migraciones pendientes |
+| `npm run db:seed` | Siembra los datos de demostración (idempotente) |
+| `npm run db:generate` | Genera el cliente de Prisma |
+| `npm run test:db` | Pruebas de integridad de la base de datos (necesita Docker; usa `forno_test`) |
+
+`npm test` en el backend no necesita base de datos. Más información en `docs/database/`.
+
 ## Base de datos local
 
 `docker compose up -d` crea dos bases en el mismo servidor PostgreSQL: `forno_dev` (desarrollo) y `forno_test` (pruebas). Las credenciales de `docker-compose.yml` son solo para uso local.
@@ -78,4 +92,4 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fases 1 (configuración) y 2 (diseño e interfaz) completadas. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
+Fases 1 (configuración), 2 (diseño e interfaz) y 3 (base de datos) completadas. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.

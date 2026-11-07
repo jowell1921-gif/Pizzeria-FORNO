@@ -2,6 +2,15 @@
 
 ## [Sin publicar]
 
+### Fase 3 — Base de datos
+
+- Esquema Prisma 7 con 39 tablas (usuarios, catálogo, carrito, tienda, promociones, pedidos, pagos, facturas, fidelización y transversales) y 3 migraciones versionadas.
+- Reglas de integridad en la propia base: saldo de puntos solo mediante el libro (con bloqueo de fila), tablas de solo-añadir, restricciones de importes y totales de pedido, índices únicos parciales, solapes de horarios y RLS por defecto.
+- Cliente de base de datos (`src/db/client.ts`) y datos de demostración idempotentes (`npm run db:seed`).
+- 95 pruebas de integridad contra PostgreSQL (`npm run test:db`), incluida la concurrencia de canjes y de numeración de facturas.
+- IVA 2026 según la Agencia Tributaria: 10 % comida preparada y agua; 21 % alcohol y bebidas refrescantes con azúcares añadidos (corrige el refresco de cola y la limonada, que estaban al 10 %). Ver `docs/decisions/0004-iva.md`.
+- Política de puntos sin saldos negativos: los puntos gastados en un pedido cancelado se devuelven completos; los ganados se revierten hasta el saldo disponible.
+
 ### Fase 2 — Diseño e interfaz
 
 - Sistema de diseño FORNO: paleta con variantes accesibles, Barlow Condensed e Inter, componentes shadcn/ui y Lucide.
