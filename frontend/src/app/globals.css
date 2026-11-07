@@ -233,7 +233,6 @@
 @keyframes depth-copy {
   to {
     transform: translateY(-44px);
-    opacity: 0.25;
   }
 }
 
@@ -515,5 +514,77 @@
       0 0 24px 6px rgb(217 74 50 / 0.35);
     animation: ember-rise var(--dur) ease-out var(--delay) infinite;
     will-change: translate, opacity;
+  }
+}
+
+/*
+ * Panel de las páginas de acceso (auth-showcase.tsx).
+ *
+ * Iconos que suben y bajan girando un poco, anillos punteados que giran despacio y un cupón que
+ * se balancea. Solo transform; con «reducir movimiento» todo queda quieto.
+ */
+.auth-showcase {
+  background-image:
+    radial-gradient(circle at 20% 15%, rgb(217 74 50 / 0.35), transparent 55%),
+    radial-gradient(circle at 85% 85%, rgb(214 168 75 / 0.22), transparent 50%);
+}
+
+.auth-ring {
+  width: 26rem;
+  height: 26rem;
+  translate: -50% -50%;
+  border-radius: 9999px;
+  border: 2px dashed rgb(245 230 200 / 0.22);
+}
+
+.auth-ring-inner {
+  width: 17rem;
+  height: 17rem;
+  border-color: rgb(214 168 75 / 0.3);
+}
+
+@keyframes auth-bob {
+  0%,
+  100% {
+    transform: translateY(-12px) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(12px) rotate(6deg);
+  }
+}
+
+@keyframes auth-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes auth-swing {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-chip {
+    animation: auth-bob var(--dur) ease-in-out var(--delay) infinite;
+  }
+
+  .auth-ring {
+    animation: auth-spin 60s linear infinite;
+  }
+
+  .auth-ring-inner {
+    animation-duration: 40s;
+    animation-direction: reverse;
+  }
+
+  .auth-ticket {
+    transform-origin: left center;
+    animation: auth-swing 5s ease-in-out infinite;
   }
 }

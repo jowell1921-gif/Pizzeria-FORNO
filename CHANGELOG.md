@@ -2,6 +2,21 @@
 
 ## [Sin publicar]
 
+### Fase 4 — Autenticación
+
+- Backend: verificación de los access tokens de Supabase con JWKS (`ES256`/`RS256`), perfil creado de forma idempotente en la primera petición, roles y permisos leídos siempre de la base de datos, matriz de permisos explícita y endpoints `GET`/`PATCH /api/v1/me`.
+- Formato de errores unificado con `requestId`; `npm run roles` para crear el primer administrador, con auditoría y protección del último administrador.
+- Frontend: clientes de Supabase, `proxy.ts` para proteger `/cuenta`, `/admin` y `/kitchen`, páginas de acceso, registro, recuperación y restablecimiento de contraseña, acceso con Google, callbacks de confirmación y «Mi cuenta» con edición del perfil.
+- Enlace «Acceder / Mi cuenta» en la cabecera; el menú completo pasa a mostrarse desde 1024 px.
+- Pruebas: 127 de base de datos y API, 24 unitarias del backend, 224 unitarias del frontend y 279 E2E. Los flujos reales de correo y Google quedan pendientes de verificar con un proyecto de Supabase.
+- Documentación: `docs/security/supabase-auth.md` (guía de configuración) y decisión `0005`.
+- Perfil: nombre de usuario (3–12 caracteres, es el que se muestra en el botón de la cabecera) y teléfono obligatorios (restricciones también en la base de datos). Endpoints de puntos, pedidos propios y direcciones.
+- «Mi cuenta»: datos y ajustes en modo lectura con «Editar datos», puntos, código promocional (solo se guarda en el navegador; lo valida el servidor al pedir), pedidos, direcciones, cambio de contraseña y cierre de sesión. Un cliente nuevo completa primero sus datos y vuelve a la página principal.
+- Pantalla de acceso con panel animado de ventajas (iconos de promociones, puntos y reparto) en lugar de una tarjeta suelta.
+- Carta, favoritos y promociones: al pulsar un producto se abre su ficha con «Pedir ahora» (el pedido real llega en la fase 6) y al pulsar una promoción, su detalle con el código para copiar.
+- El texto y los botones del hero ya no se vuelven transparentes al hacer scroll.
+- Plantillas de correo de Supabase con el logo (`docs/security/email-templates/`); editarlas exige configurar un SMTP propio.
+
 ### Fase 3 — Base de datos
 
 - Esquema Prisma 7 con 39 tablas (usuarios, catálogo, carrito, tienda, promociones, pedidos, pagos, facturas, fidelización y transversales) y 3 migraciones versionadas.

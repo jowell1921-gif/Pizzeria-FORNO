@@ -1,4 +1,5 @@
 import { DemoBanner } from "@/components/layout/demo-banner";
+import { ProfileProvider } from "@/features/account/profile-context";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 
@@ -11,12 +12,14 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
       >
         Saltar al contenido
       </a>
-      <DemoBanner />
-      <SiteHeader />
-      <main id="contenido" className="flex-1">
-        {children}
-      </main>
-      <SiteFooter />
+      <ProfileProvider>
+        <DemoBanner />
+        <SiteHeader />
+        <main id="contenido" className="flex-1">
+          {children}
+        </main>
+        <SiteFooter />
+      </ProfileProvider>
     </>
   );
 }

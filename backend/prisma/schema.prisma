@@ -113,6 +113,10 @@ model Profile {
   /// Siempre en minúsculas (CHECK en la migración de integridad).
   email              String    @unique
   fullName           String
+  /// Nombre corto que se muestra en la web (por ejemplo, en el botón «Mi cuenta»). De 3 a 12
+  /// caracteres (CHECK en la migración). Nulo hasta que el usuario completa sus datos.
+  username           String?
+  /// Obligatorio para hacer pedidos (lo exige el servicio); la base de datos solo valida el formato.
   phone              String?
   /// NIF/NIE/CIF opcional, para facturas con datos fiscales.
   taxId              String?

@@ -94,6 +94,7 @@ test.describe("with motion allowed", () => {
         const style = (selector: string) => getComputedStyle(document.querySelector(selector)!);
         return {
           pizza: style(".hero-depth").transform,
+          copy: style(".hero-copy").transform,
           copyOpacity: Number(style(".hero-copy").opacity),
           watermark: style(".hero-watermark").transform,
         };
@@ -104,8 +105,10 @@ test.describe("with motion allowed", () => {
     expect(top.copyOpacity).toBe(1);
 
     await page.evaluate(() => window.scrollTo(0, 400));
-    await expect.poll(async () => (await read()).copyOpacity).toBeLessThan(0.9);
+    await expect.poll(async () => (await read()).copy).not.toBe(top.copy);
     const scrolled = await read();
+    // El texto y los botones del hero nunca se vuelven transparentes al hacer scroll.
+    expect(scrolled.copyOpacity).toBe(1);
     expect(scrolled.pizza).not.toBe(top.pizza);
     expect(scrolled.watermark).not.toBe(top.watermark);
     // Las capas se mueven a distinta velocidad: no comparten transformación.

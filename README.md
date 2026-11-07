@@ -73,9 +73,14 @@ Solo en `backend/`:
 | `npm run db:deploy` | Aplica las migraciones pendientes |
 | `npm run db:seed` | Siembra los datos de demostración (idempotente) |
 | `npm run db:generate` | Genera el cliente de Prisma |
-| `npm run test:db` | Pruebas de integridad de la base de datos (necesita Docker; usa `forno_test`) |
+| `npm run test:db` | Pruebas de integridad de la base de datos y de la API (necesita Docker; usa `forno_test`) |
+| `npm run roles -- grant correo@ejemplo.com ADMIN` | Concede o retira (`revoke`) un rol: `ADMIN`, `STAFF` o `KITCHEN` |
 
 `npm test` en el backend no necesita base de datos. Más información en `docs/database/`.
+
+## Autenticación
+
+El acceso de usuarios usa Supabase Auth. Sin configurarlo, la web pública funciona y las páginas de acceso muestran un aviso. Para activarlo, crea un proyecto de Supabase y sigue `docs/security/supabase-auth.md` (incluye Google y el primer administrador).
 
 ## Base de datos local
 
@@ -92,4 +97,4 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fases 1 (configuración), 2 (diseño e interfaz) y 3 (base de datos) completadas. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
+Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos) y 4 (autenticación) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.

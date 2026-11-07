@@ -1,0 +1,26 @@
+import type { Metadata } from "next";
+
+import { PageTransition } from "@/components/layout/page-transition";
+import { SectionHeading } from "@/components/layout/section-heading";
+import { AccountPanel } from "@/features/account/account-panel";
+
+export const metadata: Metadata = {
+  title: "Mi cuenta",
+  robots: { index: false },
+};
+
+export default function AccountPage() {
+  return (
+    <PageTransition className="container-page section-y">
+      <div className="space-y-8">
+        <SectionHeading
+          as="h1"
+          eyebrow="Mi cuenta"
+          title="Tu cuenta FORNO"
+          description="Tus datos, puntos, pedidos y direcciones en un solo lugar."
+        />
+        <AccountPanel />
+      </div>
+    </PageTransition>
+  );
+}

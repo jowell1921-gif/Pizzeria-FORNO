@@ -1,4 +1,7 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+/** Por debajo de 1024 px la navegación está en el menú desplegable. */
+const usesMenuButton = (page: Page) => (page.viewportSize()?.width ?? 0) < 1024;
 
 test.describe("navigation", () => {
   test("primary actions reach the menu", async ({ page }) => {
@@ -18,10 +21,8 @@ test.describe("navigation", () => {
     }
   });
 
-  test("«Principal» is the first link and goes back to the home page", async ({
-    page,
-    isMobile,
-  }) => {
+  test("«Principal» is the first link and goes back to the home page", async ({ page }) => {
+    const isMobile = usesMenuButton(page);
     await page.goto("/carta");
     let nav = page.getByRole("navigation", { name: "Navegación principal", exact: true });
     if (isMobile) {
@@ -47,8 +48,8 @@ test.describe("navigation", () => {
     );
   });
 
-  test("mobile menu opens and navigates", async ({ page, isMobile }) => {
-    test.skip(!isMobile, "Only relevant on small viewports");
+  test("mobile menu opens and navigates", async ({ page }) => {
+    test.skip(!usesMenuButton(page), "Only relevant when the menu button is shown");
     await page.goto("/");
     await page.getByRole("button", { name: "Abrir menú" }).click();
     const dialog = page.getByRole("dialog");

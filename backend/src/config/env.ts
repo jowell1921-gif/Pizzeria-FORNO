@@ -12,6 +12,10 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
+  /** Conexión a PostgreSQL. */
+  DATABASE_URL: z.url(),
+  /** URL del proyecto de Supabase (https://<ref>.supabase.co). De ahí salen el emisor y el JWKS. */
+  SUPABASE_URL: z.url().transform((value) => value.replace(/\/+$/, "")),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -34,5 +34,11 @@ export default defineConfig({
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
+    // Las pruebas no dependen de la configuración local: se ejecutan sin claves de Supabase.
+    // (Los flujos reales de acceso se verifican aparte, con un proyecto de Supabase configurado.)
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL: "",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "",
+    },
   },
 });

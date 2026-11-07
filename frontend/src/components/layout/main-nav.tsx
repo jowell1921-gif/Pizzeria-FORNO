@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { AuthMenu } from "@/features/auth/auth-menu";
 import { MAIN_NAV } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +37,7 @@ export function MainNav() {
 
   return (
     <>
-      <nav aria-label="Navegación principal" className="hidden items-center gap-1 md:flex">
+      <nav aria-label="Navegación principal" className="hidden items-center gap-1 lg:flex">
         {MAIN_NAV.map((item) => (
           <Link
             key={item.href}
@@ -54,6 +55,7 @@ export function MainNav() {
       </nav>
 
       <div className="flex items-center gap-2">
+        <AuthMenu className="hidden lg:inline-flex" />
         <Link
           href="/carta"
           transitionTypes={FORWARD}
@@ -65,7 +67,7 @@ export function MainNav() {
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
             render={
-              <Button variant="outline" size="icon" className="md:hidden" aria-label="Abrir menú" />
+              <Button variant="outline" size="icon" className="lg:hidden" aria-label="Abrir menú" />
             }
           >
             <Menu aria-hidden className="size-5" />
@@ -89,6 +91,9 @@ export function MainNav() {
                 </Link>
               ))}
             </nav>
+            <div className="mt-auto px-4 pb-6">
+              <AuthMenu className="w-full" onNavigate={() => setOpen(false)} />
+            </div>
           </SheetContent>
         </Sheet>
       </div>
