@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { AmbientParticles } from "@/components/brand/ambient-particles";
+import { FornoWatermark } from "@/components/brand/forno-watermark";
 import { buttonVariants } from "@/components/ui/button";
 import { DEMO_STORE } from "@/lib/demo-data";
 import { IMAGES } from "@/lib/images";
@@ -18,12 +20,8 @@ export function Hero() {
       aria-labelledby="hero-title"
       className="bg-charcoal text-cream relative isolate overflow-hidden"
     >
-      <div
-        aria-hidden
-        className="hero-watermark font-heading pointer-events-none absolute inset-x-0 top-1/2 -z-10 -translate-y-1/2 text-center text-[clamp(9rem,30vw,24rem)] leading-none font-extrabold whitespace-nowrap text-transparent select-none [-webkit-text-stroke:2px_rgba(245,230,200,0.09)]"
-      >
-        FORNO
-      </div>
+      <AmbientParticles />
+      <FornoWatermark className="hero-watermark top-1/2 -translate-y-1/2" />
 
       <div className="container-page grid items-center gap-8 py-12 sm:py-16 lg:grid-cols-2 lg:py-24">
         <div className="hero-copy space-y-6">

@@ -17,9 +17,17 @@ import { MAIN_NAV } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
 const FORWARD = ["nav-forward"];
+const BACK = ["nav-back"];
 
+/** La portada solo está activa en «/»; el resto, en su ruta y sus subrutas. */
 function isActive(pathname: string, href: string): boolean {
-  return !href.includes("#") && pathname.startsWith(href);
+  if (href.includes("#")) return false;
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
+/** Volver a la portada se anima como «atrás»; el resto, como «adelante». */
+function transitionFor(href: string): string[] {
+  return href === "/" ? BACK : FORWARD;
 }
 
 export function MainNav() {
@@ -28,12 +36,12 @@ export function MainNav() {
 
   return (
     <>
-      <nav aria-label="Principal" className="hidden items-center gap-1 md:flex">
+      <nav aria-label="Navegación principal" className="hidden items-center gap-1 md:flex">
         {MAIN_NAV.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            transitionTypes={FORWARD}
+            transitionTypes={transitionFor(item.href)}
             aria-current={isActive(pathname, item.href) ? "page" : undefined}
             className={cn(
               "hover:text-tomato-strong rounded-md px-3 py-2 text-sm font-semibold transition-colors",
@@ -67,12 +75,12 @@ export function MainNav() {
               Menú
             </SheetTitle>
             <SheetDescription className="sr-only">Navegación principal del sitio</SheetDescription>
-            <nav aria-label="Principal (móvil)" className="flex flex-col gap-1 px-2">
+            <nav aria-label="Navegación principal (móvil)" className="flex flex-col gap-1 px-2">
               {MAIN_NAV.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  transitionTypes={FORWARD}
+                  transitionTypes={transitionFor(item.href)}
                   onClick={() => setOpen(false)}
                   aria-current={isActive(pathname, item.href) ? "page" : undefined}
                   className="hover:bg-cream rounded-lg px-3 py-3 text-base font-semibold"

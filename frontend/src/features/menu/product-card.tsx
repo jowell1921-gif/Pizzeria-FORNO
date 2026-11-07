@@ -31,7 +31,7 @@ export function ProductCard({ product }: ProductCardProps) {
             height={product.image.height}
             alt={product.image.alt}
             sizes="96px"
-            className="scroll-image card-zoom h-auto w-full"
+            className="h-auto w-full"
           />
         ) : (
           <PizzaIllustration />

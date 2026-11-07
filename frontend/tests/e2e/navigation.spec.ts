@@ -18,6 +18,35 @@ test.describe("navigation", () => {
     }
   });
 
+  test("«Principal» is the first link and goes back to the home page", async ({
+    page,
+    isMobile,
+  }) => {
+    await page.goto("/carta");
+    let nav = page.getByRole("navigation", { name: "Navegación principal", exact: true });
+    if (isMobile) {
+      await page.getByRole("button", { name: "Abrir menú" }).click();
+      nav = page.getByRole("dialog").getByRole("navigation");
+    }
+
+    const links = nav.getByRole("link");
+    await expect(links.first()).toHaveText("Principal");
+    await expect(links.nth(1)).toHaveText("Carta");
+    await expect(nav.getByRole("link", { name: "Carta" })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Principal" })).not.toHaveAttribute("aria-current");
+
+    await nav.getByRole("link", { name: "Principal" }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expect(page.getByRole("heading", { level: 1, name: /pizza de horno/i })).toBeVisible();
+
+    // Estando en la portada, «Principal» es la página actual.
+    if (isMobile) await page.getByRole("button", { name: "Abrir menú" }).click();
+    await expect(nav.getByRole("link", { name: "Principal" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
   test("mobile menu opens and navigates", async ({ page, isMobile }) => {
     test.skip(!isMobile, "Only relevant on small viewports");
     await page.goto("/");

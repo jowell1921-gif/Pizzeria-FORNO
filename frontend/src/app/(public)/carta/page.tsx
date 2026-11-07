@@ -24,14 +24,19 @@ export default function MenuPage() {
             title="Nuestra carta"
             description="Consulta ingredientes y alérgenos de cada producto. Precios con IVA incluido."
           />
-          <Image
-            src={IMAGES.pizzasMostrador.src}
-            width={IMAGES.pizzasMostrador.width}
-            height={IMAGES.pizzasMostrador.height}
-            alt={IMAGES.pizzasMostrador.alt}
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="scroll-image h-40 w-full rounded-2xl object-cover sm:h-52 md:h-56"
-          />
+          <div className="banner-enter">
+            <div className="banner-breathe overflow-hidden rounded-2xl">
+              <Image
+                src={IMAGES.pizzasMostrador.src}
+                width={IMAGES.pizzasMostrador.width}
+                height={IMAGES.pizzasMostrador.height}
+                alt={IMAGES.pizzasMostrador.alt}
+                sizes="(min-width: 768px) 50vw, 100vw"
+                priority
+                className="h-40 w-full object-cover sm:h-52 md:h-56"
+              />
+            </div>
+          </div>
         </div>
       </div>
 

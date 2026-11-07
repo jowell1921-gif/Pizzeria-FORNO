@@ -1,6 +1,7 @@
 import { Gift, ShoppingBag, Star } from "lucide-react";
 import type { Metadata } from "next";
 
+import { AmbientParticles } from "@/components/brand/ambient-particles";
 import { PageTransition } from "@/components/layout/page-transition";
 import { SectionHeading } from "@/components/layout/section-heading";
 import {
@@ -48,7 +49,8 @@ const FAQ = [
 export default function ClubPage() {
   return (
     <PageTransition>
-      <div className="bg-charcoal text-cream">
+      <div className="bg-charcoal text-cream relative isolate overflow-hidden">
+        <AmbientParticles />
         <div className="container-page section-y">
           <SectionHeading
             as="h1"

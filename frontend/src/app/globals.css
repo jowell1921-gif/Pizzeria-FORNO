@@ -132,10 +132,11 @@
  * Animaciones.
  *
  * - .hero-enter / .hero-float: entrada y flotación suave de la pizza del hero.
- * - .scroll-image: la imagen se «dibuja» al hacer scroll (de transparente y sin color a su color).
+ * - .banner-enter / .banner-breathe: la foto de la carta crece al entrar y después «respira»
+ *   (se hace un poco más pequeña y más grande, de forma sutil).
  * - .scroll-reveal: aparición progresiva con desplazamiento para tarjetas.
  *
- * Las dos últimas usan animaciones guiadas por scroll de CSS (sin JavaScript). Los navegadores que
+ * .scroll-reveal usa animaciones guiadas por scroll de CSS (sin JavaScript); los navegadores que
  * no las soportan muestran el contenido sin animar. Todo se desactiva con «reducir movimiento».
  */
 @keyframes hero-enter {
@@ -159,18 +160,24 @@
   }
 }
 
-@keyframes image-draw {
+@keyframes banner-enter {
   from {
     opacity: 0;
-    filter: grayscale(1) brightness(1.15) blur(3px);
-    clip-path: inset(100% 0 0 0);
-    transform: translateY(24px) scale(0.97);
+    transform: scale(0.88);
   }
   to {
     opacity: 1;
-    filter: none;
-    clip-path: inset(0 0 0 0);
     transform: none;
+  }
+}
+
+@keyframes banner-breathe {
+  0%,
+  100% {
+    transform: scale(0.965);
+  }
+  50% {
+    transform: scale(1.03);
   }
 }
 
@@ -194,13 +201,15 @@
     animation: hero-float 6s ease-in-out infinite;
   }
 
-  @supports (animation-timeline: view()) {
-    .scroll-image {
-      animation: image-draw linear both;
-      animation-timeline: view();
-      animation-range: entry 0% cover 40%;
-    }
+  .banner-enter {
+    animation: banner-enter 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
 
+  .banner-breathe {
+    animation: banner-breathe 8s ease-in-out infinite;
+  }
+
+  @supports (animation-timeline: view()) {
     .scroll-reveal {
       animation: reveal-up linear both;
       animation-timeline: view();
@@ -217,7 +226,7 @@
  */
 @keyframes depth-pizza {
   to {
-    transform: translateY(70px) scale(1.18) rotate(7deg);
+    transform: translateY(70px) rotate(7deg);
   }
 }
 
@@ -271,9 +280,14 @@
 /*
  * Contadores animados.
  *
- * El número real está siempre en el HTML (.counter-text). Cuando el navegador soporta animaciones
- * guiadas por scroll, se oculta visualmente (sigue disponible para lectores de pantalla) y se
- * muestra un contador CSS que sube de 0 al valor final mientras se hace scroll.
+ * El número real está siempre en el HTML (.counter-text). Cuando el componente AnimatedNumber se
+ * activa en el navegador (data-counter), el texto se oculta visualmente (sigue disponible para
+ * lectores de pantalla) y se muestra un contador CSS.
+ *
+ *   data-counter="armed":   el contador espera en 0 hasta que el número entra en pantalla.
+ *   data-counter="running": sube de 0 al valor final en unos segundos, para que se vea contar.
+ *
+ * La cuenta dura lo mismo vayas rápido o despacio con el scroll (no depende de él).
  */
 @property --count {
   syntax: "<integer>";
@@ -290,27 +304,26 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .counter {
-      position: relative;
-      counter-reset: count var(--count);
-      animation: count-up linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 100%;
-    }
-    .counter::after {
-      content: counter(count);
-    }
-    .counter-text {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-    }
-  }
+.counter[data-counter] {
+  position: relative;
+  counter-reset: count var(--count);
+}
+
+.counter[data-counter]::after {
+  content: counter(count);
+}
+
+.counter[data-counter] .counter-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.counter[data-counter="running"] {
+  animation: count-up 4s cubic-bezier(0.45, 0, 0.35, 1) both;
 }
 
 /*
@@ -327,12 +340,6 @@
   .card-interactive:hover {
     translate: 0 -4px;
     box-shadow: 0 18px 36px -18px rgb(23 23 23 / 0.35);
-  }
-  .card-interactive .card-zoom {
-    transition: scale 400ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .card-interactive:hover .card-zoom {
-    scale: 1.12;
   }
 }
 
@@ -410,5 +417,103 @@
   ::view-transition-group(*) {
     animation-duration: 0s !important;
     animation-delay: 0s !important;
+  }
+}
+
+/*
+ * Fondo animado (hero y FORNO CLUB).
+ *
+ * - .ambient-leaf: hojas de albahaca que caen balanceándose y girando.
+ * - .ambient-ember: chispas de brasa que suben, como las de un horno de leña.
+ *
+ * Son decorativas (aria-hidden) y solo usan transform/opacity. Las posiciones de cada partícula
+ * se definen con variables CSS en ambient-particles.tsx. Con «reducir movimiento» no se muestran.
+ */
+.ambient-particles {
+  display: none;
+}
+
+@keyframes leaf-fall {
+  0% {
+    translate: 0 -60px;
+    opacity: 0;
+  }
+  8% {
+    opacity: var(--alpha);
+  }
+  92% {
+    opacity: var(--alpha);
+  }
+  100% {
+    translate: 0 calc(100cqh + 60px);
+    opacity: 0;
+  }
+}
+
+@keyframes leaf-sway {
+  from {
+    transform: perspective(400px) translateX(calc(var(--sway) * -1)) rotate(calc(var(--spin) * -1))
+      rotateY(-65deg);
+  }
+  to {
+    transform: perspective(400px) translateX(var(--sway)) rotate(var(--spin)) rotateY(65deg);
+  }
+}
+
+@keyframes ember-rise {
+  0% {
+    translate: 0 0;
+    opacity: 0;
+    scale: 1;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    translate: var(--drift) -70cqh;
+    opacity: 0;
+    scale: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ambient-particles {
+    display: block;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    container-type: size;
+    pointer-events: none;
+  }
+
+  .ambient-leaf {
+    position: absolute;
+    top: 0;
+    left: var(--x);
+    width: var(--size);
+    animation: leaf-fall var(--dur) linear var(--delay) infinite;
+    will-change: translate, opacity;
+  }
+
+  .ambient-leaf > svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    animation: leaf-sway calc(var(--dur) / 3) ease-in-out var(--delay) infinite alternate;
+  }
+
+  .ambient-ember {
+    position: absolute;
+    bottom: 0;
+    left: var(--x);
+    width: var(--size);
+    height: var(--size);
+    border-radius: 9999px;
+    background: radial-gradient(circle, #ffe3a1 0%, #ff8a3d 55%, rgb(217 74 50 / 0) 100%);
+    box-shadow:
+      0 0 12px 3px rgb(255 120 40 / 0.7),
+      0 0 24px 6px rgb(217 74 50 / 0.35);
+    animation: ember-rise var(--dur) ease-out var(--delay) infinite;
+    will-change: translate, opacity;
   }
 }

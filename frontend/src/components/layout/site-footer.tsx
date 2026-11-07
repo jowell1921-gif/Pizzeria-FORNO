@@ -23,7 +23,7 @@ export async function SiteFooter() {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  transitionTypes={["nav-forward"]}
+                  transitionTypes={item.href === "/" ? ["nav-back"] : ["nav-forward"]}
                   className="hover:text-gold underline-offset-4 hover:underline"
                 >
                   {item.label}
