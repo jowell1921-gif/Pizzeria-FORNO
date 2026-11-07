@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadEnv } from "../src/config/env.js";
+import { docsEnabled, loadEnv } from "../src/config/env.js";
 
 const required = {
   DATABASE_URL: "postgresql://forno:secret@localhost:5432/forno_dev",
@@ -34,5 +34,34 @@ describe("loadEnv", () => {
   it("removes trailing slashes from the Supabase URL", () => {
     const env = loadEnv({ ...required, SUPABASE_URL: "https://abcdefghijklmnop.supabase.co//" });
     expect(env.SUPABASE_URL).toBe("https://abcdefghijklmnop.supabase.co");
+  });
+});
+
+describe("loadEnv (API settings)", () => {
+  it("applies safe defaults for logging, proxies and docs", () => {
+    const env = loadEnv(required);
+    expect(env.LOG_LEVEL).toBe("info");
+    expect(env.TRUST_PROXY).toBe(0);
+    expect(env.API_DOCS_ENABLED).toBeUndefined();
+  });
+
+  it("publishes the docs everywhere except production, unless told otherwise", () => {
+    expect(docsEnabled({ NODE_ENV: "development", API_DOCS_ENABLED: undefined })).toBe(true);
+    expect(docsEnabled({ NODE_ENV: "production", API_DOCS_ENABLED: undefined })).toBe(false);
+    expect(docsEnabled({ NODE_ENV: "production", API_DOCS_ENABLED: true })).toBe(true);
+    expect(docsEnabled({ NODE_ENV: "development", API_DOCS_ENABLED: false })).toBe(false);
+  });
+
+  it("parses and validates the new variables", () => {
+    const env = loadEnv({
+      ...required,
+      TRUST_PROXY: "1",
+      API_DOCS_ENABLED: "true",
+      LOG_LEVEL: "warn",
+    });
+    expect(env).toMatchObject({ TRUST_PROXY: 1, API_DOCS_ENABLED: true, LOG_LEVEL: "warn" });
+    expect(() => loadEnv({ ...required, TRUST_PROXY: "-1" })).toThrow(/TRUST_PROXY/);
+    expect(() => loadEnv({ ...required, API_DOCS_ENABLED: "yes" })).toThrow(/API_DOCS_ENABLED/);
+    expect(() => loadEnv({ ...required, LOG_LEVEL: "loud" })).toThrow(/LOG_LEVEL/);
   });
 });

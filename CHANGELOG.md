@@ -2,6 +2,15 @@
 
 ## [Sin publicar]
 
+### Fase 5 — Backend y API
+
+- Endpoints públicos: `/categories`, `/products` (filtros y detalle por id o slug), `/promotions`, `/store/settings` (con horario, días especiales y si está abierto ahora) y `/delivery-zones` (con comprobación por código postal).
+- Seguridad: límite de peticiones por IP, por usuario y en escrituras (`429 RATE_LIMITED`), `TRUST_PROXY` explícito, CORS acotado, registros JSON con `requestId` sin cabeceras ni cuerpos y caché pública de 30 s.
+- Documentación OpenAPI 3.1 generada desde los esquemas Zod de respuesta, con Swagger UI propio en `/api/v1/docs` (sin CDN; en producción solo con `API_DOCS_ENABLED=true`).
+- Pruebas de contrato contra PostgreSQL: las respuestas coinciden con la documentación (detectaron que `orderNumber` es entero).
+- Pruebas: 39 unitarias y 186 de base de datos y API en el backend.
+- Documentación: `docs/api/README.md` y decisión `0006`.
+
 ### Fase 4 — Autenticación
 
 - Backend: verificación de los access tokens de Supabase con JWKS (`ES256`/`RS256`), perfil creado de forma idempotente en la primera petición, roles y permisos leídos siempre de la base de datos, matriz de permisos explícita y endpoints `GET`/`PATCH /api/v1/me`.

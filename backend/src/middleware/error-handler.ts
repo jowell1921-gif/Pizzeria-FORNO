@@ -18,7 +18,7 @@ export const notFoundHandler: RequestHandler = (_req, res) => {
   send(res, 404, "NOT_FOUND", "Resource not found");
 };
 
-export const errorHandler: ErrorRequestHandler = (err: unknown, _req, res, next) => {
+export const errorHandler: ErrorRequestHandler = (err: unknown, req, res, next) => {
   if (res.headersSent) {
     next(err);
     return;
@@ -52,6 +52,6 @@ export const errorHandler: ErrorRequestHandler = (err: unknown, _req, res, next)
   }
 
   // Error inesperado: se registra con el identificador de la petición y no se filtra al cliente.
-  console.error(`[${String(res.locals["requestId"])}]`, err);
+  req.log.error({ err }, "Unhandled error");
   send(res, 500, "INTERNAL_ERROR", "An unexpected error occurred");
 };

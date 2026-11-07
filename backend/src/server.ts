@@ -5,10 +5,10 @@ import { createPrismaClient } from "./db/client.js";
 
 const env = loadEnv();
 const prisma = createPrismaClient(env.DATABASE_URL);
-const app = createApp(env, {
-  prisma,
-  verifyToken: createSupabaseTokenVerifier(env.SUPABASE_URL),
-});
+const app = createApp(
+  { ...env, LOG_PRETTY: env.NODE_ENV === "development" },
+  { prisma, verifyToken: createSupabaseTokenVerifier(env.SUPABASE_URL) },
+);
 
 const server = app.listen(env.PORT, () => {
   console.log(`FORNO API listening on port ${env.PORT} (${env.NODE_ENV})`);
