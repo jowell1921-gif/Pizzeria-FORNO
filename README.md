@@ -58,10 +58,10 @@ Disponibles en `frontend/` y en `backend/`:
 
 Solo en `frontend/`:
 
-| Comando                           | Acción                                                                                                    |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `npx playwright install chromium` | Descarga el navegador para las pruebas E2E (una sola vez)                                                 |
-| `npm run test:e2e`                | Pruebas de navegador (responsive, navegación y accesibilidad). Compila y arranca la web en el puerto 3100 |
+| Comando                           | Acción                                                                                                                                                                                                         |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npx playwright install chromium` | Descarga el navegador para las pruebas E2E (una sola vez)                                                                                                                                                      |
+| `npm run test:e2e`                | Pruebas de navegador (responsive, navegación, accesibilidad y compra). Necesitan PostgreSQL local (docker compose up -d): siembran la base `forno_test`, arrancan la API en el puerto 4100 y la web en el 3100 |
 
 Para generar capturas de revisión visual: establece la variable `CAPTURE=1` y ejecuta `npx playwright test screenshots`. Se guardan en `frontend/test-results/screens/`.
 
@@ -101,4 +101,4 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos), 4 (autenticación) y 5 (API pública, seguridad y documentación) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
+Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos), 4 (autenticación), 5 (API pública, seguridad y documentación) y 6 (pedidos y checkout) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.

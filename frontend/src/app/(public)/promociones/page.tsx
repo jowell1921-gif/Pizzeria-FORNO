@@ -1,16 +1,33 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { FornoWatermark } from "@/components/brand/forno-watermark";
 import { PageTransition } from "@/components/layout/page-transition";
 import { SectionHeading } from "@/components/layout/section-heading";
+import { getPromotions } from "@/features/catalog/api";
+import { CatalogSkeleton, CatalogUnavailable } from "@/features/catalog/catalog-unavailable";
 import { PromotionCard } from "@/features/promotions/promotion-card";
-import { DEMO_PROMOTIONS } from "@/lib/demo-data";
 
 export const metadata: Metadata = {
   title: "Promociones",
   description: "Ofertas, combos y descuentos vigentes en FORNO, con sus condiciones.",
   alternates: { canonical: "/promociones" },
 };
+
+async function PromotionsList() {
+  const result = await getPromotions();
+  if (!result.ok) return <CatalogUnavailable what="las promociones" />;
+  if (result.data.length === 0) {
+    return <p className="text-muted-foreground">Ahora mismo no hay promociones activas.</p>;
+  }
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {result.data.map((promotion) => (
+        <PromotionCard key={promotion.id} promotion={promotion} showConditions />
+      ))}
+    </div>
+  );
+}
 
 export default function PromotionsPage() {
   return (
@@ -23,11 +40,9 @@ export default function PromotionsPage() {
           title="Promociones"
           description="Cada promoción indica su vigencia y sus condiciones. La elegibilidad se valida al hacer el pedido."
         />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {DEMO_PROMOTIONS.map((promotion) => (
-            <PromotionCard key={promotion.id} promotion={promotion} showConditions />
-          ))}
-        </div>
+        <Suspense fallback={<CatalogSkeleton />}>
+          <PromotionsList />
+        </Suspense>
       </div>
     </PageTransition>
   );

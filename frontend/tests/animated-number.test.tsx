@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AnimatedNumber } from "@/components/ui/animated-number";
-import { Stats } from "@/features/home/stats";
-import { DEMO_PRODUCTS, DEMO_STORE } from "@/lib/demo-data";
+import { StatsView } from "@/features/home/stats";
+import { DEMO_STORE } from "@/lib/demo-data";
 
 type ObserverCallback = (entries: Array<{ isIntersecting: boolean }>) => void;
 
@@ -71,18 +71,22 @@ describe("AnimatedNumber", () => {
 
 describe("Stats", () => {
   it("derives its figures from the store configuration and the menu", () => {
-    render(<Stats />);
-    const available = DEMO_PRODUCTS.filter((product) => product.available).length;
+    render(<StatsView productCount={15} />);
 
     expect(screen.getByText(String(DEMO_STORE.prepTimeMinutes))).toBeInTheDocument();
     expect(screen.getByText(String(DEMO_STORE.deliveryTimeMinutes))).toBeInTheDocument();
-    expect(screen.getByText(String(available))).toBeInTheDocument();
+    expect(screen.getByText("15")).toBeInTheDocument();
     expect(screen.getByText("100")).toBeInTheDocument();
   });
 
   it("exposes each figure with its label to assistive technology", () => {
-    render(<Stats />);
+    render(<StatsView productCount={15} />);
     expect(screen.getAllByRole("term")).toHaveLength(4);
     expect(screen.getAllByRole("definition")).toHaveLength(4);
+  });
+
+  it("omits the product count when the menu could not be loaded", () => {
+    render(<StatsView productCount={null} />);
+    expect(screen.getAllByRole("term")).toHaveLength(3);
   });
 });

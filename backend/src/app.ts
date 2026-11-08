@@ -18,7 +18,9 @@ import {
   type RateLimitConfig,
 } from "./middleware/rate-limit.js";
 import { createAddressesRouter } from "./modules/addresses/addresses.routes.js";
+import { createCartRouter } from "./modules/cart/cart.routes.js";
 import { createCatalogRouter } from "./modules/catalog/catalog.routes.js";
+import { createCheckoutRouter } from "./modules/checkout/checkout.routes.js";
 import { createDeliveryRouter } from "./modules/delivery/delivery.routes.js";
 import { createLoyaltyRouter } from "./modules/loyalty/loyalty.routes.js";
 import { createMeRouter } from "./modules/me/me.routes.js";
@@ -90,11 +92,13 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
     app.use("/api/v1/promotions", createPromotionsRouter(prisma));
     app.use("/api/v1/store", createStoreRouter(prisma));
     app.use("/api/v1/delivery-zones", createDeliveryRouter(prisma));
+    app.use("/api/v1/checkout", createCheckoutRouter(prisma));
 
     const authenticate = createAuthenticate(deps);
     const userLimits = userRateLimits(limits);
     app.use("/api/v1/me/addresses", authenticate, ...userLimits, createAddressesRouter(prisma));
     app.use("/api/v1/me", authenticate, ...userLimits, createMeRouter(prisma));
+    app.use("/api/v1/cart", authenticate, ...userLimits, createCartRouter(prisma));
     app.use("/api/v1/loyalty", authenticate, ...userLimits, createLoyaltyRouter(prisma));
     app.use("/api/v1/orders", authenticate, ...userLimits, createOrdersRouter(prisma));
   }

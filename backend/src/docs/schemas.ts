@@ -260,6 +260,7 @@ export const Order = z
     status: z.enum(values(OrderStatus)),
     type: z.enum(values(OrderType)),
     scheduledFor: isoDate.nullable(),
+    estimatedReadyAt: isoDate.nullable(),
     notes: z.string().nullable(),
     createdAt: isoDate,
     delivery: z
@@ -304,3 +305,65 @@ export const Order = z
 /** Envoltorios de respuesta: `{ data }` y `{ data, meta }` en las listas paginadas. */
 export const data = <T extends z.ZodType>(schema: T) => z.object({ data: schema });
 export const paged = <T extends z.ZodType>(schema: T) => z.object({ data: z.array(schema), meta });
+
+const orderKind = z.enum(["PICKUP", "DELIVERY"]);
+
+export const Quote = z
+  .object({
+    type: orderKind,
+    lines: z.array(
+      z.object({
+        productId: id,
+        productName: z.string(),
+        quantity: z.number().int(),
+        notes: z.string().nullable(),
+        unitPrice: money,
+        lineTotal: money,
+        options: z.array(
+          z.object({ optionId: id, group: z.string(), name: z.string(), priceDelta: money }),
+        ),
+      }),
+    ),
+    totals: z.object({
+      subtotal: money,
+      discount: money,
+      deliveryFee: money,
+      tax: money,
+      total: money,
+    }),
+    delivery: z
+      .object({
+        postalCode: z.string().nullable(),
+        covered: z.boolean(),
+        zoneName: z.string().nullable(),
+        minimumOrder: money.nullable(),
+        belowMinimum: z.boolean(),
+      })
+      .nullable(),
+    estimatedMinutes: z.number().int().nullable(),
+    pointsToEarn: z.number().int(),
+  })
+  .meta({ id: "Quote" });
+
+export const Cart = z
+  .object({
+    items: z.array(
+      z.object({
+        productId: id,
+        quantity: z.number().int(),
+        optionIds: z.array(id),
+        notes: z.string().nullable(),
+      }),
+    ),
+  })
+  .meta({ id: "Cart" });
+
+export const StoreSlots = z
+  .object({
+    type: orderKind,
+    date: z.string(),
+    asapAvailable: z.boolean(),
+    slotMinutes: z.number().int(),
+    slots: z.array(isoDate),
+  })
+  .meta({ id: "StoreSlots" });

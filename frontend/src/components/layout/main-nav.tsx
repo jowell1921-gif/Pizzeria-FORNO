@@ -14,6 +14,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { AuthMenu } from "@/features/auth/auth-menu";
+import { CartSheet } from "@/features/cart/cart-sheet";
 import { MAIN_NAV } from "@/lib/site";
 import { cn } from "@/lib/utils";
 
@@ -56,10 +57,14 @@ export function MainNav() {
 
       <div className="flex items-center gap-2">
         <AuthMenu className="hidden lg:inline-flex" />
+        <CartSheet />
         <Link
           href="/carta"
           transitionTypes={FORWARD}
-          className={cn(buttonVariants({ size: "default" }), "tracking-wide uppercase")}
+          className={cn(
+            buttonVariants({ size: "default" }),
+            "tracking-wide uppercase max-[419px]:hidden",
+          )}
         >
           Pedir ahora
         </Link>

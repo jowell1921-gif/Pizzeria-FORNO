@@ -53,7 +53,12 @@ export function OrdersCard() {
               >
                 <div>
                   <p className="font-semibold">
-                    Pedido nº {order.orderNumber}{" "}
+                    <Link
+                      href={`/pedido/${order.id}`}
+                      className="underline-offset-4 hover:underline"
+                    >
+                      Pedido nº {order.orderNumber}
+                    </Link>{" "}
                     <span className="text-muted-foreground text-sm font-normal">
                       · {ORDER_TYPE_LABELS[order.type]}
                     </span>

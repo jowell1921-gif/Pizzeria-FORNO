@@ -1,9 +1,26 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { SectionHeading } from "@/components/layout/section-heading";
 import { buttonVariants } from "@/components/ui/button";
+import { getPromotions } from "@/features/catalog/api";
+import { CatalogSkeleton, CatalogUnavailable } from "@/features/catalog/catalog-unavailable";
 import { PromotionCard } from "@/features/promotions/promotion-card";
-import { DEMO_PROMOTIONS } from "@/lib/demo-data";
+
+async function PromotionsList() {
+  const result = await getPromotions();
+  if (!result.ok) return <CatalogUnavailable what="las promociones" />;
+  if (result.data.length === 0) {
+    return <p className="text-muted-foreground text-sm">Ahora mismo no hay promociones activas.</p>;
+  }
+  return (
+    <div className="grid gap-4 md:grid-cols-3">
+      {result.data.slice(0, 3).map((promotion) => (
+        <PromotionCard key={promotion.id} promotion={promotion} />
+      ))}
+    </div>
+  );
+}
 
 export function FeaturedPromotions() {
   return (
@@ -19,11 +36,9 @@ export function FeaturedPromotions() {
             Todas las promociones
           </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {DEMO_PROMOTIONS.map((promotion) => (
-            <PromotionCard key={promotion.id} promotion={promotion} />
-          ))}
-        </div>
+        <Suspense fallback={<CatalogSkeleton className="h-48" />}>
+          <PromotionsList />
+        </Suspense>
       </div>
     </section>
   );

@@ -1,6 +1,10 @@
+import { z } from "zod";
+
 import type { PrismaClient } from "../../db/client.js";
 import { HttpError } from "../../errors.js";
+import { usablePaymentMethods } from "../payments/availability.js";
 import { isOpenAt, localTime } from "./opening-hours.js";
+import { asapAvailable, listSlots, loadOpeningData } from "./scheduling.js";
 
 const toDateString = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -55,7 +59,8 @@ export async function getStoreSettings(prisma: PrismaClient, now = new Date()) {
     deliveryEnabled: settings.deliveryEnabled,
     ordersPaused: settings.ordersPaused,
     pausedMessage: settings.pausedMessage,
-    enabledPaymentMethods: settings.enabledPaymentMethods,
+    // Solo los métodos que se pueden usar de verdad ahora (sin pago online hasta la fase 9).
+    enabledPaymentMethods: usablePaymentMethods(settings.enabledPaymentMethods),
     slotMinutes: settings.slotMinutes,
     maxAdvanceDays: settings.maxAdvanceDays,
     loyalty: {
@@ -65,5 +70,36 @@ export async function getStoreSettings(prisma: PrismaClient, now = new Date()) {
     openingHours,
     specialDays,
     open: isOpenAt(now, settings.timezone, openingHours, specialDays),
+  };
+}
+
+export const slotsQuerySchema = z.object({
+  type: z.enum(["PICKUP", "DELIVERY"]).default("PICKUP"),
+  /** Fecha local «YYYY-MM-DD»; por defecto, hoy. */
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD")
+    .optional(),
+});
+
+/**
+ * Franjas horarias seleccionables para recoger o recibir un pedido en una fecha, y si se puede
+ * pedir «lo antes posible» ahora mismo. Depende del reloj del servidor, por eso no se guarda en caché.
+ */
+export async function getStoreSlots(prisma: PrismaClient, query: unknown, now = new Date()) {
+  const { type, date } = slotsQuerySchema.parse(query);
+  const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
+  if (!settings)
+    throw new HttpError(503, "STORE_NOT_CONFIGURED", "The store is not configured yet");
+
+  const today = localTime(now, settings.timezone).date;
+  const day = date ?? today;
+  const opening = await loadOpeningData(prisma, today);
+  return {
+    type,
+    date: day,
+    asapAvailable: asapAvailable(settings, opening, now),
+    slotMinutes: settings.slotMinutes,
+    slots: listSlots(settings, opening, type, day, now).map((slot) => slot.toISOString()),
   };
 }

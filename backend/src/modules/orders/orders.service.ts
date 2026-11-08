@@ -63,6 +63,7 @@ export async function getMyOrder(prisma: PrismaClient, userId: string, orderId: 
     status: order.status,
     type: order.type,
     scheduledFor: order.scheduledFor?.toISOString() ?? null,
+    estimatedReadyAt: order.estimatedReadyAt?.toISOString() ?? null,
     notes: order.notes,
     createdAt: order.createdAt.toISOString(),
     delivery:

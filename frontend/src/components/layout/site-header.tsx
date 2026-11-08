@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { Logo } from "@/components/brand/logo";
 import { MainNav } from "@/components/layout/main-nav";
 
@@ -9,7 +11,10 @@ export function SiteHeader() {
     >
       <div className="container-page flex h-16 items-center justify-between gap-4 md:h-20">
         <Logo />
-        <MainNav />
+        {/* La navegación lee la ruta actual: en rutas con parámetros (p. ej. /pedido/[id]) debe ir en Suspense. */}
+        <Suspense fallback={<div aria-hidden className="h-11" />}>
+          <MainNav />
+        </Suspense>
       </div>
     </header>
   );

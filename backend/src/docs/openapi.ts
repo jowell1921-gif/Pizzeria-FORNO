@@ -4,9 +4,13 @@ import {
   createAddressSchema,
   updateAddressSchema,
 } from "../modules/addresses/addresses.service.js";
+import { replaceCartSchema } from "../modules/cart/cart.service.js";
+import { quoteSchema } from "../modules/checkout/totals.js";
+import { createOrderSchema } from "../modules/orders/create-order.service.js";
 import { updateProfileSchema } from "../modules/me/me.service.js";
 import {
   Address,
+  Cart,
   Category,
   DeliveryCheck,
   DeliveryZone,
@@ -19,14 +23,11 @@ import {
   Product,
   Profile,
   Promotion,
+  Quote,
   Reward,
   StoreSettings,
+  StoreSlots,
 } from "./schemas.js";
-
-/** Cuerpos de petición: son los mismos esquemas con los que el servidor valida. */
-const UpdateProfileRequest = updateProfileSchema.meta({ id: "UpdateProfileRequest" });
-const CreateAddressRequest = createAddressSchema.meta({ id: "CreateAddressRequest" });
-const UpdateAddressRequest = updateAddressSchema.meta({ id: "UpdateAddressRequest" });
 
 type Json = Record<string, unknown>;
 
@@ -83,6 +84,16 @@ const pagingParams: Json[] = [
   },
 ];
 
+/** Cuerpos de petición: son los mismos esquemas con los que el servidor valida (forma de entrada). */
+const REQUEST_SCHEMAS = {
+  UpdateProfileRequest: updateProfileSchema,
+  CreateAddressRequest: createAddressSchema,
+  UpdateAddressRequest: updateAddressSchema,
+  QuoteRequest: quoteSchema,
+  ReplaceCartRequest: replaceCartSchema,
+  CreateOrderRequest: createOrderSchema,
+};
+
 function components() {
   const { schemas } = z.toJSONSchema(z.globalRegistry, {
     uri: (id) => `#/components/schemas/${id}`,
@@ -93,6 +104,11 @@ function components() {
     const copy = { ...(schema as Record<string, unknown>) };
     delete copy["$schema"];
     delete copy["$id"];
+    cleaned[name] = copy;
+  }
+  for (const [name, schema] of Object.entries(REQUEST_SCHEMAS)) {
+    const copy = { ...(z.toJSONSchema(schema, { io: "input" }) as Record<string, unknown>) };
+    delete copy["$schema"];
     cleaned[name] = copy;
   }
   cleaned["PageMeta"] = {
@@ -125,9 +141,9 @@ export const REGISTERED_SCHEMAS = [
   Promotion,
   Reward,
   StoreSettings,
-  UpdateProfileRequest,
-  CreateAddressRequest,
-  UpdateAddressRequest,
+  Cart,
+  Quote,
+  StoreSlots,
 ];
 
 /** Documento OpenAPI 3.1 de la API v1. Es el contrato que consumen la web y la app Flutter. */
@@ -260,6 +276,103 @@ export function buildOpenApiDocument(): Json {
           responses: {
             "200": ok("Resultado y condiciones de la zona.", dataOf("DeliveryCheck")),
             "400": error("Código postal no válido."),
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/store/slots": {
+        get: {
+          tags: ["Local"],
+          summary: "Franjas horarias para recoger o recibir",
+          description:
+            "Franjas seleccionables de una fecha (dentro del horario, con antelación suficiente) y si se puede pedir «lo antes posible» ahora. No se guarda en caché. `scheduledFor` de un pedido debe ser exactamente una de estas franjas.",
+          parameters: [
+            { name: "type", in: "query", schema: { type: "string", enum: ["PICKUP", "DELIVERY"] } },
+            {
+              name: "date",
+              in: "query",
+              description: "Fecha local YYYY-MM-DD; por defecto, hoy.",
+              schema: { type: "string", pattern: "^\\d{4}-\\d{2}-\\d{2}$" },
+            },
+          ],
+          responses: {
+            "200": ok("Franjas (UTC).", dataOf("StoreSlots")),
+            "400": error("Parámetros no válidos."),
+            "503": error("El local aún no está configurado."),
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/checkout/quote": {
+        post: {
+          tags: ["Pedidos"],
+          summary: "Presupuesto del carrito",
+          description:
+            "Calcula en el servidor los importes que verá el cliente (líneas, IVA, envío, total y puntos estimados). Solo se envían identificadores y cantidades; cualquier precio enviado se rechaza. No requiere sesión ni guarda nada.",
+          requestBody: { required: true, content: json(ref("QuoteRequest")) },
+          responses: {
+            "200": ok("Presupuesto.", dataOf("Quote")),
+            "400": error("Datos no válidos."),
+            "422": error(
+              "Producto u opción inexistente o no disponible (`PRODUCT_NOT_FOUND`, `PRODUCT_UNAVAILABLE`, `INVALID_OPTIONS`, `OPTION_UNAVAILABLE`).",
+            ),
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/cart": {
+        get: {
+          tags: ["Pedidos"],
+          summary: "Mi carrito guardado",
+          description:
+            "Sincroniza el carrito entre la web y la app. Guarda qué se quiere, nunca precios.",
+          ...secured,
+          responses: {
+            "200": ok("Carrito.", dataOf("Cart")),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+        put: {
+          tags: ["Pedidos"],
+          summary: "Sustituir mi carrito guardado",
+          description: "Los productos y opciones que ya no existan se descartan.",
+          ...secured,
+          requestBody: { required: true, content: json(ref("ReplaceCartRequest")) },
+          responses: {
+            "200": ok("Carrito guardado.", dataOf("Cart")),
+            "400": error("Datos no válidos."),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/orders": {
+        post: {
+          tags: ["Pedidos"],
+          summary: "Crear un pedido",
+          description:
+            "Exige la cabecera `Idempotency-Key` (8–255 caracteres): repetir la misma petición devuelve el mismo pedido (cabecera `Idempotent-Replayed: true`) sin crear otro. El servidor recalcula precios, IVA, envío y mínimo, y valida zona, horario, franja y método de pago. Hoy solo se admite efectivo (`CASH_PICKUP` en recogida, `CASH_DELIVERY` a domicilio): el pago online llega en la fase 9. El pedido nace `NEW` con un pago de efectivo pendiente.",
+          ...secured,
+          parameters: [
+            {
+              name: "Idempotency-Key",
+              in: "header",
+              required: true,
+              schema: { type: "string", minLength: 8, maxLength: 255 },
+            },
+          ],
+          requestBody: { required: true, content: json(ref("CreateOrderRequest")) },
+          responses: {
+            "201": ok("Pedido creado.", dataOf("Order")),
+            "400": error("Datos no válidos o falta `Idempotency-Key`."),
+            "409": error(
+              "No se puede pedir ahora: `ORDERS_PAUSED`, `STORE_CLOSED`, `ORDER_TYPE_UNAVAILABLE`, `PAYMENT_METHOD_UNAVAILABLE`, o petición idéntica en curso (`REQUEST_IN_PROGRESS`).",
+            ),
+            "422": error(
+              "Regla de negocio: `PROFILE_INCOMPLETE`, `OUTSIDE_DELIVERY_ZONE`, `BELOW_MINIMUM_ORDER`, `INVALID_SCHEDULE`, `ADDRESS_NOT_FOUND`, `PAYMENT_METHOD_MISMATCH`, `IDEMPOTENCY_KEY_REUSED`, y los errores de producto del presupuesto.",
+            ),
+            ...AUTH_ERRORS,
             ...COMMON_ERRORS,
           },
         },

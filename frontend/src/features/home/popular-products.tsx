@@ -1,16 +1,27 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { SectionHeading } from "@/components/layout/section-heading";
 import { buttonVariants } from "@/components/ui/button";
-import { DEMO_PRODUCTS } from "@/lib/demo-data";
+import { getProducts } from "@/features/catalog/api";
+import { CatalogSkeleton, CatalogUnavailable } from "@/features/catalog/catalog-unavailable";
 import { ProductCard } from "@/features/menu/product-card";
 
-export function PopularProducts() {
-  const popular = DEMO_PRODUCTS.filter((product) => product.popular && product.available).slice(
-    0,
-    4,
-  );
+async function PopularList() {
+  const result = await getProducts();
+  if (!result.ok) return <CatalogUnavailable what="los productos" />;
 
+  const popular = result.data.filter((product) => product.popular && product.available).slice(0, 4);
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {popular.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+}
+
+export function PopularProducts() {
   return (
     <section aria-labelledby="popular-title" className="section-y">
       <div className="container-page space-y-8">
@@ -29,11 +40,9 @@ export function PopularProducts() {
             Ver toda la carta
           </Link>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {popular.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <Suspense fallback={<CatalogSkeleton />}>
+          <PopularList />
+        </Suspense>
       </div>
     </section>
   );

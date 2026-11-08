@@ -25,5 +25,5 @@ export async function proxy(request: NextRequest) {
 
 // Solo se ejecuta en las zonas privadas: las páginas públicas no pagan este coste.
 export const config = {
-  matcher: ["/cuenta/:path*", "/admin/:path*", "/kitchen/:path*"],
+  matcher: ["/cuenta/:path*", "/pedido/:path*", "/admin/:path*", "/kitchen/:path*"],
 };

@@ -18,8 +18,10 @@ export class ApiError extends Error {
 }
 
 interface RequestOptions {
-  /** Access token de Supabase del usuario. El backend lo verifica en cada petición. */
-  token: string;
+  /** Access token de Supabase del usuario. El backend lo verifica en cada petición. Sin él, petición pública. */
+  token?: string;
+  /** Cabeceras adicionales (por ejemplo, Idempotency-Key). */
+  headers?: Record<string, string>;
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number>;
@@ -42,7 +44,8 @@ async function send(path: string, options: RequestOptions): Promise<unknown> {
       method: options.method ?? "GET",
       headers: {
         Accept: "application/json",
-        Authorization: `Bearer ${options.token}`,
+        ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+        ...options.headers,
         ...(options.body === undefined ? {} : { "Content-Type": "application/json" }),
       },
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),

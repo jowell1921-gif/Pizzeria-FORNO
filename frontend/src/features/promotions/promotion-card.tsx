@@ -12,11 +12,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Promotion } from "@/types/menu";
+import type { Promotion } from "@/features/catalog/schemas";
 
 interface PromotionCardProps {
   promotion: Promotion;
   showConditions?: boolean;
+}
+
+const dateFormat = new Intl.DateTimeFormat("es-ES", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
+
+/** Texto de vigencia a partir de las fechas de la promoción. */
+export function validityText(promotion: Pick<Promotion, "startsAt" | "endsAt">): string {
+  const starts = promotion.startsAt ? dateFormat.format(new Date(promotion.startsAt)) : null;
+  const ends = promotion.endsAt ? dateFormat.format(new Date(promotion.endsAt)) : null;
+  if (starts && ends) return `Del ${starts} al ${ends}`;
+  if (ends) return `Hasta el ${ends}`;
+  if (starts) return `Desde el ${starts}`;
+  return "Sin fecha de caducidad";
 }
 
 function CopyCodeButton({ code }: { code: string }) {
@@ -62,10 +78,12 @@ export function PromotionCard({ promotion, showConditions = false }: PromotionCa
         aria-labelledby={headingId}
         className="scroll-reveal card-interactive border-border bg-cream relative flex h-full flex-col gap-3 rounded-2xl border p-6"
       >
-        <Badge className="bg-charcoal text-cream w-fit">{promotion.badge}</Badge>
+        {promotion.badge ? (
+          <Badge className="bg-charcoal text-cream w-fit">{promotion.badge}</Badge>
+        ) : null}
         <h3 id={headingId} className="text-3xl leading-none font-bold">
           <DialogTrigger className="focus-visible:after:ring-ring/60 cursor-pointer text-left outline-none after:absolute after:inset-0 after:rounded-2xl focus-visible:after:ring-3">
-            {promotion.title}
+            {promotion.name}
           </DialogTrigger>
         </h3>
         <p className="text-sm">{promotion.description}</p>
@@ -81,7 +99,7 @@ export function PromotionCard({ promotion, showConditions = false }: PromotionCa
 
         <p className="text-muted-foreground mt-auto flex items-center gap-2 text-xs">
           <CalendarDays aria-hidden className="size-4 shrink-0" />
-          {promotion.validity}
+          {validityText(promotion)}
         </p>
 
         {showConditions ? (
@@ -98,8 +116,10 @@ export function PromotionCard({ promotion, showConditions = false }: PromotionCa
 
       <DialogContent>
         <div className="bg-charcoal text-cream space-y-2 p-6 pr-16">
-          <Badge className="bg-gold text-charcoal w-fit">{promotion.badge}</Badge>
-          <DialogTitle className="text-cream">{promotion.title}</DialogTitle>
+          {promotion.badge ? (
+            <Badge className="bg-gold text-charcoal w-fit">{promotion.badge}</Badge>
+          ) : null}
+          <DialogTitle className="text-cream">{promotion.name}</DialogTitle>
         </div>
         <div className="space-y-4 p-6">
           <DialogDescription className="text-foreground text-base">
@@ -125,7 +145,7 @@ export function PromotionCard({ promotion, showConditions = false }: PromotionCa
 
           <p className="text-muted-foreground flex items-center gap-2 text-xs">
             <CalendarDays aria-hidden className="size-4 shrink-0" />
-            {promotion.validity}
+            {validityText(promotion)}
           </p>
         </div>
       </DialogContent>

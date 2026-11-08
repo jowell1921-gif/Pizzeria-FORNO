@@ -57,6 +57,11 @@ describe("proxy (route protection)", () => {
   });
 
   it("only runs on the private areas", () => {
-    expect(config.matcher).toEqual(["/cuenta/:path*", "/admin/:path*", "/kitchen/:path*"]);
+    expect(config.matcher).toEqual([
+      "/cuenta/:path*",
+      "/pedido/:path*",
+      "/admin/:path*",
+      "/kitchen/:path*",
+    ]);
   });
 });

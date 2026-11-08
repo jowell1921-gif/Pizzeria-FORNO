@@ -5,12 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { PromoCodeCard } from "@/features/account/promo-code-card";
 import { clearPromoCode } from "@/features/account/promo-code-store";
 import { ProductCard } from "@/features/menu/product-card";
-import { PromotionCard } from "@/features/promotions/promotion-card";
-import { DEMO_PRODUCTS, DEMO_PROMOTIONS } from "@/lib/demo-data";
+import { PromotionCard, validityText } from "@/features/promotions/promotion-card";
 
-const product = DEMO_PRODUCTS.find((item) => item.id === "margherita")!;
-const welcome = DEMO_PROMOTIONS.find((item) => item.id === "bienvenida")!;
-const combo = DEMO_PROMOTIONS.find((item) => item.id === "menu-forno")!;
+import { comboPromotion, makeProduct, makePromotion } from "./fixtures";
 
 afterEach(() => {
   clearPromoCode();
@@ -18,21 +15,17 @@ afterEach(() => {
 });
 
 describe("product detail dialog", () => {
-  it("opens with the full information and an order button", async () => {
+  it("opens with the full information and the options", async () => {
     const user = userEvent.setup();
-    render(<ProductCard product={product} />);
+    render(<ProductCard product={makeProduct()} />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: product.name }));
+    await user.click(screen.getByRole("button", { name: "Margherita" }));
 
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveTextContent("Alérgenos");
-    expect(dialog).toHaveTextContent("Precio con IVA incluido");
-    // Sin sesión, «Pedir ahora» lleva a acceder.
-    expect(screen.getByRole("link", { name: /Pedir ahora/ })).toHaveAttribute(
-      "href",
-      "/acceso?next=/carta",
-    );
+    expect(dialog).toHaveTextContent("Tamaño");
+    expect(screen.getByRole("button", { name: /Añadir al pedido/ })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Cerrar" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -40,10 +33,9 @@ describe("product detail dialog", () => {
 
   it("does not offer to order an unavailable product", async () => {
     const user = userEvent.setup();
-    const unavailable = DEMO_PRODUCTS.find((item) => !item.available)!;
-    render(<ProductCard product={unavailable} />);
+    render(<ProductCard product={makeProduct({ available: false })} />);
 
-    await user.click(screen.getByRole("button", { name: unavailable.name }));
+    await user.click(screen.getByRole("button", { name: "Margherita" }));
     expect(await screen.findByRole("button", { name: "No disponible" })).toBeDisabled();
   });
 });
@@ -53,9 +45,10 @@ describe("promotion detail dialog", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     const user = userEvent.setup();
     vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    const welcome = makePromotion();
     render(<PromotionCard promotion={welcome} />);
 
-    await user.click(screen.getByRole("button", { name: welcome.title }));
+    await user.click(screen.getByRole("button", { name: welcome.name }));
     await user.click(await screen.findByRole("button", { name: "Copiar código" }));
 
     expect(writeText).toHaveBeenCalledWith("BIENVENIDO10");
@@ -64,11 +57,24 @@ describe("promotion detail dialog", () => {
 
   it("says when a promotion needs no code", async () => {
     const user = userEvent.setup();
-    render(<PromotionCard promotion={combo} />);
+    render(<PromotionCard promotion={comboPromotion} />);
 
-    await user.click(screen.getByRole("button", { name: combo.title }));
+    await user.click(screen.getByRole("button", { name: comboPromotion.name }));
     expect(await screen.findByText("Esta promoción no necesita código.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copiar código" })).not.toBeInTheDocument();
+  });
+
+  it("describes the validity from the promotion dates", () => {
+    expect(validityText({ startsAt: null, endsAt: null })).toBe("Sin fecha de caducidad");
+    expect(validityText({ startsAt: null, endsAt: "2026-12-31T22:59:59.000Z" })).toMatch(
+      /^Hasta el /,
+    );
+    expect(validityText({ startsAt: "2026-11-01T00:00:00.000Z", endsAt: null })).toMatch(
+      /^Desde el /,
+    );
+    expect(
+      validityText({ startsAt: "2026-11-01T12:00:00.000Z", endsAt: "2026-11-30T12:00:00.000Z" }),
+    ).toMatch(/^Del .* al /);
   });
 });
 

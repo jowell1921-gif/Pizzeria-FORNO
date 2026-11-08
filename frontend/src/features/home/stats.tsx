@@ -1,23 +1,26 @@
 import { AnimatedNumber } from "@/components/ui/animated-number";
-import { DEMO_LOYALTY, DEMO_PRODUCTS, DEMO_STORE } from "@/lib/demo-data";
+import { Suspense } from "react";
+
+import { getProducts } from "@/features/catalog/api";
+import { CatalogSkeleton } from "@/features/catalog/catalog-unavailable";
+import { DEMO_LOYALTY, DEMO_STORE } from "@/lib/demo-data";
 
 /** Cifras derivadas de la configuración y la carta, no datos inventados. */
-function buildStats() {
+function buildStats(productCount: number | null) {
   const cheapestReward = Math.min(...DEMO_LOYALTY.rewards.map((reward) => reward.points));
   return [
     { value: DEMO_STORE.prepTimeMinutes, unit: "min", label: "de preparación estimada" },
     { value: DEMO_STORE.deliveryTimeMinutes, unit: "min", label: "de entrega a domicilio" },
-    {
-      value: DEMO_PRODUCTS.filter((product) => product.available).length,
-      unit: "",
-      label: "productos en la carta",
-    },
+    ...(productCount === null
+      ? []
+      : [{ value: productCount, unit: "", label: "productos en la carta" }]),
     { value: cheapestReward, unit: "pts", label: "para tu primera recompensa" },
   ] as const;
 }
 
-export function Stats() {
-  const stats = buildStats();
+/** Parte visual: recibe el número de productos (o null si la carta no se pudo cargar). */
+export function StatsView({ productCount }: { productCount: number | null }) {
+  const stats = buildStats(productCount);
 
   return (
     <section aria-label="FORNO en cifras" className="border-border bg-cream border-y">
@@ -41,5 +44,24 @@ export function Stats() {
         ))}
       </dl>
     </section>
+  );
+}
+
+async function StatsList() {
+  const products = await getProducts();
+  return (
+    <StatsView
+      productCount={
+        products.ok ? products.data.filter((product) => product.available).length : null
+      }
+    />
+  );
+}
+
+export function Stats() {
+  return (
+    <Suspense fallback={<CatalogSkeleton className="h-44 rounded-none" />}>
+      <StatsList />
+    </Suspense>
   );
 }

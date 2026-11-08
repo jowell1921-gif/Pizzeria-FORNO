@@ -1,4 +1,5 @@
 import { DemoBanner } from "@/components/layout/demo-banner";
+import { CartProvider } from "@/features/cart/cart-provider";
 import { ProfileProvider } from "@/features/account/profile-context";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -13,12 +14,14 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
         Saltar al contenido
       </a>
       <ProfileProvider>
-        <DemoBanner />
-        <SiteHeader />
-        <main id="contenido" className="flex-1">
-          {children}
-        </main>
-        <SiteFooter />
+        <CartProvider>
+          <DemoBanner />
+          <SiteHeader />
+          <main id="contenido" className="flex-1">
+            {children}
+          </main>
+          <SiteFooter />
+        </CartProvider>
       </ProfileProvider>
     </>
   );

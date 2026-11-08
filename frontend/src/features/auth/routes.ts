@@ -1,5 +1,5 @@
 /** Rutas que exigen sesión. La comprobación real de permisos la hace el backend. */
-export const PROTECTED_PREFIXES = ["/cuenta", "/admin", "/kitchen"] as const;
+export const PROTECTED_PREFIXES = ["/cuenta", "/pedido", "/admin", "/kitchen"] as const;
 
 export const LOGIN_PATH = "/acceso";
 export const DEFAULT_AFTER_LOGIN = "/cuenta";

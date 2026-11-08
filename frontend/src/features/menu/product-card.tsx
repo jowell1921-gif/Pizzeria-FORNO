@@ -2,6 +2,7 @@
 
 import { Leaf } from "lucide-react";
 import Image from "next/image";
+import { useState } from "react";
 
 import { PizzaIllustration } from "@/components/brand/pizza-illustration";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +13,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ALLERGEN_LABELS } from "@/lib/allergens";
+import type { Product } from "@/features/catalog/schemas";
 import { formatEuro } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { Product } from "@/types/menu";
 
-import { OrderButton } from "./order-button";
+import { ProductConfigurator } from "./product-configurator";
 
 interface ProductCardProps {
   product: Product;
@@ -34,24 +34,25 @@ function ProductImage({
 }) {
   return product.image ? (
     <Image
-      src={product.image.src}
-      width={product.image.width}
-      height={product.image.height}
+      src={product.image.url}
       alt={product.image.alt}
+      fill
       sizes={sizes}
-      className={cn("h-auto w-full", className)}
+      className={cn("object-contain", className)}
     />
   ) : (
     <PizzaIllustration />
   );
 }
 
-/** Tarjeta de producto. Al pulsarla se abre una ventana con toda la información y «Pedir ahora». */
+/** Tarjeta de producto. Al pulsarla se abre una ventana con la información completa y «Añadir al pedido». */
 export function ProductCard({ product }: ProductCardProps) {
   const headingId = `product-${product.id}`;
+  const [open, setOpen] = useState(false);
+  const allergens = product.allergens.map((allergen) => allergen.name);
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <article
         aria-labelledby={headingId}
         className={cn(
@@ -59,8 +60,10 @@ export function ProductCard({ product }: ProductCardProps) {
           !product.available && "bg-muted border-dashed",
         )}
       >
-        <div className="bg-cream-soft flex size-20 shrink-0 items-center justify-center rounded-xl p-1.5 sm:size-24 sm:p-2">
-          <ProductImage product={product} sizes="96px" />
+        <div className="bg-cream-soft relative size-20 shrink-0 rounded-xl p-1.5 sm:size-24 sm:p-2">
+          <div className="relative size-full">
+            <ProductImage product={product} sizes="96px" />
+          </div>
         </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -70,7 +73,10 @@ export function ProductCard({ product }: ProductCardProps) {
                 {product.name}
               </DialogTrigger>
             </h3>
-            <p className="text-lg font-bold whitespace-nowrap">{formatEuro(product.price)}</p>
+            <p className="text-lg font-bold whitespace-nowrap">
+              <span className="text-muted-foreground text-sm font-medium">desde </span>
+              {formatEuro(product.price)}
+            </p>
           </div>
 
           <p className="text-muted-foreground text-sm">{product.description}</p>
@@ -90,10 +96,10 @@ export function ProductCard({ product }: ProductCardProps) {
               </Badge>
             ) : null}
             {!product.available ? <Badge variant="outline">No disponible</Badge> : null}
-            {product.allergens.length > 0 ? (
+            {allergens.length > 0 ? (
               <p className="text-muted-foreground text-xs">
                 <span className="font-semibold">Alérgenos: </span>
-                {product.allergens.map((id) => ALLERGEN_LABELS[id]).join(", ")}
+                {allergens.join(", ")}
               </p>
             ) : null}
           </div>
@@ -102,7 +108,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
       <DialogContent>
         <div className="bg-cream-soft flex justify-center p-6 pb-2">
-          <div className="w-full max-w-xs">
+          <div className="relative aspect-[3/2] w-full max-w-xs">
             <ProductImage product={product} sizes="320px" className="drop-shadow-xl" />
           </div>
         </div>
@@ -124,26 +130,11 @@ export function ProductCard({ product }: ProductCardProps) {
             ) : null}
             <div>
               <dt className="font-semibold">Alérgenos</dt>
-              <dd>
-                {product.allergens.length > 0
-                  ? product.allergens.map((id) => ALLERGEN_LABELS[id]).join(", ")
-                  : "Sin alérgenos declarados"}
-              </dd>
+              <dd>{allergens.length > 0 ? allergens.join(", ") : "Sin alérgenos declarados"}</dd>
             </div>
           </dl>
 
-          <div className="flex flex-wrap gap-2">
-            {product.vegetarian ? (
-              <Badge variant="secondary" className="gap-1">
-                <Leaf aria-hidden className="size-3" />
-                Vegetariano
-              </Badge>
-            ) : null}
-            {!product.available ? <Badge variant="outline">No disponible</Badge> : null}
-          </div>
-
-          <p className="text-muted-foreground text-xs">Precio con IVA incluido.</p>
-          <OrderButton disabled={!product.available} />
+          <ProductConfigurator product={product} onAdded={() => setOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>

@@ -33,7 +33,11 @@ describe("OpenAPI document", () => {
       "/loyalty/account",
       "/loyalty/transactions",
       "/loyalty/rewards",
+      "/orders",
       "/orders/me",
+      "/store/slots",
+      "/checkout/quote",
+      "/cart",
       "/orders/{id}",
     ]) {
       expect(body.paths[path], path).toBeDefined();

@@ -2,6 +2,16 @@
 
 ## [Sin publicar]
 
+### Fase 6 — Pedidos y checkout
+
+- Backend: presupuesto del carrito (`POST /checkout/quote`), carrito guardado (`/cart`), franjas horarias (`/store/slots`) y creación de pedidos (`POST /orders`) con `Idempotency-Key`. Precios, IVA, envío, mínimo, zona, horario y método de pago se calculan y validan en el servidor; el cliente solo envía identificadores y cantidades.
+- Solo efectivo hasta la fase 9: el pago online no se anuncia ni se acepta sin proveedor.
+- Web: la carta, los favoritos y las promociones salen de la API; ficha de producto con tamaño, masa, extras, cantidad y nota; carrito en panel lateral con botón en la cabecera, guardado en el navegador y sincronizado con el servidor; checkout (`/pedido`) con modalidad, dirección, hora, pago, observaciones y resumen; seguimiento del pedido (`/pedido/[id]`) con actualización automática.
+- Corregido: con el local cerrado, el checkout permitía confirmar sin elegir hora.
+- OpenAPI y pruebas de contrato actualizadas.
+- Pruebas: 48 unitarias y 213 de base de datos y API en el backend; 299 unitarias en el frontend; 307 E2E contra la API real.
+- Documentación: `docs/api/README.md` y decisión `0007`.
+
 ### Fase 5 — Backend y API
 
 - Endpoints públicos: `/categories`, `/products` (filtros y detalle por id o slug), `/promotions`, `/store/settings` (con horario, días especiales y si está abierto ahora) y `/delivery-zones` (con comprobación por código postal).

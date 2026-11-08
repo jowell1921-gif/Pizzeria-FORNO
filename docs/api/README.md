@@ -49,8 +49,32 @@ Con sesión (`Authorization`): `GET`/`PATCH /me`, `GET`/`POST /me/addresses`,
 `PATCH`/`DELETE /me/addresses/{id}`, `GET /loyalty/account`, `GET /loyalty/transactions`,
 `GET /loyalty/rewards`, `GET /orders/me`, `GET /orders/{id}`.
 
-Llegan en sus fases: creación de pedidos y carrito (6), canjes y validación de cupones (7),
-administración y cocina (8), pagos y webhooks (9).
+Pedidos (fase 6):
+
+| Método y ruta                  | Descripción                                                                       |
+| ------------------------------ | --------------------------------------------------------------------------------- |
+| `GET /store/slots?type=&date=` | Franjas horarias seleccionables y si se puede pedir «lo antes posible». Sin caché |
+| `POST /checkout/quote`         | Presupuesto del carrito (líneas, IVA, envío, total, puntos estimados). Público    |
+| `GET /cart`, `PUT /cart`       | Carrito guardado del usuario (solo producto, opciones y cantidad; nunca precios)  |
+| `POST /orders`                 | Crea un pedido. Exige `Idempotency-Key`                                           |
+
+El cliente solo envía **identificadores y cantidades**: cualquier campo de precio, total o envío se
+rechaza con `400`. El servidor recalcula precios, IVA, gastos de envío, mínimo de la zona, horario,
+franja y método de pago. Hoy solo se admite efectivo (`CASH_PICKUP` en recogida, `CASH_DELIVERY` a
+domicilio); `/store/settings` solo anuncia los métodos de pago que se pueden usar de verdad.
+
+Errores de negocio al crear un pedido (`error.code`): `PROFILE_INCOMPLETE`, `ORDERS_PAUSED`,
+`STORE_CLOSED`, `ORDER_TYPE_UNAVAILABLE`, `PAYMENT_METHOD_UNAVAILABLE`, `PAYMENT_METHOD_MISMATCH`,
+`OUTSIDE_DELIVERY_ZONE`, `BELOW_MINIMUM_ORDER`, `INVALID_SCHEDULE`, `ADDRESS_NOT_FOUND`,
+`PRODUCT_NOT_FOUND`, `PRODUCT_UNAVAILABLE`, `INVALID_OPTIONS`, `OPTION_UNAVAILABLE`.
+
+Idempotencia: repetir la misma petición con la misma clave devuelve el mismo pedido (cabecera
+`Idempotent-Replayed: true`) sin crear otro; la misma clave con otro cuerpo da `422
+IDEMPOTENCY_KEY_REUSED`; mientras la primera sigue en curso, `409 REQUEST_IN_PROGRESS`. Una petición
+fallida no gasta la clave. Las claves caducan a las 24 h.
+
+Llegan en sus fases: canjes y validación de cupones (7), administración y cocina (8), pagos y
+webhooks (9).
 
 ## Ejemplos
 
