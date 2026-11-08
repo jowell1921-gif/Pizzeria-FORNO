@@ -6,6 +6,10 @@ import type { SiteImage } from "@/types/media";
  * Todas las rutas apuntan a `public/image/`. Para usar las fotografías definitivas basta con
  * sustituir los archivos (o cambiar aquí la ruta y las dimensiones). Un `alt` vacío indica que la
  * imagen es decorativa y no aporta información a los lectores de pantalla.
+ *
+ * Las fotos de los productos de la carta no se listan aquí: su ruta está en la base de datos
+ * (tabla `ProductImage`, ver `backend/prisma/seed-demo-data.ts`) y la sirve la API.
+ * Los originales sin procesar se guardan en `frontend/assets-originals/` (fuera de Git).
  */
 export const IMAGES = {
   logo: {
@@ -20,28 +24,11 @@ export const IMAGES = {
     height: 624,
     alt: "Pizza Margherita recién salida del horno de leña",
   },
-  pizzaMargheritaTabla: {
-    src: "/image/pizza-margherita-tabla.webp",
-    width: 900,
-    height: 551,
-    alt: "",
-  },
-  pizzaNapolitana: {
-    src: "/image/pizza-napolitana.webp",
-    width: 900,
-    height: 554,
-    alt: "",
-  },
-  pizzaEspecial: {
-    src: "/image/pizza-especial.webp",
-    width: 900,
-    height: 675,
-    alt: "",
-  },
-  pizzasMostrador: {
-    src: "/image/pizzas-mostrador.webp",
-    width: 1400,
-    height: 933,
+  /** Pizza sin fondo de la cabecera de «Nuestra carta». */
+  cartaBanner: {
+    src: "/image/carta-banner.webp",
+    width: 1000,
+    height: 562,
     alt: "",
   },
 } as const satisfies Record<string, SiteImage>;

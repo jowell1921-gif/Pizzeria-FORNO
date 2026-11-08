@@ -76,6 +76,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "diavola",
+    image: "/image/pizza-diavola.webp",
     category: "pizzas",
     name: "Diavola",
     description: "Con carácter: salame picante y un toque de guindilla.",
@@ -84,10 +85,10 @@ const PRODUCTS: DemoProduct[] = [
     allergens: ["gluten", "lacteos"],
     vegetarian: false,
     popular: true,
-    image: "/image/pizza-especial.webp",
   },
   {
     slug: "quattro-formaggi",
+    image: "/image/pizza-quattro-formaggi.webp",
     category: "pizzas",
     name: "Quattro Formaggi",
     description: "Cuatro quesos fundidos para los más golosos.",
@@ -99,6 +100,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "prosciutto-funghi",
+    image: "/image/pizza-prosciutto-funghi.webp",
     category: "pizzas",
     name: "Prosciutto e Funghi",
     description: "Jamón cocido y champiñón salteado sobre tomate y mozzarella.",
@@ -109,6 +111,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "vegetariana",
+    image: "/image/pizza-vegetariana.webp",
     category: "pizzas",
     name: "Vegetariana",
     description: "Verduras de temporada asadas con mozzarella.",
@@ -116,10 +119,10 @@ const PRODUCTS: DemoProduct[] = [
     ingredients: ["Tomate", "Mozzarella", "Calabacín", "Pimiento", "Cebolla roja"],
     allergens: ["gluten", "lacteos"],
     vegetarian: true,
-    image: "/image/pizza-napolitana.webp",
   },
   {
     slug: "burrata",
+    image: "/image/pizza-napolitana.webp",
     category: "pizzas",
     name: "Burrata",
     description: "Burrata cremosa al salir del horno sobre tomate fresco.",
@@ -130,6 +133,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "focaccia",
+    image: "/image/entrante-focaccia.webp",
     category: "entrantes",
     name: "Focaccia al romero",
     description: "Focaccia recién horneada con aceite y sal en escamas.",
@@ -140,6 +144,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "burrata-tomate",
+    image: "/image/entrante-burrata.webp",
     category: "entrantes",
     name: "Burrata con tomate",
     description: "Burrata sobre tomate maduro y albahaca.",
@@ -151,6 +156,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "provolone",
+    image: "/image/entrante-provolone.webp",
     category: "entrantes",
     name: "Provolone al horno",
     description: "Queso provolone fundido con orégano y pan tostado.",
@@ -161,6 +167,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "agua",
+    image: "/image/bebida-agua.webp",
     category: "bebidas",
     name: "Agua mineral",
     description: "Botella de 50 cl.",
@@ -171,6 +178,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "refresco-cola",
+    image: "/image/bebida-cola.webp",
     category: "bebidas",
     name: "Refresco de cola",
     description: "Lata de 33 cl.",
@@ -183,6 +191,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "limonada",
+    image: "/image/bebida-limonada.webp",
     category: "bebidas",
     name: "Limonada artesana",
     description: "Limón, menta y un toque de azúcar de caña.",
@@ -195,6 +204,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "cerveza",
+    image: "/image/bebida-cerveza.webp",
     category: "bebidas",
     name: "Cerveza lager",
     description: "Botellín de 33 cl. Solo para mayores de edad.",
@@ -207,6 +217,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "tiramisu",
+    image: "/image/postre-tiramisu.webp",
     category: "postres",
     name: "Tiramisú",
     description: "Receta casera con mascarpone y café.",
@@ -218,6 +229,7 @@ const PRODUCTS: DemoProduct[] = [
   },
   {
     slug: "panna-cotta",
+    image: "/image/postre-panna-cotta.webp",
     category: "postres",
     name: "Panna cotta",
     description: "Con coulis de frutos rojos.",

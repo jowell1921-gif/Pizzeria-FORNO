@@ -90,15 +90,15 @@ export default function MenuPage() {
             description="Elige tu pizza, personalízala y añádela a tu pedido. Precios con IVA incluido."
           />
           <div className="banner-enter">
-            <div className="banner-breathe overflow-hidden rounded-2xl">
+            <div className="banner-breathe">
               <Image
-                src={IMAGES.pizzasMostrador.src}
-                width={IMAGES.pizzasMostrador.width}
-                height={IMAGES.pizzasMostrador.height}
-                alt={IMAGES.pizzasMostrador.alt}
+                src={IMAGES.cartaBanner.src}
+                width={IMAGES.cartaBanner.width}
+                height={IMAGES.cartaBanner.height}
+                alt={IMAGES.cartaBanner.alt}
                 sizes="(min-width: 768px) 50vw, 100vw"
                 priority
-                className="h-40 w-full object-cover sm:h-52 md:h-56"
+                className="mx-auto h-auto max-h-64 w-full object-contain drop-shadow-2xl md:max-h-72"
               />
             </div>
           </div>

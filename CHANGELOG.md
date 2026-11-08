@@ -8,6 +8,8 @@
 - Solo efectivo hasta la fase 9: el pago online no se anuncia ni se acepta sin proveedor.
 - Web: la carta, los favoritos y las promociones salen de la API; ficha de producto con tamaño, masa, extras, cantidad y nota; carrito en panel lateral con botón en la cabecera, guardado en el navegador y sincronizado con el servidor; checkout (`/pedido`) con modalidad, dirección, hora, pago, observaciones y resumen; seguimiento del pedido (`/pedido/[id]`) con actualización automática.
 - Corregido: con el local cerrado, el checkout permitía confirmar sin elegir hora.
+- El checkout explica qué falta para confirmar, elige por defecto una dirección con reparto y marca las que no lo tienen.
+- Imágenes de la carta: 14 fotografías procesadas (fondo blanco eliminado, recortadas y exportadas a WebP con transparencia) asignadas a cada producto, y nuevo banner de «Nuestra carta». Los originales quedan en `frontend/assets-originals/` (fuera de Git).
 - OpenAPI y pruebas de contrato actualizadas.
 - Pruebas: 48 unitarias y 213 de base de datos y API en el backend; 299 unitarias en el frontend; 307 E2E contra la API real.
 - Documentación: `docs/api/README.md` y decisión `0007`.
