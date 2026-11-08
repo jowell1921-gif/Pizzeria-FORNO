@@ -62,6 +62,27 @@ export function AccountDashboard() {
           </div>
         </div>
         <div className="flex flex-col gap-3 sm:items-end">
+          {profile.permissions.includes("orders:read:all") ? (
+            <Link
+              href="/admin"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "border-gold text-gold hover:bg-gold/10 bg-transparent",
+              )}
+            >
+              Panel del personal
+            </Link>
+          ) : profile.permissions.includes("kitchen:orders:read") ? (
+            <Link
+              href="/kitchen"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "border-gold text-gold hover:bg-gold/10 bg-transparent",
+              )}
+            >
+              Pantalla de cocina
+            </Link>
+          ) : null}
           <Link
             href="/carta"
             transitionTypes={["nav-forward"]}

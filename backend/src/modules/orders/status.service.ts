@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import type { PrismaClient } from "../../db/client.js";
 import type { OrderStatus } from "../../generated/prisma/enums.js";
+import { orderEvents } from "../../events/order-events.js";
 import { conflict, HttpError, notFound } from "../../errors.js";
 import { earnPointsForOrder, lockOrder, reversePointsForOrder } from "../loyalty/ledger.service.js";
 
@@ -22,6 +23,13 @@ const TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
 };
 
 export const canTransition = (from: OrderStatus, to: OrderStatus) => TRANSITIONS[from].includes(to);
+
+/** Estados a los que puede pasar un pedido (un pedido para recoger no sale a reparto). */
+export function nextStatuses(order: { status: OrderStatus; type: "PICKUP" | "DELIVERY" }) {
+  return TRANSITIONS[order.status].filter(
+    (status) => status !== "OUT_FOR_DELIVERY" || order.type === "DELIVERY",
+  );
+}
 
 export const changeStatusSchema = z
   .object({
@@ -62,7 +70,7 @@ export async function changeOrderStatus(
   change: StatusChange,
   now = new Date(),
 ) {
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await lockOrder(tx, change.orderId);
     const order = await tx.order.findUnique({
       where: { id: change.orderId },
@@ -140,6 +148,21 @@ export async function changeOrderStatus(
       }
     }
 
+    // Operación del personal: queda en el registro de auditoría (el cliente al cancelar, no).
+    if (change.actorId !== order.userId) {
+      await tx.auditLog.create({
+        data: {
+          actorId: change.actorId,
+          action: "order.status",
+          entityType: "Order",
+          entityId: order.id,
+          before: { status: from },
+          after: { status: change.to },
+          reason: change.reason?.trim() || null,
+        },
+      });
+    }
+
     let points = 0;
     if (change.to === "COMPLETED") {
       points = (await earnPointsForOrder(tx, order.id)).points;
@@ -150,8 +173,22 @@ export async function changeOrderStatus(
         change.reason?.trim() || `Order ${change.to.toLowerCase()}`,
       );
     }
-    return { id: order.id, from, status: change.to, pointsGranted: points };
+    return {
+      id: order.id,
+      orderNumber: order.orderNumber,
+      from,
+      status: change.to,
+      pointsGranted: points,
+    };
   });
+  // Tras confirmar la transacción: avisa a la cocina y al personal (sin datos personales).
+  orderEvents.publish({
+    kind: "status",
+    orderId: result.id,
+    orderNumber: result.orderNumber,
+    status: result.status,
+  });
+  return result;
 }
 
 /**

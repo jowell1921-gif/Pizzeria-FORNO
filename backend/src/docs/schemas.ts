@@ -400,3 +400,143 @@ export const StoreSlots = z
     slots: z.array(isoDate),
   })
   .meta({ id: "StoreSlots" });
+
+const orderStatus = z.enum(values(OrderStatus));
+
+export const AdminOrderSummary = z
+  .object({
+    id,
+    orderNumber: z.number().int(),
+    status: orderStatus,
+    type: z.enum(values(OrderType)),
+    customerName: z.string(),
+    total: money,
+    itemCount: z.number().int(),
+    placedAt: isoDate,
+    scheduledFor: isoDate.nullable(),
+    payment: z
+      .object({
+        method: z.enum(values(PaymentMethod)).nullable(),
+        status: z.enum(values(PaymentStatus)).nullable(),
+      })
+      .nullable(),
+  })
+  .meta({ id: "AdminOrderSummary" });
+
+export const AdminOrder = z
+  .object({
+    id,
+    orderNumber: z.number().int(),
+    status: orderStatus,
+    type: z.enum(values(OrderType)),
+    placedAt: isoDate,
+    scheduledFor: isoDate.nullable(),
+    estimatedReadyAt: isoDate.nullable(),
+    notes: z.string().nullable(),
+    cancellationReason: z.string().nullable(),
+    couponCode: z.string().nullable(),
+    customer: z.object({
+      name: z.string(),
+      email: z.string(),
+      phone: z.string().nullable(),
+    }),
+    delivery: z
+      .object({
+        name: z.string().nullable(),
+        line1: z.string().nullable(),
+        line2: z.string().nullable(),
+        postalCode: z.string().nullable(),
+        city: z.string().nullable(),
+        notes: z.string().nullable(),
+        zone: z.string().nullable(),
+      })
+      .nullable(),
+    items: z.array(
+      z.object({
+        id,
+        productName: z.string(),
+        quantity: z.number().int(),
+        unitPrice: money,
+        lineTotal: money,
+        notes: z.string().nullable(),
+        options: z.array(z.object({ group: z.string(), name: z.string(), priceDelta: money })),
+      }),
+    ),
+    discounts: z.array(z.object({ description: z.string(), amount: money })),
+    totals: z.object({
+      subtotal: money,
+      discount: money,
+      deliveryFee: money,
+      tax: money,
+      total: money,
+    }),
+    payments: z
+      .array(
+        z.object({
+          method: z.enum(values(PaymentMethod)),
+          status: z.enum(values(PaymentStatus)),
+          amount: money,
+          paidAt: isoDate.nullable(),
+        }),
+      )
+      .nullable(),
+    history: z.array(
+      z.object({
+        from: orderStatus.nullable(),
+        status: orderStatus,
+        at: isoDate,
+        by: z.string().nullable(),
+        reason: z.string().nullable(),
+      }),
+    ),
+    allowedNext: z.array(orderStatus),
+  })
+  .meta({ id: "AdminOrder" });
+
+export const KitchenOrder = z
+  .object({
+    id,
+    orderNumber: z.number().int(),
+    status: orderStatus,
+    type: z.enum(values(OrderType)),
+    placedAt: isoDate,
+    scheduledFor: isoDate.nullable(),
+    estimatedReadyAt: isoDate.nullable(),
+    notes: z.string().nullable(),
+    items: z.array(
+      z.object({
+        quantity: z.number().int(),
+        name: z.string(),
+        options: z.array(z.string()),
+        notes: z.string().nullable(),
+      }),
+    ),
+  })
+  .meta({ id: "KitchenOrder" });
+
+export const Dashboard = z
+  .object({
+    date: z.string(),
+    orders: z.object({
+      total: z.number().int(),
+      pending: z.number().int(),
+      preparing: z.number().int(),
+      ready: z.number().int(),
+      completed: z.number().int(),
+      cancelled: z.number().int(),
+    }),
+    sales: z.object({ completed: money, inProgress: money, averageTicket: money }),
+    popularProducts: z.array(z.object({ name: z.string(), quantity: z.number().int() })),
+    recentOrders: z.array(
+      z.object({
+        id,
+        orderNumber: z.number().int(),
+        status: orderStatus,
+        type: z.enum(values(OrderType)),
+        customerName: z.string(),
+        total: money,
+        placedAt: isoDate,
+      }),
+    ),
+  })
+  .meta({ id: "Dashboard" });

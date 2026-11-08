@@ -11,7 +11,7 @@ const formAlert = (page: Page) => page.locator('[role="alert"]:not(#__next-route
 const usesMenuButton = (page: Page) => (page.viewportSize()?.width ?? 0) < 1024;
 
 test.describe("route protection", () => {
-  for (const path of ["/cuenta", "/admin", "/admin/productos", "/kitchen"]) {
+  for (const path of ["/cuenta", "/admin", "/admin/pedidos", "/admin/productos", "/kitchen"]) {
     test(`${path} redirects visitors without a session to the login page`, async ({ page }) => {
       await page.goto(path);
       await expect(page).toHaveURL(new RegExp(`/acceso\\?next=${encodeURIComponent(path)}$`));

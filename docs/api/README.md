@@ -92,7 +92,20 @@ El presupuesto devuelve `discounts` (descripción e importe de cada uno).
 Los puntos se conceden solo cuando el pedido se completa y se revierten al cancelarlo (ver
 `docs/decisions/0008-fidelizacion-y-promociones.md`).
 
-Llegan en sus fases: administración y cocina (8), pagos y webhooks (9).
+Personal y cocina (fase 8A). Todas exigen sesión y un permiso explícito:
+
+| Método y ruta                          | Permiso                                  | Descripción                                                        |
+| -------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| `GET /admin/dashboard`                 | `dashboard:read`                         | Resumen del día                                                    |
+| `GET /admin/orders`                    | `orders:read:all`                        | Pedidos con filtros (`status`, `type`, `date`, `q`) y paginación   |
+| `GET /admin/orders/{id}`               | `orders:read:all`                        | Detalle completo y estados siguientes (`allowedNext`)              |
+| `PATCH /admin/orders/{id}/status`      | `orders:update-status`                   | Cambia el estado (`409 INVALID_TRANSITION`, `422 REASON_REQUIRED`) |
+| `GET /kitchen/orders`                  | `kitchen:orders:read`                    | Pedidos para cocina, sin datos del cliente, importes ni pagos      |
+| `PATCH /kitchen/orders/{id}/status`    | `kitchen:orders:update-status`           | Avanzar un pedido (aceptar, preparar, listo, entregar en recogida) |
+| `GET /admin/stream`, `/kitchen/stream` | `orders:read:all`, `kitchen:orders:read` | Avisos en directo (SSE) con `fetch` y `Authorization`              |
+
+Llegan en sus fases: productos, promociones, recompensas y configuración del local (8B), pagos y
+webhooks (9).
 
 ## Ejemplos
 

@@ -10,6 +10,7 @@ import { isProfileComplete } from "../me/me.service.js";
 import { usablePaymentMethods } from "../payments/availability.js";
 import { localTime } from "../store/opening-hours.js";
 import { asapAvailable, leadMinutes, listSlots, loadOpeningData } from "../store/scheduling.js";
+import { orderEvents } from "../../events/order-events.js";
 import { getMyOrder } from "./orders.service.js";
 
 export const createOrderSchema = z
@@ -257,5 +258,12 @@ export async function createOrder(
     return order.id;
   });
 
-  return getMyOrder(prisma, userId, orderId);
+  const created = await getMyOrder(prisma, userId, orderId);
+  orderEvents.publish({
+    kind: "created",
+    orderId,
+    orderNumber: created.orderNumber,
+    status: created.status,
+  });
+  return created;
 }

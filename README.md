@@ -101,4 +101,4 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos), 4 (autenticación), 5 (API pública, seguridad y documentación) 6 (pedidos y checkout) y 7 (FORNO CLUB y promociones) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
+Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos), 4 (autenticación), 5 (API pública, seguridad y documentación) 6 (pedidos y checkout) 7 (FORNO CLUB y promociones) y 8A (pedidos del personal, cocina y panel de control) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.

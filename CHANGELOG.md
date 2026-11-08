@@ -2,6 +2,13 @@
 
 ## [Sin publicar]
 
+### Fase 8A — Pedidos del personal, cocina y panel de control
+
+- Backend: `GET/PATCH /admin/orders` (filtros, paginación, detalle, cambio de estado con motivo y auditoría), `GET /admin/dashboard`, `GET/PATCH /kitchen/orders` y flujos SSE (`/admin/stream`, `/kitchen/stream`). Cada ruta exige un permiso explícito; la cocina solo recibe lo necesario para preparar (sin datos del cliente, importes ni pagos).
+- Web: zona privada independiente (`/admin`, `/admin/pedidos`, `/admin/pedidos/[id]`, `/kitchen`) con panel de control, lista y detalle de pedidos con los cambios de estado válidos, y pantalla de cocina por columnas con acciones rápidas y actualización en directo (con consulta periódica de respaldo). Enlace «Panel del personal» en «Mi cuenta» para quien tiene permisos.
+- Pruebas: 48 unitarias y 267 de base de datos y API en el backend; 350 unitarias y 315 E2E en el frontend.
+- Documentación: decisión `0009`, `docs/api/README.md` y OpenAPI.
+
 ### Fase 7 — FORNO CLUB y promociones
 
 - Puntos: se conceden solo al completar el pedido (una vez, aunque se complete dos veces o a la vez), sobre productos menos descuentos y sin gasto de envío; se revierten al cancelar o devolver sin dejar saldo negativo, y se devuelven completos los puntos gastados en una recompensa.

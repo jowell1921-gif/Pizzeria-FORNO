@@ -4,13 +4,19 @@ import {
   createAddressSchema,
   updateAddressSchema,
 } from "../modules/addresses/addresses.service.js";
+import { kitchenStatusSchema } from "../modules/kitchen/kitchen.service.js";
+import { changeStatusSchema } from "../modules/orders/status.service.js";
 import { replaceCartSchema } from "../modules/cart/cart.service.js";
 import { quoteSchema } from "../modules/checkout/totals.js";
 import { createOrderSchema } from "../modules/orders/create-order.service.js";
 import { updateProfileSchema } from "../modules/me/me.service.js";
 import {
+  AdminOrder,
+  AdminOrderSummary,
   Address,
   Cart,
+  Dashboard,
+  KitchenOrder,
   Category,
   DeliveryCheck,
   DeliveryZone,
@@ -88,6 +94,8 @@ const pagingParams: Json[] = [
 
 /** Cuerpos de petición: son los mismos esquemas con los que el servidor valida (forma de entrada). */
 const REQUEST_SCHEMAS = {
+  ChangeOrderStatusRequest: changeStatusSchema,
+  KitchenStatusRequest: kitchenStatusSchema,
   RedeemRewardRequest: z.object({ rewardId: z.uuid() }).strict(),
   UpdateProfileRequest: updateProfileSchema,
   CreateAddressRequest: createAddressSchema,
@@ -129,6 +137,10 @@ function components() {
 
 /** Referencias para que TypeScript no elimine los esquemas registrados con `.meta({ id })`. */
 export const REGISTERED_SCHEMAS = [
+  AdminOrder,
+  AdminOrderSummary,
+  Dashboard,
+  KitchenOrder,
   Address,
   Category,
   DeliveryCheck,
@@ -178,6 +190,8 @@ export function buildOpenApiDocument(): Json {
       { name: "Cuenta" },
       { name: "FORNO CLUB" },
       { name: "Pedidos" },
+      { name: "Personal" },
+      { name: "Cocina" },
     ],
     paths: {
       "/health": {
@@ -516,6 +530,156 @@ export function buildOpenApiDocument(): Json {
             "200": ok("Pedidos propios, del más reciente al más antiguo.", pagedOf("OrderSummary")),
             ...AUTH_ERRORS,
             ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/admin/dashboard": {
+        get: {
+          tags: ["Personal"],
+          summary: "Panel de control del día",
+          description:
+            "Pedidos de hoy (en la zona horaria del local) por estado, ventas, productos más pedidos de los últimos 7 días y últimos pedidos. Permiso `dashboard:read`.",
+          ...secured,
+          responses: {
+            "200": ok("Resumen.", dataOf("Dashboard")),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/admin/orders": {
+        get: {
+          tags: ["Personal"],
+          summary: "Pedidos (personal)",
+          description:
+            "Con filtros y paginación, del más reciente al más antiguo. Permiso `orders:read:all`. El método de pago solo se incluye con `payments:read`.",
+          ...secured,
+          parameters: [
+            ...pagingParams,
+            {
+              name: "status",
+              in: "query",
+              description: "Uno o varios estados separados por comas.",
+              schema: { type: "string" },
+            },
+            { name: "type", in: "query", schema: { type: "string", enum: ["PICKUP", "DELIVERY"] } },
+            {
+              name: "date",
+              in: "query",
+              description: "Día del pedido (YYYY-MM-DD, hora del local).",
+              schema: { type: "string" },
+            },
+            {
+              name: "q",
+              in: "query",
+              description: "Número de pedido, nombre o correo del cliente.",
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": ok("Pedidos.", pagedOf("AdminOrderSummary")),
+            "400": error("Filtros no válidos."),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/admin/orders/{id}": {
+        get: {
+          tags: ["Personal"],
+          summary: "Detalle de un pedido (personal)",
+          description:
+            "Cliente, dirección, líneas, importes, pagos, historial y los estados a los que se puede pasar (`allowedNext`).",
+          ...secured,
+          parameters: [idParam("Identificador del pedido.")],
+          responses: {
+            "200": ok("Pedido.", dataOf("AdminOrder")),
+            "404": error("No existe."),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/admin/orders/{id}/status": {
+        patch: {
+          tags: ["Personal"],
+          summary: "Cambiar el estado de un pedido",
+          description:
+            "Solo transiciones válidas (`409 INVALID_TRANSITION` si no). Rechazar y devolver un pedido completado exigen `reason`. Al completar se conceden los puntos; al rechazar o cancelar se revierten. Queda en el historial y en la auditoría. Permiso `orders:update-status`.",
+          ...secured,
+          parameters: [idParam("Identificador del pedido.")],
+          requestBody: { required: true, content: json(ref("ChangeOrderStatusRequest")) },
+          responses: {
+            "200": ok("Pedido actualizado.", dataOf("AdminOrder")),
+            "400": error("Datos no válidos."),
+            "404": error("No existe."),
+            "409": error("`INVALID_TRANSITION`."),
+            "422": error("`REASON_REQUIRED`."),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/admin/stream": {
+        get: {
+          tags: ["Personal"],
+          summary: "Avisos en directo de pedidos (SSE)",
+          description:
+            "Flujo `text/event-stream`: cada cambio de pedido emite `event: order` con `{ kind, orderId, orderNumber, status }` (sin datos personales). Se consume con `fetch` para poder enviar `Authorization`. Se cierra a los 15 minutos: hay que reconectar con un token renovado. Permiso `orders:read:all`.",
+          ...secured,
+          responses: {
+            "200": {
+              description: "Flujo de eventos.",
+              content: { "text/event-stream": { schema: { type: "string" } } },
+            },
+            ...AUTH_ERRORS,
+          },
+        },
+      },
+      "/kitchen/orders": {
+        get: {
+          tags: ["Cocina"],
+          summary: "Pedidos de la pantalla de cocina",
+          description:
+            "Pedidos en curso y los completados en las últimas 3 horas. Solo lo necesario para preparar: **sin datos del cliente, importes ni pagos**. Permiso `kitchen:orders:read`.",
+          ...secured,
+          responses: {
+            "200": ok("Pedidos.", listOf("KitchenOrder")),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/kitchen/orders/{id}/status": {
+        patch: {
+          tags: ["Cocina"],
+          summary: "Avanzar un pedido desde la cocina",
+          description:
+            "La cocina solo puede aceptar, preparar, marcar listo y entregar (recogida). No puede rechazar, cancelar, sacar a reparto ni saltarse pasos (`403 KITCHEN_TRANSITION_NOT_ALLOWED`). Permiso `kitchen:orders:update-status`.",
+          ...secured,
+          parameters: [idParam("Identificador del pedido.")],
+          requestBody: { required: true, content: json(ref("KitchenStatusRequest")) },
+          responses: {
+            "200": ok("Pedido actualizado.", dataOf("KitchenOrder")),
+            "400": error("Datos no válidos."),
+            "404": error("No existe."),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/kitchen/stream": {
+        get: {
+          tags: ["Cocina"],
+          summary: "Avisos en directo de pedidos (SSE)",
+          description: "Igual que `/admin/stream`, con el permiso `kitchen:orders:read`.",
+          ...secured,
+          responses: {
+            "200": {
+              description: "Flujo de eventos.",
+              content: { "text/event-stream": { schema: { type: "string" } } },
+            },
+            ...AUTH_ERRORS,
           },
         },
       },

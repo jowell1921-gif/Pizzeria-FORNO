@@ -17,11 +17,13 @@ import {
   userRateLimits,
   type RateLimitConfig,
 } from "./middleware/rate-limit.js";
+import { createAdminRouter } from "./modules/admin/admin.routes.js";
 import { createAddressesRouter } from "./modules/addresses/addresses.routes.js";
 import { createCartRouter } from "./modules/cart/cart.routes.js";
 import { createCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { createCheckoutRouter } from "./modules/checkout/checkout.routes.js";
 import { createDeliveryRouter } from "./modules/delivery/delivery.routes.js";
+import { createKitchenRouter } from "./modules/kitchen/kitchen.routes.js";
 import {
   createLoyaltyProgramRouter,
   createLoyaltyRouter,
@@ -101,6 +103,8 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
     const userLimits = userRateLimits(limits);
     app.use("/api/v1/me/addresses", authenticate, ...userLimits, createAddressesRouter(prisma));
     app.use("/api/v1/me", authenticate, ...userLimits, createMeRouter(prisma));
+    app.use("/api/v1/admin", authenticate, ...userLimits, createAdminRouter(prisma));
+    app.use("/api/v1/kitchen", authenticate, ...userLimits, createKitchenRouter(prisma));
     app.use("/api/v1/cart", authenticate, ...userLimits, createCartRouter(prisma));
     app.use("/api/v1/loyalty/program", createLoyaltyProgramRouter(prisma));
     app.use("/api/v1/loyalty", authenticate, ...userLimits, createLoyaltyRouter(prisma));
