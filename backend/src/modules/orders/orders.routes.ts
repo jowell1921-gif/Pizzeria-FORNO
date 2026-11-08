@@ -7,6 +7,7 @@ import { paginationArgs } from "../../utils/pagination.js";
 import { requireIdempotencyKey, runIdempotent } from "../../utils/idempotency.js";
 import { createOrder } from "./create-order.service.js";
 import { getMyOrder, listMyOrders } from "./orders.service.js";
+import { cancelMyOrder } from "./status.service.js";
 
 /**
  * Creación y consulta de los pedidos del propio usuario. Montar detrás de `authenticate`.
@@ -33,6 +34,13 @@ export function createOrdersRouter(prisma: PrismaClient): Router {
   router.get("/me", requirePermission("orders:read:own"), async (req, res) => {
     if (!req.auth) throw unauthorized();
     res.json(await listMyOrders(prisma, req.auth.userId, paginationArgs(req.query)));
+  });
+
+  // El cliente puede cancelar su pedido mientras el local no lo haya aceptado.
+  router.post("/:id/cancel", requirePermission("orders:read:own"), async (req, res) => {
+    if (!req.auth) throw unauthorized();
+    await cancelMyOrder(prisma, req.auth.userId, String(req.params["id"]));
+    res.json({ data: await getMyOrder(prisma, req.auth.userId, String(req.params["id"])) });
   });
 
   router.get("/:id", requirePermission("orders:read:own"), async (req, res) => {

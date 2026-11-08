@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 import { Prisma, type PrismaClient } from "../../db/client.js";
+import {
+  allocateDiscount,
+  couponCodeSchema,
+  evaluateDiscounts,
+  type AppliedDiscount,
+} from "./discounts.js";
 import { cartLinesSchema, cents, priceLines, taxIncluded, type PricedLine } from "./pricing.js";
 
 /**
@@ -21,6 +27,10 @@ export const quoteSchema = z
       .trim()
       .regex(/^[0-9]{5}$/, "Postal code must have 5 digits")
       .optional(),
+    /** Cupón promocional (se valida en el servidor; exige sesión). */
+    couponCode: couponCodeSchema.optional(),
+    /** Recompensa ya canjeada que se quiere usar en este pedido (exige sesión). */
+    redemptionId: z.uuid().optional(),
   })
   .strict();
 
@@ -37,6 +47,7 @@ type Zone = {
 export interface ComputedOrder {
   lines: PricedLine[];
   subtotal: Prisma.Decimal;
+  discounts: AppliedDiscount[];
   discountTotal: Prisma.Decimal;
   deliveryFee: Prisma.Decimal;
   total: Prisma.Decimal;
@@ -50,16 +61,25 @@ export interface ComputedOrder {
 const ZERO = new Prisma.Decimal(0);
 
 /**
- * Importes de un pedido, calculados siempre en el servidor. Hoy no hay descuentos (promociones y
- * canjes llegan en la fase 7): `discountTotal` ya forma parte del cálculo para no cambiar el contrato.
+ * Importes de un pedido, calculados siempre en el servidor: líneas, descuentos (cupón y recompensa,
+ * validados aquí), envío, IVA contenido y total. Los descuentos exigen un usuario con sesión.
  */
 export async function computeOrder(
   prisma: PrismaClient,
   input: QuoteInput,
+  context: { userId: string | null; now?: Date } = { userId: null },
 ): Promise<ComputedOrder> {
   const lines = await priceLines(prisma, input.items);
   const subtotal = lines.reduce((sum, line) => sum.add(line.lineTotal), ZERO);
-  const discountTotal = ZERO;
+  const discounts = await evaluateDiscounts(prisma, {
+    userId: context.userId,
+    couponCode: input.couponCode,
+    redemptionId: input.redemptionId,
+    lines,
+    subtotal,
+    now: context.now ?? new Date(),
+  });
+  const discountTotal = discounts.reduce((sum, discount) => sum.add(discount.amount), ZERO);
 
   const zone =
     input.type === "DELIVERY" && input.postalCode
@@ -70,8 +90,13 @@ export async function computeOrder(
   const deliveryFee = input.type === "DELIVERY" && zone ? zone.deliveryFee : ZERO;
 
   const total = subtotal.sub(discountTotal).add(deliveryFee);
+  // IVA contenido en lo que se paga: el descuento se reparte entre las líneas antes de extraer el IVA.
+  const shares = allocateDiscount(lines, discountTotal);
   const taxTotal = lines
-    .reduce((sum, line) => sum.add(line.taxAmount), ZERO)
+    .reduce(
+      (sum, line, index) => sum.add(taxIncluded(line.lineTotal.sub(shares[index]!), line.taxRate)),
+      ZERO,
+    )
     .add(deliveryFee.greaterThan(ZERO) ? taxIncluded(deliveryFee, DELIVERY_FEE_TAX_RATE) : ZERO);
 
   const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
@@ -82,6 +107,7 @@ export async function computeOrder(
   return {
     lines,
     subtotal,
+    discounts,
     discountTotal,
     deliveryFee,
     total,

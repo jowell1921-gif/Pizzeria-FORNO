@@ -1,26 +1,33 @@
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { Suspense } from "react";
 
-import { getProducts } from "@/features/catalog/api";
+import { getLoyaltyProgram, getProducts } from "@/features/catalog/api";
 import { CatalogSkeleton } from "@/features/catalog/catalog-unavailable";
-import { DEMO_LOYALTY, DEMO_STORE } from "@/lib/demo-data";
+import { DEMO_STORE } from "@/lib/demo-data";
 
 /** Cifras derivadas de la configuración y la carta, no datos inventados. */
-function buildStats(productCount: number | null) {
-  const cheapestReward = Math.min(...DEMO_LOYALTY.rewards.map((reward) => reward.points));
+function buildStats(productCount: number | null, cheapestReward: number | null) {
   return [
     { value: DEMO_STORE.prepTimeMinutes, unit: "min", label: "de preparación estimada" },
     { value: DEMO_STORE.deliveryTimeMinutes, unit: "min", label: "de entrega a domicilio" },
     ...(productCount === null
       ? []
       : [{ value: productCount, unit: "", label: "productos en la carta" }]),
-    { value: cheapestReward, unit: "pts", label: "para tu primera recompensa" },
+    ...(cheapestReward === null
+      ? []
+      : [{ value: cheapestReward, unit: "pts", label: "para tu primera recompensa" }]),
   ] as const;
 }
 
 /** Parte visual: recibe el número de productos (o null si la carta no se pudo cargar). */
-export function StatsView({ productCount }: { productCount: number | null }) {
-  const stats = buildStats(productCount);
+export function StatsView({
+  productCount,
+  cheapestReward,
+}: {
+  productCount: number | null;
+  cheapestReward: number | null;
+}) {
+  const stats = buildStats(productCount, cheapestReward);
 
   return (
     <section aria-label="FORNO en cifras" className="border-border bg-cream border-y">
@@ -48,12 +55,14 @@ export function StatsView({ productCount }: { productCount: number | null }) {
 }
 
 async function StatsList() {
-  const products = await getProducts();
+  const [products, program] = await Promise.all([getProducts(), getLoyaltyProgram()]);
+  const prices = program.ok ? program.data.rewards.map((reward) => reward.pointsCost) : [];
   return (
     <StatsView
       productCount={
         products.ok ? products.data.filter((product) => product.available).length : null
       }
+      cheapestReward={prices.length > 0 ? Math.min(...prices) : null}
     />
   );
 }

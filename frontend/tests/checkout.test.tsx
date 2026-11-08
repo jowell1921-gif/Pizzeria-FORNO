@@ -74,6 +74,7 @@ function quoteFor(type: string, delivery: object | null = null) {
         options: [{ optionId: "o-medium", group: "Tamaño", name: "Mediana", priceDelta: "0.00" }],
       },
     ],
+    discounts: [],
     totals: {
       subtotal: "19.00",
       discount: "0.00",
@@ -110,6 +111,7 @@ interface Scenario {
   delivery?: object | null;
   orderResponse?: () => Response;
   addresses?: object[];
+  redemptions?: object[];
 }
 
 /** API simulada: responde a cada ruta y recuerda las peticiones de pedido. */
@@ -121,6 +123,12 @@ function mockApi(scenario: Scenario = {}) {
     const json = (data: unknown, status = 200) => Response.json({ data }, { status });
 
     if (path === "/me") return json(scenario.profile ?? profile);
+    if (path === "/loyalty/redemptions") {
+      return Response.json({
+        data: scenario.redemptions ?? [],
+        meta: { page: 1, pageSize: 50, total: 0, totalPages: 1 },
+      });
+    }
     if (path === "/me/addresses") return json(scenario.addresses ?? [address]);
     if (path === "/delivery-zones") {
       return json([

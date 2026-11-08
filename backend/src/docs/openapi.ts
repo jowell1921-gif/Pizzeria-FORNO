@@ -17,6 +17,7 @@ import {
   ErrorResponse,
   Health,
   LoyaltyAccount,
+  LoyaltyProgram,
   LoyaltyTransaction,
   Order,
   OrderSummary,
@@ -24,6 +25,7 @@ import {
   Profile,
   Promotion,
   Quote,
+  Redemption,
   Reward,
   StoreSettings,
   StoreSlots,
@@ -86,6 +88,7 @@ const pagingParams: Json[] = [
 
 /** Cuerpos de petición: son los mismos esquemas con los que el servidor valida (forma de entrada). */
 const REQUEST_SCHEMAS = {
+  RedeemRewardRequest: z.object({ rewardId: z.uuid() }).strict(),
   UpdateProfileRequest: updateProfileSchema,
   CreateAddressRequest: createAddressSchema,
   UpdateAddressRequest: updateAddressSchema,
@@ -133,12 +136,14 @@ export const REGISTERED_SCHEMAS = [
   ErrorResponse,
   Health,
   LoyaltyAccount,
+  LoyaltyProgram,
   LoyaltyTransaction,
   Order,
   OrderSummary,
   Product,
   Profile,
   Promotion,
+  Redemption,
   Reward,
   StoreSettings,
   Cart,
@@ -313,8 +318,9 @@ export function buildOpenApiDocument(): Json {
           responses: {
             "200": ok("Presupuesto.", dataOf("Quote")),
             "400": error("Datos no válidos."),
+            "401": error("Se pidió un cupón o una recompensa sin sesión, o el token no es válido."),
             "422": error(
-              "Producto u opción inexistente o no disponible (`PRODUCT_NOT_FOUND`, `PRODUCT_UNAVAILABLE`, `INVALID_OPTIONS`, `OPTION_UNAVAILABLE`).",
+              "Producto u opción inexistente o no disponible, o cupón/recompensa no válidos (`COUPON_NOT_FOUND`, `COUPON_EXPIRED`, `COUPON_NOT_STARTED`, `COUPON_INACTIVE`, `COUPON_MIN_SUBTOTAL`, `COUPON_NOT_FIRST_ORDER`, `COUPON_USED_UP`, `COUPON_ALREADY_USED`, `COUPON_NOT_APPLICABLE`, `REDEMPTION_NOT_AVAILABLE`, `REWARD_NOT_APPLICABLE`).",
             ),
             ...COMMON_ERRORS,
           },
@@ -508,6 +514,78 @@ export function buildOpenApiDocument(): Json {
           parameters: pagingParams,
           responses: {
             "200": ok("Pedidos propios, del más reciente al más antiguo.", pagedOf("OrderSummary")),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/loyalty/program": {
+        get: {
+          tags: ["FORNO CLUB"],
+          summary: "Programa FORNO CLUB (público)",
+          description:
+            "Regla de conversión de puntos, caducidad y recompensas disponibles. No requiere sesión.",
+          responses: { "200": ok("Programa.", dataOf("LoyaltyProgram")), ...COMMON_ERRORS },
+        },
+      },
+      "/loyalty/redemptions": {
+        get: {
+          tags: ["FORNO CLUB"],
+          summary: "Mis recompensas canjeadas",
+          description: "La «cartera» del cliente: recompensas disponibles, usadas o canceladas.",
+          ...secured,
+          parameters: [
+            ...pagingParams,
+            {
+              name: "status",
+              in: "query",
+              schema: { type: "string", enum: ["AVAILABLE", "USED", "CANCELLED", "EXPIRED"] },
+            },
+          ],
+          responses: {
+            "200": ok("Recompensas canjeadas.", pagedOf("Redemption")),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+        post: {
+          tags: ["FORNO CLUB"],
+          summary: "Canjear una recompensa",
+          description:
+            "Descuenta los puntos y añade la recompensa a «Mis recompensas» (estado AVAILABLE), lista para usarla en un pedido con `redemptionId`. Exige `Idempotency-Key`: un reintento no descuenta los puntos otra vez. Dos peticiones simultáneas nunca consumen los mismos puntos.",
+          ...secured,
+          parameters: [
+            {
+              name: "Idempotency-Key",
+              in: "header",
+              required: true,
+              schema: { type: "string", minLength: 8, maxLength: 255 },
+            },
+          ],
+          requestBody: { required: true, content: json(ref("RedeemRewardRequest")) },
+          responses: {
+            "201": ok("Recompensa canjeada.", dataOf("Redemption")),
+            "404": error("La recompensa no existe o no está vigente."),
+            "409": error(
+              "`INSUFFICIENT_POINTS`, `REWARD_OUT_OF_STOCK` o petición idéntica en curso.",
+            ),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/orders/{id}/cancel": {
+        post: {
+          tags: ["Pedidos"],
+          summary: "Cancelar mi pedido",
+          description:
+            "Solo mientras el local no lo haya aceptado. Se anula el pago pendiente, se devuelven los puntos gastados en una recompensa y se libera el cupón.",
+          ...secured,
+          parameters: [idParam("Identificador del pedido.")],
+          responses: {
+            "200": ok("Pedido cancelado.", dataOf("Order")),
+            "404": error("No existe o es de otra persona."),
+            "409": error("`CANNOT_CANCEL`: el pedido ya está en preparación."),
             ...AUTH_ERRORS,
             ...COMMON_ERRORS,
           },

@@ -7,12 +7,13 @@ import { useRef, useState } from "react";
 
 import { buttonVariants, Button } from "@/components/ui/button";
 import { fetchAddresses } from "@/features/account/addresses";
+import { fetchAvailableRedemptions } from "@/features/account/loyalty";
+import { clearPromoCode, useSavedPromoCode } from "@/features/account/promo-code-store";
 import { useProfile } from "@/features/account/profile-context";
 import { useApiResource } from "@/features/account/use-api-resource";
 import { CartLines } from "@/features/cart/cart-lines";
 import { toApiItems, useCartHydrated, useCartStore } from "@/features/cart/cart-store";
 import { CartTotals } from "@/features/cart/cart-totals";
-import { useCartQuote } from "@/features/cart/use-cart-quote";
 import { fetchDeliveryZones, fetchSlots, fetchStoreSettings } from "@/features/catalog/api";
 import { FormError } from "@/features/auth/form-parts";
 import { formatEuro } from "@/lib/format";
@@ -20,6 +21,9 @@ import { fromCents, toCents } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 import { DeliverySection } from "./delivery-section";
+import { discountErrorMessage, isCouponError } from "./discount-errors";
+import { DiscountsSection } from "./discounts-section";
+import { useCheckoutQuote } from "./use-checkout-quote";
 import {
   createOrder,
   orderErrorMessage,
@@ -83,6 +87,12 @@ export function CheckoutFlow() {
   const [addressId, setAddressId] = useState<string | null>(null);
   const [schedule, setSchedule] = useState<ScheduleValue>({ mode: "asap", date: null, slot: null });
   const [payment, setPayment] = useState<PaymentMethod | null>(null);
+  // Cupón: hasta que el cliente elige otro (o lo quita), se usa el código guardado en «Mi cuenta».
+  const savedCoupon = useSavedPromoCode();
+  const [chosenCoupon, setChosenCoupon] = useState<string | null | undefined>(undefined);
+  const coupon = chosenCoupon === undefined ? savedCoupon : chosenCoupon;
+  const [redemptionId, setRedemptionId] = useState<string | null>(null);
+  const redemptions = useApiResource(token, fetchAvailableRedemptions);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,7 +116,15 @@ export function CheckoutFlow() {
         list[0] ??
         null)
       : null;
-  const quote = useCartQuote({ type, postalCode: selectedAddress?.postalCode ?? null });
+  const quote = useCheckoutQuote({
+    type,
+    postalCode: selectedAddress?.postalCode ?? null,
+    token,
+    couponCode: coupon,
+    redemptionId,
+  });
+  const couponError = isCouponError(quote.discountError) ? quote.discountError : null;
+  const rewardError = quote.discountError && !couponError ? quote.discountError : null;
   // Misma consulta que el selector de hora (se comparte la caché): ¿se puede pedir «lo antes posible»?
   const asapSlots = useQuery({
     queryKey: ["slots", type, "today"],
@@ -167,6 +185,7 @@ export function CheckoutFlow() {
     scheduleOk &&
     selectedPayment !== null &&
     quote.data !== undefined &&
+    !quote.discountError &&
     !submitting;
 
   /** Lo que falta para poder confirmar, en palabras del cliente. */
@@ -189,6 +208,9 @@ export function CheckoutFlow() {
       );
     }
   }
+  if (quote.discountError) {
+    missing.push("Corrige o quita el código o la recompensa que no se puede aplicar.");
+  }
   if (!scheduleOk) missing.push("Elige la hora de tu pedido.");
   if (selectedPayment === null) missing.push("Elige un método de pago.");
   if (quote.data === undefined && !quote.isError) missing.push("Calculando el importe…");
@@ -205,6 +227,8 @@ export function CheckoutFlow() {
       ...(type === "DELIVERY" && selectedAddress ? { addressId: selectedAddress.id } : {}),
       ...(slotMode && schedule.slot ? { scheduledFor: schedule.slot } : {}),
       ...(notes.trim() ? { notes: notes.trim() } : {}),
+      ...(coupon ? { couponCode: coupon } : {}),
+      ...(redemptionId ? { redemptionId } : {}),
     };
     // Misma petición => misma clave (reintento seguro); si cambia algo, clave nueva.
     const signature = JSON.stringify(body);
@@ -289,7 +313,24 @@ export function CheckoutFlow() {
           <ScheduleSection type={type} settings={store} value={schedule} onChange={setSchedule} />
         </Step>
 
-        <Step number={3} title="Pago">
+        <Step number={3} title="Descuentos">
+          <DiscountsSection
+            coupon={coupon}
+            onApplyCoupon={(code) => setChosenCoupon(code)}
+            onRemoveCoupon={() => {
+              setChosenCoupon(null);
+              clearPromoCode();
+            }}
+            couponError={couponError ? discountErrorMessage(couponError) : null}
+            couponPending={quote.discountPending}
+            redemptions={redemptions.data ?? []}
+            redemptionId={redemptionId}
+            onSelectRedemption={setRedemptionId}
+            rewardError={rewardError ? discountErrorMessage(rewardError) : null}
+          />
+        </Step>
+
+        <Step number={4} title="Pago">
           {paymentAvailable ? (
             <label
               className={cn(
@@ -316,7 +357,7 @@ export function CheckoutFlow() {
           </p>
         </Step>
 
-        <Step number={4} title="Observaciones">
+        <Step number={5} title="Observaciones">
           <label htmlFor="order-notes" className="text-sm font-semibold">
             ¿Algo que debamos saber?{" "}
             <span className="text-muted-foreground font-normal">(opcional)</span>

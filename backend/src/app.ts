@@ -4,7 +4,7 @@ import cors from "cors";
 import express, { type Express } from "express";
 import helmet from "helmet";
 
-import { createAuthenticate } from "./auth/authenticate.js";
+import { createAuthenticate, createOptionalAuthenticate } from "./auth/authenticate.js";
 import type { TokenVerifier } from "./auth/token-verifier.js";
 import { docsEnabled, type Env } from "./config/env.js";
 import type { PrismaClient } from "./db/client.js";
@@ -22,7 +22,10 @@ import { createCartRouter } from "./modules/cart/cart.routes.js";
 import { createCatalogRouter } from "./modules/catalog/catalog.routes.js";
 import { createCheckoutRouter } from "./modules/checkout/checkout.routes.js";
 import { createDeliveryRouter } from "./modules/delivery/delivery.routes.js";
-import { createLoyaltyRouter } from "./modules/loyalty/loyalty.routes.js";
+import {
+  createLoyaltyProgramRouter,
+  createLoyaltyRouter,
+} from "./modules/loyalty/loyalty.routes.js";
 import { createMeRouter } from "./modules/me/me.routes.js";
 import { createOrdersRouter } from "./modules/orders/orders.routes.js";
 import { createPromotionsRouter } from "./modules/promotions/promotions.routes.js";
@@ -92,13 +95,14 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
     app.use("/api/v1/promotions", createPromotionsRouter(prisma));
     app.use("/api/v1/store", createStoreRouter(prisma));
     app.use("/api/v1/delivery-zones", createDeliveryRouter(prisma));
-    app.use("/api/v1/checkout", createCheckoutRouter(prisma));
 
     const authenticate = createAuthenticate(deps);
+    app.use("/api/v1/checkout", createOptionalAuthenticate(deps), createCheckoutRouter(prisma));
     const userLimits = userRateLimits(limits);
     app.use("/api/v1/me/addresses", authenticate, ...userLimits, createAddressesRouter(prisma));
     app.use("/api/v1/me", authenticate, ...userLimits, createMeRouter(prisma));
     app.use("/api/v1/cart", authenticate, ...userLimits, createCartRouter(prisma));
+    app.use("/api/v1/loyalty/program", createLoyaltyProgramRouter(prisma));
     app.use("/api/v1/loyalty", authenticate, ...userLimits, createLoyaltyRouter(prisma));
     app.use("/api/v1/orders", authenticate, ...userLimits, createOrdersRouter(prisma));
   }

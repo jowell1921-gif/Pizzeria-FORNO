@@ -130,3 +130,11 @@ test("the order panel and dialogs fit the screen without horizontal overflow", a
     .toBeLessThanOrEqual(viewport.width + 1);
   expect(await overflow()).toBeLessThanOrEqual(0);
 });
+
+test("FORNO CLUB shows the points rule and the rewards from the API", async ({ page }) => {
+  await page.goto("/forno-club");
+  await expect(page.getByRole("heading", { level: 1, name: "FORNO CLUB" })).toBeVisible();
+  await expect(page.getByText(/sumas 1 punto/i)).toBeVisible();
+  await expect(page.getByText("Bebida gratis")).toBeVisible();
+  await expect(page.getByText("400 puntos")).toBeVisible();
+});

@@ -87,6 +87,20 @@ export const deliveryZoneSchema = z.object({
   estimatedMinutes: z.number(),
 });
 
+export const loyaltyProgramSchema = z.object({
+  pointsPerEuro: z.string().nullable(),
+  expiryDays: z.number().nullable(),
+  rewards: z.array(
+    z.object({
+      id: z.string(),
+      name: z.string(),
+      description: z.string().nullable(),
+      pointsCost: z.number(),
+      inStock: z.boolean(),
+    }),
+  ),
+});
+
 export const slotsSchema = z.object({
   type: z.enum(["PICKUP", "DELIVERY"]),
   date: z.string(),
@@ -100,4 +114,5 @@ export type OptionGroup = z.infer<typeof optionGroupSchema>;
 export type Product = z.infer<typeof productSchema>;
 export type Promotion = z.infer<typeof promotionSchema>;
 export type StoreSettings = z.infer<typeof storeSettingsSchema>;
+export type LoyaltyProgram = z.infer<typeof loyaltyProgramSchema>;
 export type Slots = z.infer<typeof slotsSchema>;

@@ -5,11 +5,13 @@ import { apiRequest } from "@/lib/api";
 import {
   categorySchema,
   deliveryZoneSchema,
+  loyaltyProgramSchema,
   productSchema,
   promotionSchema,
   slotsSchema,
   storeSettingsSchema,
   type Category,
+  type LoyaltyProgram,
   type Product,
   type Promotion,
 } from "./schemas";
@@ -33,9 +35,12 @@ export const fetchStoreSettings = () =>
   apiRequest("/store/settings", { schema: storeSettingsSchema });
 export const fetchDeliveryZones = () =>
   apiRequest("/delivery-zones", { schema: z.array(deliveryZoneSchema) });
+export const fetchLoyaltyProgram = () =>
+  apiRequest("/loyalty/program", { schema: loyaltyProgramSchema });
 export const fetchSlots = (type: "PICKUP" | "DELIVERY", date?: string) =>
   apiRequest("/store/slots", { query: { type, ...(date ? { date } : {}) }, schema: slotsSchema });
 
 export const getCategories = (): Promise<Loaded<Category[]>> => load(fetchCategories());
 export const getProducts = (): Promise<Loaded<Product[]>> => load(fetchProducts());
+export const getLoyaltyProgram = (): Promise<Loaded<LoyaltyProgram>> => load(fetchLoyaltyProgram());
 export const getPromotions = (): Promise<Loaded<Promotion[]>> => load(fetchPromotions());

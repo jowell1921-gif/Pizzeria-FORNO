@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { ApiError, apiRequest } from "@/lib/api";
 
+import { discountErrorMessage } from "./discount-errors";
+
 import { orderSummarySchema } from "@/features/account/orders";
 
 const money = z.string();
@@ -94,6 +96,14 @@ export const createOrder = (token: string, body: CreateOrderBody, idempotencyKey
     schema: orderSchema,
   });
 
+/** El cliente cancela su pedido mientras el local no lo haya aceptado. */
+export const cancelOrder = (token: string, id: string) =>
+  apiRequest(`/orders/${encodeURIComponent(id)}/cancel`, {
+    token,
+    method: "POST",
+    schema: orderSchema,
+  });
+
 export const fetchOrder = (token: string, id: string) =>
   apiRequest(`/orders/${encodeURIComponent(id)}`, { token, schema: orderSchema });
 
@@ -129,9 +139,13 @@ export function orderErrorMessage(error: unknown): string {
       return "Algún producto de tu pedido ya no está disponible o ha cambiado. Revisa tu pedido.";
     case "REQUEST_IN_PROGRESS":
       return "Tu pedido se está procesando. Espera un momento y revisa «Mis pedidos».";
+    case "CANNOT_CANCEL":
+      return "El local ya ha empezado a preparar tu pedido: llámanos para cancelarlo.";
     case "RATE_LIMITED":
       return "Demasiados intentos. Espera un minuto e inténtalo de nuevo.";
     default:
-      return "No hemos podido enviar tu pedido. Inténtalo de nuevo.";
+      return /^(COUPON_|REDEMPTION_|REWARD_)/.test(error.code)
+        ? discountErrorMessage(error)
+        : "No hemos podido enviar tu pedido. Inténtalo de nuevo.";
   }
 }

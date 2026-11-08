@@ -21,7 +21,17 @@ export function CartTotals({ quote }: { quote: Quote }) {
     <div className="space-y-2">
       <dl className="space-y-2" aria-label="Resumen de importes">
         <Row label="Subtotal" value={formatEuro(totals.subtotal)} />
-        {hasDiscount ? <Row label="Descuentos" value={`-${formatEuro(totals.discount)}`} /> : null}
+        {quote.discounts.length > 0 ? (
+          quote.discounts.map((discount) => (
+            <Row
+              key={discount.description}
+              label={discount.description}
+              value={`-${formatEuro(discount.amount)}`}
+            />
+          ))
+        ) : hasDiscount ? (
+          <Row label="Descuentos" value={`-${formatEuro(totals.discount)}`} />
+        ) : null}
         {quote.type === "DELIVERY" ? (
           <Row label="Gastos de envío" value={formatEuro(totals.deliveryFee)} />
         ) : null}

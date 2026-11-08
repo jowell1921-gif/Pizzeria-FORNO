@@ -4,6 +4,7 @@ import type { PrismaClient } from "../../db/client.js";
 import { HttpError } from "../../errors.js";
 import { clearCart } from "../cart/cart.service.js";
 import { cartLinesSchema } from "../checkout/pricing.js";
+import { couponCodeSchema, evaluateCoupon } from "../checkout/discounts.js";
 import { computeOrder, orderTypeSchema } from "../checkout/totals.js";
 import { isProfileComplete } from "../me/me.service.js";
 import { usablePaymentMethods } from "../payments/availability.js";
@@ -21,6 +22,10 @@ export const createOrderSchema = z
     scheduledFor: z.iso.datetime().optional(),
     paymentMethod: z.enum(["ONLINE", "CASH_PICKUP", "CASH_DELIVERY"]),
     notes: z.string().trim().max(300).optional(),
+    /** Cupón promocional; el servidor valida fechas, límites y condiciones. */
+    couponCode: couponCodeSchema.optional(),
+    /** Recompensa ya canjeada (de «Mis recompensas») que se usa en este pedido. */
+    redemptionId: z.uuid().optional(),
   })
   .strict()
   .superRefine((value, ctx) => {
@@ -101,11 +106,17 @@ export async function createOrder(
     throw rejected("ADDRESS_NOT_FOUND", "The delivery address does not exist");
   }
 
-  const computed = await computeOrder(prisma, {
-    items: input.items,
-    type: input.type,
-    postalCode: address?.postalCode,
-  });
+  const computed = await computeOrder(
+    prisma,
+    {
+      items: input.items,
+      type: input.type,
+      postalCode: address?.postalCode,
+      couponCode: input.couponCode,
+      redemptionId: input.redemptionId,
+    },
+    { userId, now },
+  );
   if (input.type === "DELIVERY" && !computed.zone) {
     throw rejected("OUTSIDE_DELIVERY_ZONE", "We do not deliver to this postal code");
   }
@@ -142,7 +153,23 @@ export async function createOrder(
   const lead = computed.zone?.estimatedMinutes ?? leadMinutes(settings, input.type);
   const estimatedReadyAt = scheduledFor ?? new Date(now.getTime() + lead * 60_000);
 
+  const appliedCoupon = computed.discounts.find((discount) => discount.couponId);
+  const appliedReward = computed.discounts.find((discount) => discount.rewardRedemptionId);
+
   const orderId = await prisma.$transaction(async (tx) => {
+    // Cupón: se bloquea su fila y se vuelven a comprobar los límites de uso dentro de la transacción,
+    // de modo que dos pedidos simultáneos no pueden gastar el mismo cupón de un solo uso.
+    if (appliedCoupon?.couponId) {
+      await tx.$queryRaw`SELECT "id" FROM "Coupon" WHERE "id" = ${appliedCoupon.couponId}::uuid FOR UPDATE`;
+      await evaluateCoupon(tx, {
+        userId,
+        code: input.couponCode ?? "",
+        lines: computed.lines,
+        subtotal: computed.subtotal,
+        now,
+      });
+    }
+
     const order = await tx.order.create({
       data: {
         userId,
@@ -168,6 +195,16 @@ export async function createOrder(
           : {}),
         subtotal: computed.subtotal,
         discountTotal: computed.discountTotal,
+        couponCode: appliedCoupon?.couponCode ?? null,
+        discounts: {
+          create: computed.discounts.map((discount) => ({
+            description: discount.description,
+            amount: discount.amount,
+            promotionId: discount.promotionId ?? null,
+            couponId: discount.couponId ?? null,
+            rewardRedemptionId: discount.rewardRedemptionId ?? null,
+          })),
+        },
         deliveryFee: computed.deliveryFee,
         total: computed.total,
         taxTotal: computed.taxTotal,
@@ -201,6 +238,21 @@ export async function createOrder(
         },
       },
     });
+    if (appliedCoupon?.couponId) {
+      await tx.couponRedemption.create({
+        data: { couponId: appliedCoupon.couponId, userId, orderId: order.id },
+      });
+    }
+    if (appliedReward?.rewardRedemptionId) {
+      // Una recompensa solo se puede usar una vez: la actualización condicional lo garantiza.
+      const used = await tx.rewardRedemption.updateMany({
+        where: { id: appliedReward.rewardRedemptionId, userId, status: "AVAILABLE" },
+        data: { status: "USED", usedAt: now, orderId: order.id },
+      });
+      if (used.count === 0) {
+        throw new HttpError(409, "REDEMPTION_NOT_AVAILABLE", "This reward was already used");
+      }
+    }
     await clearCart(tx, userId);
     return order.id;
   });

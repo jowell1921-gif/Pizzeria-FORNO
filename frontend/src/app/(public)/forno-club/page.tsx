@@ -1,5 +1,6 @@
 import { Gift, ShoppingBag, Star } from "lucide-react";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { AmbientParticles } from "@/components/brand/ambient-particles";
 import { PageTransition } from "@/components/layout/page-transition";
@@ -10,7 +11,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { DEMO_LOYALTY } from "@/lib/demo-data";
+import { getLoyaltyProgram } from "@/features/catalog/api";
+import { CatalogSkeleton, CatalogUnavailable } from "@/features/catalog/catalog-unavailable";
+import { pointsRuleText } from "@/features/club/format";
 
 export const metadata: Metadata = {
   title: "FORNO CLUB",
@@ -32,12 +35,12 @@ const FAQ = [
   {
     question: "¿Cuándo recibo los puntos?",
     answer:
-      "Cuando el pedido pasa al estado completado. Si se cancela o se devuelve, los puntos se revierten.",
+      "Cuando el pedido pasa al estado completado. Si se cancela o se devuelve, se retiran los puntos que habías ganado (sin dejar tu saldo en negativo) y se te devuelven los que gastaste en una recompensa.",
   },
   {
     question: "¿Todo el importe suma puntos?",
     answer:
-      "En esta demostración no suman los gastos de envío ni los descuentos aplicados. Las reglas definitivas las configura el local.",
+      "Suman los productos de tu pedido una vez descontadas las promociones y las recompensas que hayas usado. Los gastos de envío no suman puntos. La conversión de euros a puntos la configura el local.",
   },
   {
     question: "¿Los puntos caducan?",
@@ -46,19 +49,64 @@ const FAQ = [
   },
 ] as const;
 
+function ClubHeading({ description }: { description: string | undefined }) {
+  return (
+    <SectionHeading
+      as="h1"
+      tone="light"
+      eyebrow="Fidelización"
+      title="FORNO CLUB"
+      description={description}
+    />
+  );
+}
+
+async function ClubIntro() {
+  const program = await getLoyaltyProgram();
+  return (
+    <ClubHeading
+      description={
+        program.ok
+          ? `Por cada euro de tus pedidos sumas ${pointsRuleText(program.data.pointsPerEuro).replace(" por cada euro", "")} (configurable por el local).`
+          : "Suma puntos en cada pedido y canjéalos por recompensas."
+      }
+    />
+  );
+}
+
+async function ClubRewards() {
+  const program = await getLoyaltyProgram();
+  if (!program.ok) return <CatalogUnavailable what="las recompensas" />;
+  if (program.data.rewards.length === 0) {
+    return <p className="text-muted-foreground">Ahora mismo no hay recompensas disponibles.</p>;
+  }
+  return (
+    <ul className="grid gap-4 md:grid-cols-3">
+      {program.data.rewards.map((reward) => (
+        <li key={reward.id} className="scroll-reveal border-border bg-card rounded-2xl border p-6">
+          <p className="text-2xl font-bold">{reward.name}</p>
+          {reward.description ? (
+            <p className="text-muted-foreground mt-1 text-sm">{reward.description}</p>
+          ) : null}
+          <p className="text-tomato-deep mt-1 font-bold">{reward.pointsCost} puntos</p>
+          {reward.inStock ? null : (
+            <p className="text-muted-foreground mt-1 text-xs">Agotada de momento</p>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default function ClubPage() {
   return (
     <PageTransition>
       <div className="bg-charcoal text-cream relative isolate overflow-hidden">
         <AmbientParticles />
         <div className="container-page section-y">
-          <SectionHeading
-            as="h1"
-            tone="light"
-            eyebrow="Fidelización"
-            title="FORNO CLUB"
-            description={`Por cada euro de tus pedidos sumas ${DEMO_LOYALTY.pointsPerEuro} punto (valor de ejemplo, configurable por el local).`}
-          />
+          <Suspense fallback={<ClubHeading description={undefined} />}>
+            <ClubIntro />
+          </Suspense>
         </div>
       </div>
 
@@ -85,19 +133,11 @@ export default function ClubPage() {
           <SectionHeading
             id="club-rewards"
             title="Recompensas"
-            description="Ejemplos de recompensas y puntos necesarios."
+            description="Canjea tus puntos desde «Mi cuenta» y úsalas en tu próximo pedido."
           />
-          <ul className="grid gap-4 md:grid-cols-3">
-            {DEMO_LOYALTY.rewards.map((reward) => (
-              <li
-                key={reward.id}
-                className="scroll-reveal border-border bg-card rounded-2xl border p-6"
-              >
-                <p className="text-2xl font-bold">{reward.name}</p>
-                <p className="text-tomato-deep mt-1 font-bold">{reward.points} puntos</p>
-              </li>
-            ))}
-          </ul>
+          <Suspense fallback={<CatalogSkeleton className="h-40" />}>
+            <ClubRewards />
+          </Suspense>
         </div>
       </section>
 

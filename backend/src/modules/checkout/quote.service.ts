@@ -7,9 +7,9 @@ const money = (value: Prisma.Decimal) => value.toFixed(2);
  * Presupuesto del carrito: lo que se mostrará al cliente antes de confirmar. No guarda nada y no
  * necesita sesión. El pedido real recalcula todo otra vez al crearse.
  */
-export async function quoteCart(prisma: PrismaClient, body: unknown) {
+export async function quoteCart(prisma: PrismaClient, body: unknown, userId: string | null = null) {
   const input = quoteSchema.parse(body);
-  const order = await computeOrder(prisma, input);
+  const order = await computeOrder(prisma, input, { userId });
   const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
 
   const delivery =
@@ -45,6 +45,10 @@ export async function quoteCart(prisma: PrismaClient, body: unknown) {
         name: option.optionName,
         priceDelta: money(option.priceDelta),
       })),
+    })),
+    discounts: order.discounts.map((discount) => ({
+      description: discount.description,
+      amount: money(discount.amount),
     })),
     totals: {
       subtotal: money(order.subtotal),

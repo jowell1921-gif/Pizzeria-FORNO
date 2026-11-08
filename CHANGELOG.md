@@ -2,6 +2,17 @@
 
 ## [Sin publicar]
 
+### Fase 7 — FORNO CLUB y promociones
+
+- Puntos: se conceden solo al completar el pedido (una vez, aunque se complete dos veces o a la vez), sobre productos menos descuentos y sin gasto de envío; se revierten al cancelar o devolver sin dejar saldo negativo, y se devuelven completos los puntos gastados en una recompensa.
+- Canje de recompensas (`POST /loyalty/redemptions`, con `Idempotency-Key`): atómico y seguro ante peticiones simultáneas; la recompensa pasa a «Mis recompensas» y se usa en un pedido con `redemptionId`.
+- Cupones validados en el servidor (fechas, estado, mínimo, primer pedido, límites de uso, cupón personal, productos, combos), incluso ante pedidos simultáneos; el IVA se calcula sobre lo realmente pagado.
+- Máquina de estados del pedido (`changeOrderStatus`): historial, cobro o anulación del efectivo y fidelización en una transacción. El cliente puede cancelar su pedido mientras no esté aceptado.
+- Ajustes administrativos de puntos con motivo y auditoría (servicio; las pantallas, en la fase 8).
+- Web: canjear recompensas y «Mis recompensas» en la cuenta, paso «Descuentos» en el checkout (el código guardado en «Mi cuenta» se aplica solo), cancelar pedido, y FORNO CLUB (inicio y página del club) desde la API.
+- Pruebas: 48 unitarias y 250 de base de datos y API en el backend; 318 unitarias y 311 E2E en el frontend.
+- Documentación: decisión `0008` y `docs/api/README.md`.
+
 ### Fase 6 — Pedidos y checkout
 
 - Backend: presupuesto del carrito (`POST /checkout/quote`), carrito guardado (`/cart`), franjas horarias (`/store/slots`) y creación de pedidos (`POST /orders`) con `Idempotency-Key`. Precios, IVA, envío, mínimo, zona, horario y método de pago se calculan y validan en el servidor; el cliente solo envía identificadores y cantidades.

@@ -11,6 +11,8 @@ export class ApiError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    /** Datos adicionales del error (por ejemplo, el importe mínimo de un cupón). */
+    readonly details?: unknown,
   ) {
     super(message);
     this.name = "ApiError";
@@ -58,11 +60,14 @@ async function send(path: string, options: RequestOptions): Promise<unknown> {
   const payload: unknown = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const error = (payload as { error?: { code?: string; message?: string } } | null)?.error;
+    const error = (
+      payload as { error?: { code?: string; message?: string; details?: unknown } } | null
+    )?.error;
     throw new ApiError(
       response.status,
       error?.code ?? "UNKNOWN_ERROR",
       error?.message ?? "Error inesperado del servidor.",
+      error?.details,
     );
   }
   return payload;

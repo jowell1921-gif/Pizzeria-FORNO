@@ -71,7 +71,7 @@ describe("AnimatedNumber", () => {
 
 describe("Stats", () => {
   it("derives its figures from the store configuration and the menu", () => {
-    render(<StatsView productCount={15} />);
+    render(<StatsView productCount={15} cheapestReward={100} />);
 
     expect(screen.getByText(String(DEMO_STORE.prepTimeMinutes))).toBeInTheDocument();
     expect(screen.getByText(String(DEMO_STORE.deliveryTimeMinutes))).toBeInTheDocument();
@@ -80,13 +80,13 @@ describe("Stats", () => {
   });
 
   it("exposes each figure with its label to assistive technology", () => {
-    render(<StatsView productCount={15} />);
+    render(<StatsView productCount={15} cheapestReward={100} />);
     expect(screen.getAllByRole("term")).toHaveLength(4);
     expect(screen.getAllByRole("definition")).toHaveLength(4);
   });
 
   it("omits the product count when the menu could not be loaded", () => {
-    render(<StatsView productCount={null} />);
+    render(<StatsView productCount={null} cheapestReward={100} />);
     expect(screen.getAllByRole("term")).toHaveLength(3);
   });
 });

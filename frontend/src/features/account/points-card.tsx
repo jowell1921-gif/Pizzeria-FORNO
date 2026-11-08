@@ -2,14 +2,18 @@
 
 import { Check, Gift, Lock } from "lucide-react";
 import Link from "next/link";
+import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { FormError, FormSuccess } from "@/features/auth/form-parts";
+import { ApiError } from "@/lib/api";
 
 import { CardMessage, CardSection } from "./card-section";
 import {
   fetchLoyaltyAccount,
   fetchRecentTransactions,
   fetchRewards,
+  redeemReward,
   TRANSACTION_LABELS,
 } from "./loyalty";
 import { useProfile } from "./profile-context";
@@ -25,12 +29,63 @@ const dateFormat = new Intl.DateTimeFormat("es-ES", {
   year: "numeric",
 });
 
-/** Puntos de FORNO CLUB: saldo, progreso hacia la siguiente recompensa y últimos movimientos. */
-export function PointsCard() {
+function redeemErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === "INSUFFICIENT_POINTS")
+      return "No tienes puntos suficientes para esta recompensa.";
+    if (error.code === "REWARD_OUT_OF_STOCK") return "Esta recompensa se ha agotado.";
+    if (error.status === 404) return "Esta recompensa ya no está disponible.";
+    if (error.code === "NETWORK_ERROR")
+      return "No se pudo conectar con el servidor. Inténtalo de nuevo.";
+  }
+  return "No hemos podido canjear la recompensa. Inténtalo de nuevo.";
+}
+
+interface PointsCardProps {
+  /** Se llama tras canjear una recompensa (para refrescar «Mis recompensas»). */
+  onRedeemed?: () => void;
+}
+
+/** Puntos de FORNO CLUB: saldo, progreso, recompensas que se pueden canjear y últimos movimientos. */
+export function PointsCard({ onRedeemed }: PointsCardProps = {}) {
   const { token } = useProfile();
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [redeeming, setRedeeming] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  // Misma recompensa => misma clave: reintentar tras un fallo de red no descuenta los puntos dos veces.
+  const attempt = useRef<{ rewardId: string; key: string } | null>(null);
   const account = useApiResource(token, fetchLoyaltyAccount);
   const rewards = useApiResource(token, fetchRewards);
   const movements = useApiResource(token, fetchRecentTransactions);
+
+  async function redeem(rewardId: string, name: string) {
+    if (!token) return;
+    setRedeeming(true);
+    setError(null);
+    setMessage(null);
+    if (attempt.current?.rewardId !== rewardId) {
+      attempt.current = { rewardId, key: crypto.randomUUID() };
+    }
+    try {
+      await redeemReward(token, rewardId, attempt.current.key);
+      attempt.current = null;
+      setConfirmingId(null);
+      setMessage(
+        `Has canjeado «${name}». La encontrarás en «Mis recompensas» y podrás usarla al finalizar tu pedido.`,
+      );
+      account.reload();
+      rewards.reload();
+      movements.reload();
+      onRedeemed?.();
+    } catch (caught) {
+      setError(redeemErrorMessage(caught));
+      if (caught instanceof ApiError && caught.status < 500 && caught.status !== 0)
+        attempt.current = null;
+    } finally {
+      setRedeeming(false);
+    }
+  }
 
   const failed = account.status === "error" || rewards.status === "error";
   const ready = account.status === "ready" && rewards.status === "ready";
@@ -113,19 +168,57 @@ export function PointsCard() {
                         )}
                         {reward.name}
                       </span>
-                      <span
-                        className={
-                          unlocked ? "text-tomato-deep font-bold" : "text-muted-foreground"
-                        }
-                      >
-                        {unlocked ? "Disponible" : pointsText(reward.pointsCost)}
-                      </span>
+                      {unlocked && reward.inStock ? (
+                        confirmingId === reward.id ? (
+                          <span className="flex flex-wrap items-center justify-end gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              disabled={redeeming}
+                              onClick={() => void redeem(reward.id, reward.name)}
+                            >
+                              {redeeming
+                                ? "Canjeando…"
+                                : `Confirmar (${pointsText(reward.pointsCost)})`}
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={redeeming}
+                              onClick={() => setConfirmingId(null)}
+                            >
+                              No
+                            </Button>
+                          </span>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            aria-label={`Canjear ${reward.name} por ${pointsText(reward.pointsCost)}`}
+                            onClick={() => {
+                              setMessage(null);
+                              setError(null);
+                              setConfirmingId(reward.id);
+                            }}
+                          >
+                            Canjear · {reward.pointsCost}
+                          </Button>
+                        )
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {unlocked ? "Agotada" : pointsText(reward.pointsCost)}
+                        </span>
+                      )}
                     </li>
                   );
                 })}
               </ul>
+              {message ? <FormSuccess>{message}</FormSuccess> : null}
+              <FormError>{error}</FormError>
               <p className="text-muted-foreground mt-2 text-xs">
-                Podrás canjearlas al hacer tu pedido (disponible muy pronto).
+                Al canjear una recompensa se descuentan los puntos y pasa a «Mis recompensas»; la
+                eliges al finalizar tu pedido. Si cancelas ese pedido, recuperas los puntos.
               </p>
             </div>
           ) : null}

@@ -24,6 +24,7 @@ export const quoteSchema = z.object({
       ),
     }),
   ),
+  discounts: z.array(z.object({ description: z.string(), amount: z.string() })),
   totals: z.object({
     subtotal: z.string(),
     discount: z.string(),
@@ -49,16 +50,23 @@ export type Quote = z.infer<typeof quoteSchema>;
 export interface QuoteParams {
   type: "PICKUP" | "DELIVERY";
   postalCode?: string | null;
+  /** Cupón o recompensa a validar: exigen sesión (`token`). */
+  couponCode?: string | null;
+  redemptionId?: string | null;
+  token?: string | null;
 }
 
 /** Pide al servidor los importes del carrito. Público: no necesita sesión. */
 export function fetchQuote(lines: readonly CartLine[], params: QuoteParams) {
   return apiRequest("/checkout/quote", {
     method: "POST",
+    ...(params.token ? { token: params.token } : {}),
     body: {
       items: toApiItems(lines),
       type: params.type,
       ...(params.type === "DELIVERY" && params.postalCode ? { postalCode: params.postalCode } : {}),
+      ...(params.couponCode ? { couponCode: params.couponCode } : {}),
+      ...(params.redemptionId ? { redemptionId: params.redemptionId } : {}),
     },
     schema: quoteSchema,
   });

@@ -12,7 +12,16 @@ import { useApiResource } from "@/features/account/use-api-resource";
 import { ApiError } from "@/lib/api";
 import { formatEuro } from "@/lib/format";
 
-import { fetchOrder, PAYMENT_LABELS, PAYMENT_STATUS_LABELS } from "./order";
+import { FormError } from "@/features/auth/form-parts";
+import { Button } from "@/components/ui/button";
+
+import {
+  cancelOrder,
+  fetchOrder,
+  orderErrorMessage,
+  PAYMENT_LABELS,
+  PAYMENT_STATUS_LABELS,
+} from "./order";
 
 const dateTime = new Intl.DateTimeFormat("es-ES", { dateStyle: "long", timeStyle: "short" });
 const FINAL_STATUSES = new Set(["COMPLETED", "REJECTED", "CANCELLED"]);
@@ -24,6 +33,25 @@ export function OrderView({ orderId }: { orderId: string }) {
   const order = useApiResource(token, load);
   const { reload } = order;
   const finished = order.data ? FINAL_STATUSES.has(order.data.status) : false;
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  async function cancel() {
+    if (!token) return;
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      await cancelOrder(token, orderId);
+      setConfirmingCancel(false);
+      reload();
+    } catch (caught) {
+      setCancelError(orderErrorMessage(caught));
+      reload();
+    } finally {
+      setCancelling(false);
+    }
+  }
 
   // Consulta periódica mientras el pedido sigue en curso.
   useEffect(() => {
@@ -178,6 +206,40 @@ export function OrderView({ orderId }: { orderId: string }) {
           </dl>
         </section>
       </div>
+
+      {data.status === "NEW" || data.status === "PENDING_PAYMENT" ? (
+        <section
+          aria-label="Cancelar el pedido"
+          className="border-border space-y-3 rounded-2xl border p-5"
+        >
+          <p className="text-sm">
+            Puedes cancelar el pedido mientras el local no lo haya aceptado. Se anula el pago
+            pendiente, se libera el código y se te devuelven los puntos de la recompensa que hayas
+            usado.
+          </p>
+          <FormError>{cancelError}</FormError>
+          {confirmingCancel ? (
+            <div role="alert" className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="font-semibold">¿Seguro que quieres cancelar el pedido?</span>
+              <Button type="button" disabled={cancelling} onClick={() => void cancel()}>
+                {cancelling ? "Cancelando…" : "Sí, cancelar"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={cancelling}
+                onClick={() => setConfirmingCancel(false)}
+              >
+                No
+              </Button>
+            </div>
+          ) : (
+            <Button type="button" variant="outline" onClick={() => setConfirmingCancel(true)}>
+              Cancelar pedido
+            </Button>
+          )}
+        </section>
+      ) : null}
 
       <div className="flex flex-wrap gap-3">
         <Link href="/cuenta" className={buttonVariants({ variant: "outline" })}>

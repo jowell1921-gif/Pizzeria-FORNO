@@ -70,6 +70,21 @@ export function createAuthenticate({ verifyToken, prisma }: AuthDependencies): R
   };
 }
 
+/**
+ * Autenticación opcional: sin cabecera `Authorization` la petición sigue como anónima; con ella, se
+ * verifica igual que en `authenticate` (un token inválido o caducado sigue siendo un error 401).
+ */
+export function createOptionalAuthenticate(deps: AuthDependencies): RequestHandler {
+  const authenticate = createAuthenticate(deps);
+  return (req, res, next) => {
+    if (req.headers.authorization === undefined) {
+      next();
+      return;
+    }
+    void authenticate(req, res, next);
+  };
+}
+
 /** Exige un permiso concreto. Debe ir después de `authenticate`. */
 export function requirePermission(permission: Permission): RequestHandler {
   return (req, _res, next) => {

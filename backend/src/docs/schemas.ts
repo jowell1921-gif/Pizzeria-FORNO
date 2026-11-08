@@ -201,14 +201,46 @@ export const Address = z
   })
   .meta({ id: "Address" });
 
+const benefit = z.object({
+  type: z.enum(["FREE_PRODUCT", "DISCOUNT"]),
+  productId: id.nullable(),
+  productName: z.string().nullable(),
+  amount: money.nullable(),
+});
+
 export const Reward = z
   .object({
     id,
     name: z.string(),
     description: z.string().nullable(),
     pointsCost: z.number().int(),
+    benefit,
+    inStock: z.boolean(),
   })
   .meta({ id: "Reward" });
+
+export const LoyaltyProgram = z
+  .object({
+    pointsPerEuro: z.string().nullable(),
+    expiryDays: z.number().int().nullable(),
+    rewards: z.array(Reward),
+  })
+  .meta({ id: "LoyaltyProgram" });
+
+export const Redemption = z
+  .object({
+    id,
+    rewardId: id,
+    rewardName: z.string(),
+    pointsSpent: z.number().int(),
+    status: z.enum(["AVAILABLE", "USED", "CANCELLED", "EXPIRED"]),
+    benefit: benefit.nullable(),
+    orderNumber: z.number().int().nullable(),
+    createdAt: isoDate,
+    usedAt: isoDate.nullable(),
+    expiresAt: isoDate.nullable(),
+  })
+  .meta({ id: "Redemption" });
 
 export const LoyaltyAccount = z
   .object({
@@ -324,6 +356,7 @@ export const Quote = z
         ),
       }),
     ),
+    discounts: z.array(z.object({ description: z.string(), amount: money })),
     totals: z.object({
       subtotal: money,
       discount: money,

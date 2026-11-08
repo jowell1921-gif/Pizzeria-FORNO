@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { PersonalDataCard } from "./personal-data-card";
 import { PointsCard } from "./points-card";
 import { PromoCodeCard } from "./promo-code-card";
 import { ROLE_LABELS } from "./profile";
+import { RedemptionsCard } from "./redemptions-card";
 import { useProfile } from "./profile-context";
 import { SecurityCard } from "./security-card";
 import { SignOutButton } from "./sign-out-button";
@@ -21,6 +23,8 @@ const memberSinceFormat = new Intl.DateTimeFormat("es-ES", { month: "long", year
 /** Panel de «Mi cuenta» para clientes con los datos completos. */
 export function AccountDashboard() {
   const { profile } = useProfile();
+  // Al canjear una recompensa se vuelve a cargar «Mis recompensas».
+  const [redemptionsVersion, setRedemptionsVersion] = useState(0);
   if (!profile) return null;
 
   const displayName = profile.username ?? profile.fullName;
@@ -71,7 +75,8 @@ export function AccountDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <div className="space-y-6">
-          <PointsCard />
+          <PointsCard onRedeemed={() => setRedemptionsVersion((value) => value + 1)} />
+          <RedemptionsCard key={redemptionsVersion} />
           <PromoCodeCard />
           <OrdersCard />
         </div>

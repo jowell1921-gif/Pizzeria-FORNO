@@ -73,8 +73,26 @@ Idempotencia: repetir la misma petición con la misma clave devuelve el mismo pe
 IDEMPOTENCY_KEY_REUSED`; mientras la primera sigue en curso, `409 REQUEST_IN_PROGRESS`. Una petición
 fallida no gasta la clave. Las claves caducan a las 24 h.
 
-Llegan en sus fases: canjes y validación de cupones (7), administración y cocina (8), pagos y
-webhooks (9).
+FORNO CLUB y promociones (fase 7):
+
+| Método y ruta                      | Descripción                                                                                           |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `GET /loyalty/program`             | Público: regla de puntos por euro, caducidad y recompensas                                            |
+| `GET /loyalty/redemptions?status=` | Mis recompensas canjeadas (disponibles, usadas, canceladas)                                           |
+| `POST /loyalty/redemptions`        | Canjea una recompensa. Exige `Idempotency-Key`. Errores: `INSUFFICIENT_POINTS`, `REWARD_OUT_OF_STOCK` |
+| `POST /orders/{id}/cancel`         | El cliente cancela su pedido mientras es `NEW`                                                        |
+
+`POST /checkout/quote` y `POST /orders` aceptan `couponCode` y `redemptionId`. Con cupón o recompensa
+exigen sesión (`Authorization`). El servidor valida y calcula el descuento; el cliente nunca envía
+importes. Errores de descuento (`422`): `COUPON_NOT_FOUND`, `COUPON_INACTIVE`, `COUPON_EXPIRED`,
+`COUPON_NOT_STARTED`, `COUPON_MIN_SUBTOTAL`, `COUPON_NOT_FIRST_ORDER`, `COUPON_USED_UP`,
+`COUPON_ALREADY_USED`, `COUPON_NOT_APPLICABLE`, `REDEMPTION_NOT_AVAILABLE`, `REWARD_NOT_APPLICABLE`.
+El presupuesto devuelve `discounts` (descripción e importe de cada uno).
+
+Los puntos se conceden solo cuando el pedido se completa y se revierten al cancelarlo (ver
+`docs/decisions/0008-fidelizacion-y-promociones.md`).
+
+Llegan en sus fases: administración y cocina (8), pagos y webhooks (9).
 
 ## Ejemplos
 

@@ -194,6 +194,7 @@ const quote = {
       options: [{ optionId: "o-medium", group: "Tamaño", name: "Mediana", priceDelta: "0.00" }],
     },
   ],
+  discounts: [],
   totals: { subtotal: "19.00", discount: "0.00", deliveryFee: "0.00", tax: "1.73", total: "19.00" },
   delivery: null,
   estimatedMinutes: 20,

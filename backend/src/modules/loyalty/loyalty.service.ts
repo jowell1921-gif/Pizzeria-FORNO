@@ -1,4 +1,6 @@
-import type { PrismaClient } from "../../db/client.js";
+import { z } from "zod";
+
+import type { Prisma, PrismaClient } from "../../db/client.js";
 import { paginationMeta } from "../../utils/pagination.js";
 
 /** Cuenta de puntos del usuario. Se crea al crear el perfil; esto cubre perfiles anteriores. */
@@ -25,17 +27,116 @@ function activeRewardsFilter(now: Date) {
   };
 }
 
+const rewardInclude = {
+  freeProduct: { select: { id: true, name: true } },
+} satisfies Prisma.RewardInclude;
+
+/** Qué da una recompensa: un producto gratis o un descuento fijo en euros. */
+function benefitOf(reward: {
+  discountAmount: Prisma.Decimal | null;
+  freeProduct: { id: string; name: string } | null;
+}) {
+  return reward.freeProduct
+    ? {
+        type: "FREE_PRODUCT" as const,
+        productId: reward.freeProduct.id,
+        productName: reward.freeProduct.name,
+        amount: null,
+      }
+    : {
+        type: "DISCOUNT" as const,
+        productId: null,
+        productName: null,
+        amount: reward.discountAmount?.toFixed(2) ?? null,
+      };
+}
+
 export async function listRewards(prisma: PrismaClient) {
   const rewards = await prisma.reward.findMany({
     where: activeRewardsFilter(new Date()),
     orderBy: [{ pointsCost: "asc" }, { sortOrder: "asc" }],
+    include: rewardInclude,
   });
   return rewards.map((reward) => ({
     id: reward.id,
     name: reward.name,
     description: reward.description,
     pointsCost: reward.pointsCost,
+    benefit: benefitOf(reward),
+    /** false si se agotó el stock. */
+    inStock: reward.stock === null || reward.stock > 0,
   }));
+}
+
+/** Datos públicos de FORNO CLUB: regla de puntos, caducidad y recompensas. */
+export async function getLoyaltyProgram(prisma: PrismaClient) {
+  const [settings, rewards] = await Promise.all([
+    prisma.storeSettings.findUnique({ where: { id: 1 } }),
+    listRewards(prisma),
+  ]);
+  return {
+    pointsPerEuro: settings ? settings.loyaltyPointsPerEuro.toString() : null,
+    expiryDays: settings?.loyaltyExpiryDays ?? null,
+    rewards,
+  };
+}
+
+export const redemptionsQuerySchema = z.object({
+  status: z.enum(["AVAILABLE", "USED", "CANCELLED", "EXPIRED"]).optional(),
+});
+
+/** Recompensas canjeadas por el usuario (su «cartera»): disponibles, usadas, canceladas. */
+export async function listRedemptions(
+  prisma: PrismaClient,
+  userId: string,
+  query: unknown,
+  paging: { page: number; pageSize: number; skip: number; take: number },
+) {
+  const { status } = redemptionsQuerySchema.parse(query);
+  const where = { userId, ...(status ? { status } : {}) };
+  const [rows, total] = await Promise.all([
+    prisma.rewardRedemption.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip: paging.skip,
+      take: paging.take,
+      include: { reward: { include: rewardInclude }, order: { select: { orderNumber: true } } },
+    }),
+    prisma.rewardRedemption.count({ where }),
+  ]);
+  return {
+    data: rows.map((row) => redemptionView(row)),
+    meta: paginationMeta(paging.page, paging.pageSize, total),
+  };
+}
+
+export function redemptionView(row: {
+  id: string;
+  rewardId: string;
+  rewardName: string;
+  pointsSpent: number;
+  status: string;
+  createdAt: Date;
+  usedAt: Date | null;
+  expiresAt: Date | null;
+  reward?: {
+    discountAmount: Prisma.Decimal | null;
+    freeProduct: { id: string; name: string } | null;
+  };
+  order?: { orderNumber: number } | null;
+}) {
+  return {
+    id: row.id,
+    rewardId: row.rewardId,
+    rewardName: row.rewardName,
+    pointsSpent: row.pointsSpent,
+    status: row.status,
+    benefit: row.reward ? benefitOf(row.reward) : null,
+    orderNumber: row.order?.orderNumber ?? null,
+    createdAt: row.createdAt.toISOString(),
+    usedAt: row.usedAt?.toISOString() ?? null,
+    expiresAt: row.expiresAt?.toISOString() ?? null,
+  };
 }
 
 export async function getLoyaltyAccount(prisma: PrismaClient, userId: string) {
