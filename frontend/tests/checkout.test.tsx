@@ -109,6 +109,7 @@ interface Scenario {
   asapAvailable?: boolean;
   delivery?: object | null;
   orderResponse?: () => Response;
+  addresses?: object[];
 }
 
 /** API simulada: responde a cada ruta y recuerda las peticiones de pedido. */
@@ -120,7 +121,19 @@ function mockApi(scenario: Scenario = {}) {
     const json = (data: unknown, status = 200) => Response.json({ data }, { status });
 
     if (path === "/me") return json(scenario.profile ?? profile);
-    if (path === "/me/addresses") return json([address]);
+    if (path === "/me/addresses") return json(scenario.addresses ?? [address]);
+    if (path === "/delivery-zones") {
+      return json([
+        {
+          id: "z1",
+          name: "Centro",
+          postalCodes: ["28001"],
+          deliveryFee: "2.50",
+          minimumOrder: "12.00",
+          estimatedMinutes: 35,
+        },
+      ]);
+    }
     if (path === "/store/settings") return json(settings);
     if (path === "/store/slots") {
       return json({
@@ -381,5 +394,93 @@ describe("orderErrorMessage", () => {
     expect(message("SOMETHING_NEW")).not.toMatch(/internal detail/);
     expect(orderErrorMessage(new Error("boom"))).toMatch(/Inténtalo de nuevo/);
     expect(orderErrorMessage(new ApiError(0, "NETWORK_ERROR", "x"))).toMatch(/conexión/);
+  });
+});
+
+describe("CheckoutFlow (delivery with a chosen time)", () => {
+  it("enables the confirm button for a covered address, a time slot and cash", async () => {
+    const { orderRequests } = mockApi({
+      asapAvailable: false,
+      delivery: {
+        postalCode: "28001",
+        covered: true,
+        zoneName: "Centro",
+        minimumOrder: "12.00",
+        belowMinimum: false,
+      },
+    });
+    await fillCart();
+    const user = userEvent.setup();
+    renderCheckout();
+
+    await user.click(await screen.findByRole("radio", { name: /Entrega a domicilio/ }));
+    await user.click(await screen.findByRole("button", { name: "13:00" }));
+    await user.click(await screen.findByRole("radio", { name: "Efectivo al recibir" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Confirmar pedido/ })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole("button", { name: /Confirmar pedido/ }));
+    await waitFor(() => expect(orderRequests).toHaveLength(1));
+    expect(orderRequests[0]!.body).toMatchObject({
+      type: "DELIVERY",
+      scheduledFor: "2026-11-10T12:00:00.000Z",
+    });
+  });
+});
+
+describe("CheckoutFlow (explaining what is missing)", () => {
+  it("prefers an address with delivery over a default address without it", async () => {
+    const outside = {
+      ...address,
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
+      postalCode: "28029",
+      label: "Trabajo",
+    };
+    const inside = { ...address, isDefault: false };
+    const { orderRequests } = mockApi({
+      addresses: [{ ...outside, isDefault: true }, inside],
+      delivery: {
+        postalCode: "28001",
+        covered: true,
+        zoneName: "Centro",
+        minimumOrder: "12.00",
+        belowMinimum: false,
+      },
+    });
+    await fillCart();
+    const user = userEvent.setup();
+    renderCheckout();
+
+    await user.click(await screen.findByRole("radio", { name: /Entrega a domicilio/ }));
+    expect(await screen.findByText("Sin reparto en esta zona")).toBeInTheDocument();
+    await user.click(await screen.findByRole("radio", { name: "Efectivo al recibir" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: /Confirmar pedido/ })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole("button", { name: /Confirmar pedido/ }));
+    await waitFor(() => expect(orderRequests).toHaveLength(1));
+    expect(orderRequests[0]!.body["addressId"]).toBe(inside.id);
+  });
+
+  it("lists exactly what is missing while the button is disabled", async () => {
+    mockApi({
+      delivery: {
+        postalCode: "28001",
+        covered: true,
+        zoneName: "Centro",
+        minimumOrder: "25.00",
+        belowMinimum: true,
+      },
+    });
+    await fillCart();
+    const user = userEvent.setup();
+    renderCheckout();
+
+    await user.click(await screen.findByRole("radio", { name: /Entrega a domicilio/ }));
+    const missing = await screen.findByRole("list", { name: "Qué falta para confirmar" });
+    await waitFor(() => expect(missing).toHaveTextContent(/pedido mínimo de tu zona es 25,00/));
+    expect(missing).toHaveTextContent("Elige un método de pago.");
+    expect(screen.getByRole("button", { name: /Confirmar pedido/ })).toBeDisabled();
   });
 });

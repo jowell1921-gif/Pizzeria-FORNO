@@ -17,6 +17,8 @@ interface DeliverySectionProps {
   /** Dirección elegida (la predeterminada si el cliente no ha elegido otra). */
   effectiveId: string | null;
   onSelect: (id: string) => void;
+  /** ¿Se reparte en este código postal? (según las zonas del local) */
+  hasDelivery: (postalCode: string) => boolean;
   quote: Quote | undefined;
 }
 
@@ -26,6 +28,7 @@ export function DeliverySection({
   reload,
   effectiveId,
   onSelect,
+  hasDelivery,
   quote,
 }: DeliverySectionProps) {
   const { token, profile } = useProfile();
@@ -55,6 +58,11 @@ export function DeliverySection({
               />
               <span>
                 <span className="font-semibold">{address.label || address.recipientName}</span>
+                {hasDelivery(address.postalCode) ? null : (
+                  <span className="text-destructive ml-2 text-xs font-semibold">
+                    Sin reparto en esta zona
+                  </span>
+                )}
                 <span className="text-muted-foreground block">
                   {address.line1}
                   {address.line2 ? `, ${address.line2}` : ""} · {address.postalCode} {address.city}

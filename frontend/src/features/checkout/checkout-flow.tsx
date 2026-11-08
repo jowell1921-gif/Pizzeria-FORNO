@@ -13,9 +13,10 @@ import { CartLines } from "@/features/cart/cart-lines";
 import { toApiItems, useCartHydrated, useCartStore } from "@/features/cart/cart-store";
 import { CartTotals } from "@/features/cart/cart-totals";
 import { useCartQuote } from "@/features/cart/use-cart-quote";
-import { fetchSlots, fetchStoreSettings } from "@/features/catalog/api";
+import { fetchDeliveryZones, fetchSlots, fetchStoreSettings } from "@/features/catalog/api";
 import { FormError } from "@/features/auth/form-parts";
 import { formatEuro } from "@/lib/format";
+import { fromCents, toCents } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
 import { DeliverySection } from "./delivery-section";
@@ -90,9 +91,17 @@ export function CheckoutFlow() {
   const type: OrderType =
     chosenType ?? (settings.data && !settings.data.pickupEnabled ? "DELIVERY" : "PICKUP");
   const list = addresses.data ?? [];
+  const zones = useQuery({ queryKey: ["delivery-zones"], queryFn: fetchDeliveryZones });
+  /** Mientras no se conozcan las zonas se asume que hay reparto (el servidor lo comprueba igualmente). */
+  const hasDelivery = (postalCode: string) =>
+    zones.data ? zones.data.some((zone) => zone.postalCodes.includes(postalCode)) : true;
+  // Dirección elegida; si no hay, la predeterminada (o la primera) con reparto.
   const selectedAddress =
     type === "DELIVERY"
       ? (list.find((item) => item.id === addressId) ??
+        [list.find((item) => item.isDefault), ...list].find(
+          (item) => item !== undefined && hasDelivery(item.postalCode),
+        ) ??
         list.find((item) => item.isDefault) ??
         list[0] ??
         null)
@@ -159,6 +168,30 @@ export function CheckoutFlow() {
     selectedPayment !== null &&
     quote.data !== undefined &&
     !submitting;
+
+  /** Lo que falta para poder confirmar, en palabras del cliente. */
+  const missing: string[] = [];
+  if (store.ordersPaused) missing.push("Ahora mismo no estamos aceptando pedidos.");
+  if (!typeEnabled[type]) missing.push("Esta modalidad no está disponible ahora mismo.");
+  if (type === "DELIVERY") {
+    if (!selectedAddress) missing.push("Elige o añade una dirección de entrega.");
+    else if (delivery && !delivery.covered) {
+      missing.push(
+        "La dirección elegida está fuera de la zona de reparto: elige otra o recoge en el local.",
+      );
+    } else if (delivery?.belowMinimum && delivery.minimumOrder && quote.data) {
+      const short =
+        toCents(delivery.minimumOrder) -
+        toCents(quote.data.totals.subtotal) +
+        toCents(quote.data.totals.discount);
+      missing.push(
+        `Añade ${formatEuro(fromCents(short))} más en productos: el pedido mínimo de tu zona es ${formatEuro(delivery.minimumOrder)}.`,
+      );
+    }
+  }
+  if (!scheduleOk) missing.push("Elige la hora de tu pedido.");
+  if (selectedPayment === null) missing.push("Elige un método de pago.");
+  if (quote.data === undefined && !quote.isError) missing.push("Calculando el importe…");
 
   async function submit() {
     if (!canSubmit || !selectedPayment || !token) return;
@@ -245,6 +278,7 @@ export function CheckoutFlow() {
                 reload={addresses.reload}
                 effectiveId={selectedAddress?.id ?? null}
                 onSelect={setAddressId}
+                hasDelivery={hasDelivery}
                 quote={quote.data}
               />
             )
@@ -322,6 +356,16 @@ export function CheckoutFlow() {
           )}
 
           <FormError>{error}</FormError>
+          {!canSubmit && !submitting && missing.length > 0 ? (
+            <ul
+              aria-label="Qué falta para confirmar"
+              className="bg-cream-soft list-disc space-y-1 rounded-lg p-3 pl-7 text-sm"
+            >
+              {missing.map((reason) => (
+                <li key={reason}>{reason}</li>
+              ))}
+            </ul>
+          ) : null}
           <Button
             type="button"
             size="lg"

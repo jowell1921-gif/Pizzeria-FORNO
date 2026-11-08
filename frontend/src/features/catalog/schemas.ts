@@ -78,6 +78,15 @@ export const storeSettingsSchema = z.object({
   open: z.boolean(),
 });
 
+export const deliveryZoneSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  postalCodes: z.array(z.string()),
+  deliveryFee: z.string(),
+  minimumOrder: z.string(),
+  estimatedMinutes: z.number(),
+});
+
 export const slotsSchema = z.object({
   type: z.enum(["PICKUP", "DELIVERY"]),
   date: z.string(),
