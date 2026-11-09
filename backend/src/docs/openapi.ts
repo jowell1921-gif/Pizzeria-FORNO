@@ -6,6 +6,31 @@ import {
 } from "../modules/addresses/addresses.service.js";
 import { kitchenStatusSchema } from "../modules/kitchen/kitchen.service.js";
 import { changeStatusSchema } from "../modules/orders/status.service.js";
+import {
+  categoryInputSchema,
+  categoryPatchSchema,
+  productInputSchema,
+  productPatchSchema,
+} from "../modules/admin/catalog-admin.service.js";
+import {
+  adjustmentSchema,
+  loyaltySettingsSchema,
+  rewardPatchSchema,
+  rewardSchema,
+} from "../modules/admin/loyalty-admin.service.js";
+import {
+  couponPatchSchema,
+  couponSchema,
+  promotionPatchSchema,
+  promotionSchema,
+} from "../modules/admin/promotions-admin.service.js";
+import {
+  openingHoursSchema,
+  specialDaySchema,
+  storeSettingsPatchSchema,
+  zoneInputSchema,
+  zonePatchSchema,
+} from "../modules/admin/store-admin.service.js";
 import { replaceCartSchema } from "../modules/cart/cart.service.js";
 import { quoteSchema } from "../modules/checkout/totals.js";
 import { createOrderSchema } from "../modules/orders/create-order.service.js";
@@ -36,6 +61,7 @@ import {
   StoreSettings,
   StoreSlots,
 } from "./schemas.js";
+import { ADMIN_SCHEMAS } from "./schemas-admin.js";
 
 type Json = Record<string, unknown>;
 
@@ -117,7 +143,7 @@ function components() {
     delete copy["$id"];
     cleaned[name] = copy;
   }
-  for (const [name, schema] of Object.entries(REQUEST_SCHEMAS)) {
+  for (const [name, schema] of Object.entries({ ...REQUEST_SCHEMAS, ...REQUESTS_8B })) {
     const copy = { ...(z.toJSONSchema(schema, { io: "input" }) as Record<string, unknown>) };
     delete copy["$schema"];
     cleaned[name] = copy;
@@ -137,6 +163,7 @@ function components() {
 
 /** Referencias para que TypeScript no elimine los esquemas registrados con `.meta({ id })`. */
 export const REGISTERED_SCHEMAS = [
+  ...ADMIN_SCHEMAS,
   AdminOrder,
   AdminOrderSummary,
   Dashboard,
@@ -162,6 +189,432 @@ export const REGISTERED_SCHEMAS = [
   Quote,
   StoreSlots,
 ];
+
+// ───────────────────────────── Administración (fase 8B) ─────────────────────────────
+
+const REQUESTS_8B = {
+  ProductRequest: productInputSchema,
+  ProductPatchRequest: productPatchSchema,
+  CategoryRequest: categoryInputSchema,
+  CategoryPatchRequest: categoryPatchSchema,
+  StoreSettingsPatchRequest: storeSettingsPatchSchema,
+  OpeningHoursRequest: openingHoursSchema,
+  SpecialDayRequest: specialDaySchema,
+  ZoneRequest: zoneInputSchema,
+  ZonePatchRequest: zonePatchSchema,
+  PromotionRequest: promotionSchema,
+  PromotionPatchRequest: promotionPatchSchema,
+  CouponRequest: couponSchema,
+  CouponPatchRequest: couponPatchSchema,
+  LoyaltySettingsRequest: loyaltySettingsSchema,
+  RewardRequest: rewardSchema,
+  RewardPatchRequest: rewardPatchSchema,
+  PointsAdjustmentRequest: adjustmentSchema,
+};
+
+const body = (name: string): Json => ({ required: true, content: json(ref(name)) });
+const idPath = (description: string): Json[] => [idParam(description)];
+
+/** Respuestas habituales de una escritura de administración. */
+const WRITE_ERRORS = {
+  "400": error("Datos no válidos."),
+  "404": error("No existe."),
+  "409": error("Conflicto con el estado actual."),
+  "422": error("Regla de negocio no cumplida."),
+  ...AUTH_ERRORS,
+  ...COMMON_ERRORS,
+};
+
+interface CrudOptions {
+  tag: string;
+  path: string;
+  noun: string;
+  schema: string;
+  permission: string;
+  request: string;
+  patchRequest?: string;
+  withGet?: boolean;
+  deletes?: boolean;
+}
+
+/** Documenta lista, creación, detalle, edición y borrado de un recurso de administración. */
+function crud(o: CrudOptions): Record<string, Json> {
+  const perm = `Permiso \`${o.permission}\`.`;
+  const collection: Json = {
+    get: {
+      tags: [o.tag],
+      summary: `Listar ${o.noun}`,
+      description: perm,
+      ...secured,
+      responses: { "200": ok("Lista.", listOf(o.schema)), ...AUTH_ERRORS, ...COMMON_ERRORS },
+    },
+    post: {
+      tags: [o.tag],
+      summary: `Crear ${o.noun}`,
+      description: `${perm} Cada escritura queda en el registro de auditoría.`,
+      ...secured,
+      requestBody: body(o.request),
+      responses: { "201": ok("Creado.", dataOf(o.schema)), ...WRITE_ERRORS },
+    },
+  };
+  const item: Json = {};
+  if (o.withGet) {
+    item["get"] = {
+      tags: [o.tag],
+      summary: `Detalle de ${o.noun}`,
+      description: perm,
+      ...secured,
+      parameters: idPath("Identificador."),
+      responses: { "200": ok("Detalle.", dataOf(o.schema)), ...WRITE_ERRORS },
+    };
+  }
+  if (o.patchRequest) {
+    item["patch"] = {
+      tags: [o.tag],
+      summary: `Editar ${o.noun}`,
+      description: `${perm} Solo cambian los campos enviados; los demás no se tocan.`,
+      ...secured,
+      parameters: idPath("Identificador."),
+      requestBody: body(o.patchRequest),
+      responses: { "200": ok("Actualizado.", dataOf(o.schema)), ...WRITE_ERRORS },
+    };
+  }
+  if (o.deletes) {
+    item["delete"] = {
+      tags: [o.tag],
+      summary: `Eliminar ${o.noun}`,
+      description: `${perm} Borrado lógico cuando hay historial que conservar.`,
+      ...secured,
+      parameters: idPath("Identificador."),
+      responses: { "204": { description: "Eliminado." }, ...WRITE_ERRORS },
+    };
+  }
+  return {
+    [o.path]: collection,
+    ...(Object.keys(item).length > 0 ? { [`${o.path}/{id}`]: item } : {}),
+  };
+}
+
+const settingsOperation = (
+  summary: string,
+  schema: string,
+  permission: string,
+  patch?: string,
+): Json => ({
+  get: {
+    tags: ["Configuración"],
+    summary,
+    description: `Permiso \`${permission}\`.`,
+    ...secured,
+    responses: { "200": ok(summary, dataOf(schema)), ...AUTH_ERRORS, ...COMMON_ERRORS },
+  },
+  ...(patch
+    ? {
+        patch: {
+          tags: ["Configuración"],
+          summary: `Editar: ${summary.toLowerCase()}`,
+          description: `Permiso \`${permission}\`. Solo cambian los campos enviados. Queda en la auditoría.`,
+          ...secured,
+          requestBody: body(patch),
+          responses: { "200": ok("Actualizado.", dataOf(schema)), ...WRITE_ERRORS },
+        },
+      }
+    : {}),
+});
+
+const pagedGet = (
+  tag: string,
+  summary: string,
+  permission: string,
+  schema: string,
+  extra: Json[] = [],
+): Json => ({
+  get: {
+    tags: [tag],
+    summary,
+    description: `Permiso \`${permission}\`.`,
+    ...secured,
+    parameters: [...pagingParams, ...extra],
+    responses: {
+      "200": ok("Página de resultados.", pagedOf(schema)),
+      "400": error("Filtros no válidos."),
+      ...AUTH_ERRORS,
+      ...COMMON_ERRORS,
+    },
+  },
+});
+
+const queryParam = (name: string, description: string): Json => ({
+  name,
+  in: "query",
+  description,
+  schema: { type: "string" },
+});
+
+function adminPaths(): Record<string, Json> {
+  return {
+    ...crud({
+      tag: "Carta (admin)",
+      path: "/admin/categories",
+      noun: "categorías",
+      schema: "AdminCategory",
+      permission: "catalog:manage",
+      request: "CategoryRequest",
+      patchRequest: "CategoryPatchRequest",
+      deletes: true,
+    }),
+    ...crud({
+      tag: "Carta (admin)",
+      path: "/admin/products",
+      noun: "productos",
+      schema: "AdminProduct",
+      permission: "catalog:manage",
+      request: "ProductRequest",
+      patchRequest: "ProductPatchRequest",
+      withGet: true,
+      deletes: true,
+    }),
+    "/admin/products/{id}/restore": {
+      post: {
+        tags: ["Carta (admin)"],
+        summary: "Restaurar un producto eliminado",
+        description: "Permiso `catalog:manage`.",
+        ...secured,
+        parameters: idPath("Identificador del producto."),
+        responses: { "200": ok("Restaurado.", dataOf("AdminProduct")), ...WRITE_ERRORS },
+      },
+    },
+    "/admin/allergens": {
+      get: {
+        tags: ["Carta (admin)"],
+        summary: "Alérgenos disponibles",
+        description: "Permiso `catalog:manage`.",
+        ...secured,
+        responses: {
+          "200": ok("Alérgenos.", listOf("AdminAllergen")),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/admin/uploads/product-image": {
+      post: {
+        tags: ["Carta (admin)"],
+        summary: "Subir la foto de un producto",
+        description:
+          "Permiso `catalog:manage`. El cuerpo es la imagen en bruto (`Content-Type: image/jpeg`, `image/png` o `image/webp`, máximo 3 MB); se comprueban los bytes, no el tipo declarado. Devuelve la URL pública para usarla en `image.url` del producto. `503 STORAGE_NOT_CONFIGURED` si no hay almacenamiento configurado.",
+        ...secured,
+        requestBody: {
+          required: true,
+          content: {
+            "image/webp": { schema: { type: "string", format: "binary" } },
+            "image/png": { schema: { type: "string", format: "binary" } },
+            "image/jpeg": { schema: { type: "string", format: "binary" } },
+          },
+        },
+        responses: {
+          "201": ok("Imagen subida.", dataOf("UploadResult")),
+          "400": error("`INVALID_IMAGE` o `IMAGE_REQUIRED`."),
+          "413": error("Más de 3 MB."),
+          "503": error("`STORAGE_NOT_CONFIGURED`."),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/admin/store/settings": settingsOperation(
+      "Datos del local",
+      "AdminStoreSettings",
+      "settings:manage",
+      "StoreSettingsPatchRequest",
+    ),
+    "/admin/store/opening-hours": {
+      get: {
+        tags: ["Configuración"],
+        summary: "Horario semanal",
+        description:
+          "Permiso `settings:manage`. Día ISO 1 = lunes … 7 = domingo; minutos desde las 00:00.",
+        ...secured,
+        responses: {
+          "200": ok("Tramos.", listOf("OpeningSlot")),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+      put: {
+        tags: ["Configuración"],
+        summary: "Sustituir el horario semanal",
+        description:
+          "Permiso `settings:manage`. Un día sin tramos es un día cerrado; los tramos de un día no pueden solaparse.",
+        ...secured,
+        requestBody: body("OpeningHoursRequest"),
+        responses: { "200": ok("Horario guardado.", listOf("OpeningSlot")), ...WRITE_ERRORS },
+      },
+    },
+    "/admin/store/special-days": {
+      get: {
+        tags: ["Configuración"],
+        summary: "Festivos y horarios especiales",
+        description: "Permiso `settings:manage`. Desde hace una semana en adelante.",
+        ...secured,
+        responses: {
+          "200": ok("Días especiales.", listOf("SpecialDay")),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+      post: {
+        tags: ["Configuración"],
+        summary: "Añadir un festivo u horario especial",
+        description:
+          "Permiso `settings:manage`. Un día especial sustituye al horario semanal de esa fecha. `409 SPECIAL_DAY_EXISTS` si ya hay uno.",
+        ...secured,
+        requestBody: body("SpecialDayRequest"),
+        responses: { "201": ok("Creado.", dataOf("SpecialDay")), ...WRITE_ERRORS },
+      },
+    },
+    "/admin/store/special-days/{id}": {
+      delete: {
+        tags: ["Configuración"],
+        summary: "Quitar un día especial",
+        description: "Permiso `settings:manage`.",
+        ...secured,
+        parameters: idPath("Identificador."),
+        responses: { "204": { description: "Eliminado." }, ...WRITE_ERRORS },
+      },
+    },
+    ...crud({
+      tag: "Configuración",
+      path: "/admin/delivery-zones",
+      noun: "zonas de reparto",
+      schema: "AdminZone",
+      permission: "settings:manage",
+      request: "ZoneRequest",
+      patchRequest: "ZonePatchRequest",
+      deletes: true,
+    }),
+    ...crud({
+      tag: "Promociones (admin)",
+      path: "/admin/promotions",
+      noun: "promociones",
+      schema: "AdminPromotion",
+      permission: "promotions:manage",
+      request: "PromotionRequest",
+      patchRequest: "PromotionPatchRequest",
+      withGet: true,
+      deletes: true,
+    }),
+    "/admin/promotions/{id}/coupons": {
+      post: {
+        tags: ["Promociones (admin)"],
+        summary: "Crear un cupón para una promoción",
+        description:
+          "Permiso `promotions:manage`. El código se guarda en mayúsculas; `409 COUPON_CODE_EXISTS` si ya existe. Devuelve la promoción con sus cupones.",
+        ...secured,
+        parameters: idPath("Identificador de la promoción."),
+        requestBody: body("CouponRequest"),
+        responses: {
+          "201": ok("Promoción actualizada.", dataOf("AdminPromotion")),
+          ...WRITE_ERRORS,
+        },
+      },
+    },
+    "/admin/coupons/{id}": {
+      patch: {
+        tags: ["Promociones (admin)"],
+        summary: "Editar un cupón",
+        description: "Permiso `promotions:manage`. El código no se cambia: se crea otro cupón.",
+        ...secured,
+        parameters: idPath("Identificador del cupón."),
+        requestBody: body("CouponPatchRequest"),
+        responses: {
+          "200": ok("Promoción actualizada.", dataOf("AdminPromotion")),
+          ...WRITE_ERRORS,
+        },
+      },
+      delete: {
+        tags: ["Promociones (admin)"],
+        summary: "Eliminar un cupón",
+        description:
+          "Permiso `promotions:manage`. Un cupón ya usado no se elimina (`409 COUPON_HAS_USES`): se desactiva.",
+        ...secured,
+        parameters: idPath("Identificador del cupón."),
+        responses: { "204": { description: "Eliminado." }, ...WRITE_ERRORS },
+      },
+    },
+    "/admin/loyalty/settings": settingsOperation(
+      "Regla de puntos de FORNO CLUB",
+      "LoyaltySettings",
+      "loyalty:manage",
+      "LoyaltySettingsRequest",
+    ),
+    ...crud({
+      tag: "FORNO CLUB (admin)",
+      path: "/admin/rewards",
+      noun: "recompensas",
+      schema: "AdminReward",
+      permission: "loyalty:manage",
+      request: "RewardRequest",
+      patchRequest: "RewardPatchRequest",
+      deletes: true,
+    }),
+    "/admin/loyalty/transactions": pagedGet(
+      "FORNO CLUB (admin)",
+      "Movimientos de puntos de todos los clientes",
+      "loyalty:manage",
+      "AdminTransaction",
+      [
+        {
+          name: "type",
+          in: "query",
+          schema: {
+            type: "string",
+            enum: ["EARN", "REDEEM", "REVERSAL", "ADJUSTMENT", "EXPIRATION"],
+          },
+        },
+        queryParam("userId", "Identificador del cliente."),
+        queryParam("q", "Nombre o correo del cliente."),
+      ],
+    ),
+    "/admin/loyalty/redemptions": pagedGet(
+      "FORNO CLUB (admin)",
+      "Recompensas canjeadas por los clientes",
+      "loyalty:manage",
+      "AdminRedemption",
+      [
+        {
+          name: "status",
+          in: "query",
+          schema: { type: "string", enum: ["AVAILABLE", "USED", "CANCELLED", "EXPIRED"] },
+        },
+      ],
+    ),
+    "/admin/loyalty/adjustments": {
+      post: {
+        tags: ["FORNO CLUB (admin)"],
+        summary: "Ajustar los puntos de un cliente",
+        description:
+          "Permiso `loyalty:manage`. Exige un motivo; queda en el libro de movimientos y en la auditoría. Nunca se edita el saldo directamente ni puede quedar negativo (`409 INSUFFICIENT_POINTS`).",
+        ...secured,
+        requestBody: body("PointsAdjustmentRequest"),
+        responses: { "201": ok("Ajuste registrado.", dataOf("PointsAdjustment")), ...WRITE_ERRORS },
+      },
+    },
+    "/admin/customers": pagedGet(
+      "FORNO CLUB (admin)",
+      "Clientes con su saldo de puntos",
+      "customers:read",
+      "Customer",
+      [queryParam("q", "Nombre, usuario, correo o teléfono.")],
+    ),
+    "/admin/audit": pagedGet("Configuración", "Registro de auditoría", "audit:read", "AuditEntry", [
+      queryParam("entityType", "Tipo de entidad (Product, Order…)."),
+      queryParam("action", "Prefijo de la acción (product., store.…)."),
+      queryParam("actorId", "Quién lo hizo."),
+      queryParam("entityId", "Identificador de la entidad."),
+    ]),
+  };
+}
 
 /** Documento OpenAPI 3.1 de la API v1. Es el contrato que consumen la web y la app Flutter. */
 export function buildOpenApiDocument(): Json {
@@ -192,6 +645,10 @@ export function buildOpenApiDocument(): Json {
       { name: "Pedidos" },
       { name: "Personal" },
       { name: "Cocina" },
+      { name: "Carta (admin)" },
+      { name: "Configuración" },
+      { name: "Promociones (admin)" },
+      { name: "FORNO CLUB (admin)" },
     ],
     paths: {
       "/health": {
@@ -423,6 +880,34 @@ export function buildOpenApiDocument(): Json {
             "400": error("Datos no válidos."),
             ...AUTH_ERRORS,
             ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/me/admin-role": {
+        put: {
+          tags: ["Cuenta"],
+          summary: "Hacerme administrador (solo demostración)",
+          description:
+            "Concede el rol ADMIN al propio usuario. Está activo por defecto (web de demostración); con SELF_ADMIN_ENABLED=false responde 403 SELF_ADMIN_DISABLED. Queda en la auditoría.",
+          ...secured,
+          responses: {
+            "200": ok("Perfil actualizado.", dataOf("Profile")),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+            "403": error("Sin permiso, o no disponible en este entorno (`SELF_ADMIN_DISABLED`)."),
+          },
+        },
+        delete: {
+          tags: ["Cuenta"],
+          summary: "Dejar de ser administrador (solo demostración)",
+          description:
+            "Quita el rol ADMIN al propio usuario. Mismas condiciones que la operación anterior.",
+          ...secured,
+          responses: {
+            "200": ok("Perfil actualizado.", dataOf("Profile")),
+            ...AUTH_ERRORS,
+            ...COMMON_ERRORS,
+            "403": error("Sin permiso, o no disponible en este entorno (`SELF_ADMIN_DISABLED`)."),
           },
         },
       },
@@ -683,6 +1168,7 @@ export function buildOpenApiDocument(): Json {
           },
         },
       },
+      ...adminPaths(),
       "/loyalty/program": {
         get: {
           tags: ["FORNO CLUB"],

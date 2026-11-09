@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { PrismaClient } from "../../db/client.js";
 import { permissionsFor } from "../../auth/permissions.js";
 import { notFound } from "../../errors.js";
+import { recordAudit } from "../../utils/audit.js";
 
 /** Longitud máxima del nombre de usuario: la que cabe en el botón «Mi cuenta» de la cabecera. */
 export const USERNAME_MIN = 3;
@@ -44,7 +45,7 @@ export function isProfileComplete(profile: { username: string | null; phone: str
   return Boolean(profile.username && profile.phone);
 }
 
-export async function getProfile(prisma: PrismaClient, userId: string) {
+export async function getProfile(prisma: PrismaClient, userId: string, selfAdminAvailable = false) {
   const profile = await prisma.profile.findUnique({
     where: { id: userId },
     include: { roles: true },
@@ -62,6 +63,7 @@ export async function getProfile(prisma: PrismaClient, userId: string) {
     marketingConsent: profile.marketingConsent,
     roles,
     permissions: permissionsFor(roles),
+    selfAdminAvailable,
     createdAt: profile.createdAt.toISOString(),
   };
 }
@@ -70,6 +72,7 @@ export async function updateProfile(
   prisma: PrismaClient,
   userId: string,
   input: UpdateProfileInput,
+  selfAdminAvailable = false,
 ) {
   const current = await prisma.profile.findUniqueOrThrow({ where: { id: userId } });
 
@@ -91,5 +94,32 @@ export async function updateProfile(
         : {}),
     },
   });
-  return getProfile(prisma, userId);
+  return getProfile(prisma, userId, selfAdminAvailable);
+}
+
+/**
+ * Función de demostración: el propio usuario se concede o se quita el rol ADMIN. Solo existe si el
+ * servidor la activa (`SELF_ADMIN_ENABLED`); en producción responde 403. Queda en la auditoría.
+ */
+export async function setOwnAdminRole(prisma: PrismaClient, userId: string, admin: boolean) {
+  await prisma.$transaction(async (tx) => {
+    const existing = await tx.userRole.findUnique({
+      where: { userId_role: { userId, role: "ADMIN" } },
+    });
+    if (admin === Boolean(existing)) return; // ya está como se pide
+    if (admin) {
+      await tx.userRole.create({ data: { userId, role: "ADMIN", grantedById: userId } });
+    } else if (existing) {
+      await tx.userRole.delete({ where: { id: existing.id } });
+    }
+    await recordAudit(tx, {
+      actorId: userId,
+      action: admin ? "role.self-grant" : "role.self-revoke",
+      entityType: "Profile",
+      entityId: userId,
+      before: { admin: !admin },
+      after: { admin },
+    });
+  });
+  return getProfile(prisma, userId, true);
 }

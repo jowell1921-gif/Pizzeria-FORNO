@@ -1,12 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
+import { AdminRoleButton } from "./admin-role";
 import { AddressesCard } from "./addresses-card";
 import { OrdersCard } from "./orders-card";
 import { PersonalDataCard } from "./personal-data-card";
@@ -62,34 +60,7 @@ export function AccountDashboard() {
           </div>
         </div>
         <div className="flex flex-col gap-3 sm:items-end">
-          {profile.permissions.includes("orders:read:all") ? (
-            <Link
-              href="/admin"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "border-gold text-gold hover:bg-gold/10 bg-transparent",
-              )}
-            >
-              Panel del personal
-            </Link>
-          ) : profile.permissions.includes("kitchen:orders:read") ? (
-            <Link
-              href="/kitchen"
-              className={cn(
-                buttonVariants({ variant: "outline", size: "lg" }),
-                "border-gold text-gold hover:bg-gold/10 bg-transparent",
-              )}
-            >
-              Pantalla de cocina
-            </Link>
-          ) : null}
-          <Link
-            href="/carta"
-            transitionTypes={["nav-forward"]}
-            className={cn(buttonVariants({ size: "lg" }), "tracking-wide uppercase")}
-          >
-            Pedir ahora
-          </Link>
+          <AdminRoleButton className="border-cream/40 text-cream hover:bg-cream/10 hover:text-cream bg-transparent" />
           <SignOutButton className="border-cream/40 text-cream hover:bg-cream/10 hover:text-cream bg-transparent" />
         </div>
       </section>

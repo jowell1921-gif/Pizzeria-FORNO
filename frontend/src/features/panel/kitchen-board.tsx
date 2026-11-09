@@ -31,7 +31,7 @@ const COLUMNS: Column[] = [
   { status: "NEW", title: "Nuevos", includes: ["NEW"] },
   { status: "ACCEPTED", title: "Aceptados", includes: ["ACCEPTED"] },
   { status: "PREPARING", title: "En preparación", includes: ["PREPARING"] },
-  { status: "READY", title: "Listos", includes: ["READY", "OUT_FOR_DELIVERY"] },
+  { status: "READY", title: "Listos", includes: ["READY"] },
   { status: "COMPLETED", title: "Completados", includes: ["COMPLETED"] },
 ];
 
@@ -45,8 +45,10 @@ export function nextKitchenStep(order: Pick<KitchenOrder, "status" | "type">) {
     case "PREPARING":
       return { to: "READY" as const, label: "Listo" };
     case "READY":
-      // Los pedidos a domicilio los cierra el personal cuando sale el reparto.
-      return order.type === "PICKUP" ? { to: "COMPLETED" as const, label: "Entregado" } : null;
+      // Recogida: se entrega al cliente. Domicilio: se entrega al repartidor y el personal lo cierra.
+      return order.type === "PICKUP"
+        ? { to: "COMPLETED" as const, label: "Entregado" }
+        : { to: "OUT_FOR_DELIVERY" as const, label: "Entregado al repartidor" };
     default:
       return null;
   }
@@ -131,14 +133,10 @@ function OrderCard({
           size="lg"
           disabled={busy}
           onClick={() => onAdvance(order, step.to)}
-          className="h-14 w-full text-lg tracking-wide uppercase"
+          className="h-auto min-h-14 w-full px-3 py-2 text-center text-lg leading-tight tracking-wide whitespace-normal uppercase"
         >
           {busy ? "…" : step.label}
         </Button>
-      ) : order.status === "READY" ? (
-        <p className="text-muted-foreground text-center text-sm font-semibold">
-          Esperando al repartidor
-        </p>
       ) : null}
     </article>
   );

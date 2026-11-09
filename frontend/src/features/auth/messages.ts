@@ -27,6 +27,8 @@ const MESSAGES: Record<string, string> = {
 export const GENERIC_AUTH_ERROR = "No hemos podido completar la operación. Inténtalo de nuevo.";
 export const NOT_CONFIGURED_ERROR =
   "El acceso de usuarios no está configurado en este entorno (faltan las claves de Supabase).";
+export const SERVICE_ERROR =
+  "El servicio de acceso no ha podido completar la operación (por ejemplo, enviar el correo). Inténtalo de nuevo en unos minutos.";
 export const NETWORK_ERROR = "No se pudo conectar con el servicio de acceso. Revisa tu conexión.";
 
 /**
@@ -36,7 +38,10 @@ export const NETWORK_ERROR = "No se pudo conectar con el servicio de acceso. Rev
 export function authErrorMessage(error: AuthErrorLike | null | undefined): string {
   if (!error) return GENERIC_AUTH_ERROR;
   if (error.code && MESSAGES[error.code]) return MESSAGES[error.code]!;
-  if (error.name === "AuthRetryableFetchError" || error.status === 0) return NETWORK_ERROR;
+  if (error.status === 0) return NETWORK_ERROR;
+  // El servicio respondió con un error del servidor: hay conexión, falló por dentro (p. ej. el correo).
+  if (error.status !== undefined && error.status >= 500) return SERVICE_ERROR;
+  if (error.name === "AuthRetryableFetchError") return NETWORK_ERROR;
   if (error.status === 429) return MESSAGES["over_request_rate_limit"]!;
   return GENERIC_AUTH_ERROR;
 }

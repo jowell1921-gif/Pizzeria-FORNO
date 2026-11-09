@@ -104,8 +104,30 @@ Personal y cocina (fase 8A). Todas exigen sesión y un permiso explícito:
 | `PATCH /kitchen/orders/{id}/status`    | `kitchen:orders:update-status`           | Avanzar un pedido (aceptar, preparar, listo, entregar en recogida) |
 | `GET /admin/stream`, `/kitchen/stream` | `orders:read:all`, `kitchen:orders:read` | Avisos en directo (SSE) con `fetch` y `Authorization`              |
 
-Llegan en sus fases: productos, promociones, recompensas y configuración del local (8B), pagos y
-webhooks (9).
+Administración del negocio (fase 8B). Todas exigen sesión y el permiso indicado; cada escritura se valida en el servidor y queda en la auditoría con los valores antes y después:
+
+| Método y ruta                                                             | Permiso             | Descripción                                                                               |
+| ------------------------------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------- |
+| `GET/POST /admin/categories`, `PATCH/DELETE /admin/categories/{id}`       | `catalog:manage`    | Categorías (borrado lógico; `409 CATEGORY_HAS_PRODUCTS`)                                  |
+| `GET /admin/allergens`                                                    | `catalog:manage`    | Catálogo de alérgenos (por código)                                                        |
+| `GET/POST /admin/products`, `GET/PATCH/DELETE /admin/products/{id}`       | `catalog:manage`    | Productos con ingredientes, alérgenos, imagen y grupos de opciones; `POST …/restore`      |
+| `POST /admin/uploads/product-image`                                       | `catalog:manage`    | Foto (JPEG/PNG/WebP, máx. 3 MB, cuerpo binario). `503 STORAGE_NOT_CONFIGURED` sin Storage |
+| `GET/PATCH /admin/store/settings`                                         | `settings:manage`   | Datos, tiempos, modalidades, pausa de pedidos y métodos de pago                           |
+| `GET/PUT /admin/store/opening-hours`                                      | `settings:manage`   | Horario semanal (se reemplaza completo; sin solapes)                                      |
+| `GET/POST /admin/store/special-days`, `DELETE …/{id}`                     | `settings:manage`   | Festivos y horarios especiales (`409 SPECIAL_DAY_EXISTS`)                                 |
+| `GET/POST /admin/delivery-zones`, `PATCH/DELETE …/{id}`                   | `settings:manage`   | Zonas de reparto, envío y mínimo (`422 POSTAL_CODE_IN_USE`)                               |
+| `GET/POST /admin/promotions`, `GET/PATCH/DELETE …/{id}`                   | `promotions:manage` | Descuentos y combos, con o sin código (`automatic`)                                       |
+| `POST /admin/promotions/{id}/coupons`, `PATCH/DELETE /admin/coupons/{id}` | `promotions:manage` | Cupones (`409 COUPON_CODE_EXISTS`, `409 COUPON_HAS_USES`)                                 |
+| `GET/PATCH /admin/loyalty/settings`                                       | `loyalty:manage`    | Puntos por euro y caducidad                                                               |
+| `GET/POST /admin/rewards`, `PATCH/DELETE …/{id}`                          | `loyalty:manage`    | Recompensas (producto gratis o descuento fijo)                                            |
+| `GET /admin/loyalty/transactions`, `/admin/loyalty/redemptions`           | `loyalty:manage`    | Libro de movimientos y canjes, con filtros y paginación                                   |
+| `GET /admin/customers`                                                    | `customers:read`    | Clientes con saldo (búsqueda por nombre, correo o teléfono)                               |
+| `POST /admin/loyalty/adjustments`                                         | `loyalty:manage`    | Ajuste de puntos con motivo obligatorio (nunca se edita el saldo directamente)            |
+| `GET /admin/audit`                                                        | `audit:read`        | Registro de operaciones (`entityType`, `action`, `actorId`, `entityId`) paginado          |
+
+Solo demostración: `PUT /me/admin-role` y `DELETE /me/admin-role` (sesión) hacen que el propio usuario se haga o deje de ser administrador. Responden `403 SELF_ADMIN_DISABLED` si el servidor tiene `SELF_ADMIN_ENABLED=false` (por defecto está activo, al ser una demostración). La cocina puede pasar un pedido a domicilio listo a `OUT_FOR_DELIVERY` (`PATCH /kitchen/orders/{id}/status`).
+
+Pagos y webhooks llegan en la fase 9.
 
 ## Ejemplos
 

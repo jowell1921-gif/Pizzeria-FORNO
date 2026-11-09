@@ -181,6 +181,8 @@ export const Profile = z
     marketingConsent: z.boolean(),
     roles: z.array(z.enum(values(RoleName))),
     permissions: z.array(z.string()),
+    /** Si el servidor permite hacerse administrador desde la cuenta (solo demostración). */
+    selfAdminAvailable: z.boolean(),
     createdAt: isoDate,
   })
   .meta({ id: "Profile" });

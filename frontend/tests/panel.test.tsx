@@ -247,7 +247,10 @@ describe("kitchen rules", () => {
       to: "READY",
     });
     expect(nextKitchenStep({ status: "READY", type: "PICKUP" })).toMatchObject({ to: "COMPLETED" });
-    expect(nextKitchenStep({ status: "READY", type: "DELIVERY" })).toBeNull();
+    expect(nextKitchenStep({ status: "READY", type: "DELIVERY" })).toMatchObject({
+      to: "OUT_FOR_DELIVERY",
+    });
+    expect(nextKitchenStep({ status: "OUT_FOR_DELIVERY", type: "DELIVERY" })).toBeNull();
     expect(nextKitchenStep({ status: "COMPLETED", type: "PICKUP" })).toBeNull();
   });
 
@@ -280,10 +283,11 @@ describe("KitchenBoard", () => {
     expect(
       within(screen.getByRole("region", { name: "En preparación" })).getByText("#13"),
     ).toBeInTheDocument();
-    // Un pedido a domicilio listo espera al repartidor: la cocina no lo cierra.
+    // Un pedido a domicilio listo se entrega al repartidor desde la cocina (no queda colgado).
     const listos = screen.getByRole("region", { name: "Listos" });
-    expect(within(listos).getByText("Esperando al repartidor")).toBeInTheDocument();
-    expect(within(listos).queryByRole("button")).not.toBeInTheDocument();
+    expect(
+      within(listos).getByRole("button", { name: "Entregado al repartidor" }),
+    ).toBeInTheDocument();
   });
 
   it("advances an order with the quick action and refreshes", async () => {

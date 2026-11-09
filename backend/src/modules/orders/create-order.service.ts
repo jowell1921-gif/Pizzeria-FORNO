@@ -4,7 +4,11 @@ import type { PrismaClient } from "../../db/client.js";
 import { HttpError } from "../../errors.js";
 import { clearCart } from "../cart/cart.service.js";
 import { cartLinesSchema } from "../checkout/pricing.js";
-import { couponCodeSchema, evaluateCoupon } from "../checkout/discounts.js";
+import {
+  couponCodeSchema,
+  evaluateAutomaticPromotion,
+  evaluateCoupon,
+} from "../checkout/discounts.js";
 import { computeOrder, orderTypeSchema } from "../checkout/totals.js";
 import { isProfileComplete } from "../me/me.service.js";
 import { usablePaymentMethods } from "../payments/availability.js";
@@ -156,6 +160,9 @@ export async function createOrder(
 
   const appliedCoupon = computed.discounts.find((discount) => discount.couponId);
   const appliedReward = computed.discounts.find((discount) => discount.rewardRedemptionId);
+  const appliedAutomatic = computed.discounts.find(
+    (discount) => discount.promotionId && !discount.couponId,
+  );
 
   const orderId = await prisma.$transaction(async (tx) => {
     // Cupón: se bloquea su fila y se vuelven a comprobar los límites de uso dentro de la transacción,
@@ -169,6 +176,23 @@ export async function createOrder(
         subtotal: computed.subtotal,
         now,
       });
+    }
+
+    // Promoción automática: se bloquea y se vuelve a comprobar (límites de uso) dentro de la transacción.
+    if (appliedAutomatic?.promotionId) {
+      await tx.$queryRaw`SELECT "id" FROM "Promotion" WHERE "id" = ${appliedAutomatic.promotionId}::uuid FOR UPDATE`;
+      const again = await evaluateAutomaticPromotion(tx, {
+        userId,
+        lines: computed.lines,
+        subtotal: computed.subtotal,
+        now,
+      });
+      if (
+        again?.promotionId !== appliedAutomatic.promotionId ||
+        !again.amount.equals(appliedAutomatic.amount)
+      ) {
+        throw new HttpError(409, "PROMOTION_CHANGED", "The promotion changed: review your order");
+      }
     }
 
     const order = await tx.order.create({

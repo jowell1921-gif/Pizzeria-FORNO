@@ -48,6 +48,69 @@ export function allocateDiscount(lines: readonly PricedLine[], discount: Prisma.
   return shares;
 }
 
+type PromotionWithProducts = Prisma.PromotionGetPayload<{ include: { products: true } }>;
+
+/**
+ * Importe que descuenta una promoción sobre este carrito (porcentaje, importe fijo o combo), sin
+ * superar los productos. Lanza `COUPON_NOT_APPLICABLE` si no se puede aplicar o no rebaja el precio.
+ */
+function promotionAmount(
+  promotion: PromotionWithProducts,
+  lines: readonly PricedLine[],
+  subtotal: Prisma.Decimal,
+): Prisma.Decimal {
+  let amount: Prisma.Decimal;
+  const restricted = new Map(promotion.products.map((item) => [item.productId, item.quantity]));
+  if (promotion.kind === "COMBO") {
+    // Combo: el cliente debe llevar las unidades indicadas; paga el precio cerrado en su lugar.
+    if (restricted.size === 0 || promotion.comboPrice === null) {
+      throw invalid("COUPON_NOT_APPLICABLE", "This combo cannot be applied to this order");
+    }
+    let normal = ZERO;
+    for (const [productId, quantity] of restricted) {
+      const units = lines
+        .filter((line) => line.productId === productId)
+        .flatMap((line) => Array.from({ length: line.quantity }, () => line.unitPrice))
+        .sort((a, b) => a.comparedTo(b));
+      if (units.length < quantity) {
+        throw invalid(
+          "COUPON_NOT_APPLICABLE",
+          "The order does not include the products of this combo",
+        );
+      }
+      normal = units.slice(0, quantity).reduce((sum, price) => sum.add(price), normal);
+    }
+    amount = normal.sub(promotion.comboPrice);
+  } else {
+    const base =
+      restricted.size === 0
+        ? subtotal
+        : lines
+            .filter((line) => restricted.has(line.productId))
+            .reduce((sum, line) => sum.add(line.lineTotal), ZERO);
+    if (
+      base.lessThanOrEqualTo(ZERO) ||
+      promotion.discountType === null ||
+      promotion.discountValue === null
+    ) {
+      throw invalid(
+        "COUPON_NOT_APPLICABLE",
+        "This coupon does not apply to the products in your order",
+      );
+    }
+    amount =
+      promotion.discountType === "PERCENT"
+        ? cents(base.mul(promotion.discountValue).div(100))
+        : Prisma.Decimal.min(promotion.discountValue, base);
+  }
+
+  amount = cents(Prisma.Decimal.min(amount, subtotal));
+  if (amount.lessThanOrEqualTo(ZERO)) {
+    throw invalid("COUPON_NOT_APPLICABLE", "This coupon would not reduce the price of your order");
+  }
+  return amount;
+}
+
 /**
  * Valida un cupón para este cliente y este carrito, y calcula su descuento. Todas las reglas se
  * comprueban aquí, en el servidor: fechas, estado, uso máximo, uso por cliente, primer pedido,
@@ -132,55 +195,7 @@ export async function evaluateCoupon(
     throw invalid("COUPON_ALREADY_USED", "You have already used this promotion");
   }
 
-  let amount: Prisma.Decimal;
-  const restricted = new Map(promotion.products.map((item) => [item.productId, item.quantity]));
-  if (promotion.kind === "COMBO") {
-    // Combo: el cliente debe llevar las unidades indicadas; paga el precio cerrado en su lugar.
-    if (restricted.size === 0 || promotion.comboPrice === null) {
-      throw invalid("COUPON_NOT_APPLICABLE", "This combo cannot be applied to this order");
-    }
-    let normal = ZERO;
-    for (const [productId, quantity] of restricted) {
-      const units = input.lines
-        .filter((line) => line.productId === productId)
-        .flatMap((line) => Array.from({ length: line.quantity }, () => line.unitPrice))
-        .sort((a, b) => a.comparedTo(b));
-      if (units.length < quantity) {
-        throw invalid(
-          "COUPON_NOT_APPLICABLE",
-          "The order does not include the products of this combo",
-        );
-      }
-      normal = units.slice(0, quantity).reduce((sum, price) => sum.add(price), normal);
-    }
-    amount = normal.sub(promotion.comboPrice);
-  } else {
-    const base =
-      restricted.size === 0
-        ? input.subtotal
-        : input.lines
-            .filter((line) => restricted.has(line.productId))
-            .reduce((sum, line) => sum.add(line.lineTotal), ZERO);
-    if (
-      base.lessThanOrEqualTo(ZERO) ||
-      promotion.discountType === null ||
-      promotion.discountValue === null
-    ) {
-      throw invalid(
-        "COUPON_NOT_APPLICABLE",
-        "This coupon does not apply to the products in your order",
-      );
-    }
-    amount =
-      promotion.discountType === "PERCENT"
-        ? cents(base.mul(promotion.discountValue).div(100))
-        : Prisma.Decimal.min(promotion.discountValue, base);
-  }
-
-  amount = cents(Prisma.Decimal.min(amount, input.subtotal));
-  if (amount.lessThanOrEqualTo(ZERO)) {
-    throw invalid("COUPON_NOT_APPLICABLE", "This coupon would not reduce the price of your order");
-  }
+  const amount = promotionAmount(promotion, input.lines, input.subtotal);
   return {
     description: `${promotion.name} (${coupon.code})`,
     amount,
@@ -188,6 +203,69 @@ export async function evaluateCoupon(
     couponId: coupon.id,
     couponCode: coupon.code,
   };
+}
+
+/**
+ * Promoción automática (sin código) que mejor rebaja este pedido, si alguna se cumple. Solo se
+ * consideran las vigentes y activas; las que dependen del cliente (primer pedido, límite por
+ * persona) exigen sesión. El uso se cuenta con los descuentos aplicados en pedidos no anulados.
+ */
+export async function evaluateAutomaticPromotion(
+  db: Db,
+  input: {
+    userId: string | null;
+    lines: readonly PricedLine[];
+    subtotal: Prisma.Decimal;
+    now: Date;
+  },
+): Promise<AppliedDiscount | null> {
+  const promotions = await db.promotion.findMany({
+    where: {
+      active: true,
+      automatic: true,
+      deletedAt: null,
+      AND: [
+        { OR: [{ startsAt: null }, { startsAt: { lte: input.now } }] },
+        { OR: [{ endsAt: null }, { endsAt: { gte: input.now } }] },
+      ],
+    },
+    include: { products: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  let best: AppliedDiscount | null = null;
+  for (const promotion of promotions) {
+    if (promotion.minSubtotal && input.subtotal.lessThan(promotion.minSubtotal)) continue;
+    if (promotion.firstOrderOnly) {
+      if (!input.userId) continue;
+      const previous = await db.order.count({
+        where: { userId: input.userId, status: ACTIVE_ORDER },
+      });
+      if (previous > 0) continue;
+    }
+    const used = (where: Prisma.OrderDiscountWhereInput) =>
+      db.orderDiscount.count({
+        where: {
+          promotionId: promotion.id,
+          ...where,
+          order: { ...(where.order as object), status: ACTIVE_ORDER },
+        },
+      });
+    if (promotion.maxRedemptions !== null && (await used({})) >= promotion.maxRedemptions) continue;
+    if (promotion.perUserLimit !== null) {
+      if (!input.userId) continue;
+      if ((await used({ order: { userId: input.userId } })) >= promotion.perUserLimit) continue;
+    }
+    try {
+      const amount = promotionAmount(promotion, input.lines, input.subtotal);
+      if (!best || amount.greaterThan(best.amount)) {
+        best = { description: promotion.name, amount, promotionId: promotion.id };
+      }
+    } catch (error) {
+      if (!(error instanceof HttpError)) throw error;
+    }
+  }
+  return best;
 }
 
 /**
@@ -253,15 +331,27 @@ export async function evaluateDiscounts(
     now: Date;
   },
 ): Promise<AppliedDiscount[]> {
-  const wantsDiscount = Boolean(input.couponCode?.trim() || input.redemptionId);
-  if (!wantsDiscount) return [];
-  if (!input.userId) {
+  const wantsExplicit = Boolean(input.couponCode?.trim() || input.redemptionId);
+  if (wantsExplicit && !input.userId) {
     throw new HttpError(401, "UNAUTHENTICATED", "Sign in to use coupons and rewards");
   }
 
   const applied: AppliedDiscount[] = [];
   let remaining = input.subtotal;
-  if (input.couponCode?.trim()) {
+  if (!input.couponCode?.trim()) {
+    // Sin código, se aplica la mejor promoción automática (un cupón escrito por el cliente manda).
+    const automatic = await evaluateAutomaticPromotion(db, {
+      userId: input.userId,
+      lines: input.lines,
+      subtotal: input.subtotal,
+      now: input.now,
+    });
+    if (automatic) {
+      applied.push(automatic);
+      remaining = remaining.sub(automatic.amount);
+    }
+  }
+  if (input.couponCode?.trim() && input.userId) {
     const coupon = await evaluateCoupon(db, {
       userId: input.userId,
       code: input.couponCode,
@@ -272,7 +362,7 @@ export async function evaluateDiscounts(
     applied.push(coupon);
     remaining = remaining.sub(coupon.amount);
   }
-  if (input.redemptionId) {
+  if (input.redemptionId && input.userId) {
     applied.push(
       await evaluateRedemption(db, {
         userId: input.userId,

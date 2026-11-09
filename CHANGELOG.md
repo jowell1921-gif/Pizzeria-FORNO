@@ -2,6 +2,17 @@
 
 ## [Sin publicar]
 
+### Fase 8B — Administración del negocio
+
+- Backend: carta (productos, categorías, opciones, alérgenos, disponibilidad, precios), establecimiento (datos, horarios, festivos, tiempos, zonas, mínimo, pausa de pedidos, métodos de pago), promociones y cupones (con promociones **automáticas**), FORNO CLUB (puntos por euro, recompensas, movimientos, canjes, clientes y ajustes justificados), registro de auditoría y subida de fotos a Supabase Storage. Cada escritura exige un permiso explícito, se valida en el servidor y deja constancia antes/después.
+- Base de datos: `Promotion.automatic` (migración `promotion_automatic`).
+- Pedidos: la promoción automática se evalúa en el presupuesto y se vuelve a comprobar con bloqueo al crear el pedido (`409 PROMOTION_CHANGED` si deja de cumplirse).
+- Web: nuevas pantallas del panel — Carta, Promociones, FORNO CLUB, Establecimiento y Auditoría — visibles solo según el rol.
+- Pruebas: 48 unitarias y 319 de base de datos y API en el backend; 375 unitarias y 331 E2E en el frontend.
+- Documentación: decisión `0010`, `docs/api/README.md` y OpenAPI.
+- Cocina: los pedidos a domicilio listos ya no quedan colgados; la cocina los entrega al repartidor y dejan de aparecer.
+- Demostración: ventana al entrar para ofrecer ser administrador y botón «Hazte administrador» / «Dejar de ser administrador» en «Mi cuenta» (`SELF_ADMIN_ENABLED`, activado por defecto al ser una demostración). El botón de la cabecera junto al carrito pasa a ser «Panel del personal» para el personal.
+
 ### Fase 8A — Pedidos del personal, cocina y panel de control
 
 - Backend: `GET/PATCH /admin/orders` (filtros, paginación, detalle, cambio de estado con motivo y auditoría), `GET /admin/dashboard`, `GET/PATCH /kitchen/orders` y flujos SSE (`/admin/stream`, `/kitchen/stream`). Cada ruta exige un permiso explícito; la cocina solo recibe lo necesario para preparar (sin datos del cliente, importes ni pagos).

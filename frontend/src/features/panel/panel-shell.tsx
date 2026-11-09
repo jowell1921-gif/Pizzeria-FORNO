@@ -1,7 +1,16 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ChefHat, ClipboardList, LayoutDashboard } from "lucide-react";
+import {
+  ChefHat,
+  ClipboardList,
+  Gift,
+  History,
+  LayoutDashboard,
+  Megaphone,
+  Settings,
+  UtensilsCrossed,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
@@ -22,6 +31,21 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: "/admin", label: "Panel", permission: "dashboard:read", icon: LayoutDashboard },
   { href: "/admin/pedidos", label: "Pedidos", permission: "orders:read:all", icon: ClipboardList },
+  { href: "/admin/carta", label: "Carta", permission: "catalog:manage", icon: UtensilsCrossed },
+  {
+    href: "/admin/promociones",
+    label: "Promociones",
+    permission: "promotions:manage",
+    icon: Megaphone,
+  },
+  { href: "/admin/club", label: "FORNO CLUB", permission: "loyalty:manage", icon: Gift },
+  {
+    href: "/admin/establecimiento",
+    label: "Establecimiento",
+    permission: "settings:manage",
+    icon: Settings,
+  },
+  { href: "/admin/auditoria", label: "Auditoría", permission: "audit:read", icon: History },
   { href: "/kitchen", label: "Cocina", permission: "kitchen:orders:read", icon: ChefHat },
 ];
 

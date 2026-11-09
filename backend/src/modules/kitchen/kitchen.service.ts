@@ -9,18 +9,19 @@ import { changeOrderStatus } from "../orders/status.service.js";
 const COMPLETED_VISIBLE_MS = 3 * 60 * 60 * 1000;
 
 /**
- * Cambios que puede hacer la cocina. Aceptar, preparar, marcar listo y entregar al cliente en el
- * local. Rechazar, cancelar o devolver un pedido, o sacarlo a reparto, es cosa del personal.
+ * Cambios que puede hacer la cocina: aceptar, preparar, marcar listo, entregar al cliente en el
+ * local (recogida) o entregar al repartidor (domicilio). Rechazar, cancelar o devolver un pedido, o
+ * cerrar uno a domicilio, es cosa del personal.
  */
 const KITCHEN_TRANSITIONS: Record<string, readonly OrderStatus[]> = {
   NEW: ["ACCEPTED"],
   ACCEPTED: ["PREPARING"],
   PREPARING: ["READY"],
-  READY: ["COMPLETED"],
+  READY: ["COMPLETED", "OUT_FOR_DELIVERY"],
 };
 
 export const kitchenStatusSchema = z
-  .object({ status: z.enum(["ACCEPTED", "PREPARING", "READY", "COMPLETED"]) })
+  .object({ status: z.enum(["ACCEPTED", "PREPARING", "READY", "COMPLETED", "OUT_FOR_DELIVERY"]) })
   .strict();
 
 const include = {
@@ -67,12 +68,15 @@ function kitchenView(order: KitchenRow) {
   };
 }
 
-/** Pedidos en curso y los completados hace poco, del más urgente al menos. */
+/**
+ * Pedidos pendientes de cocina y los completados hace poco. Los que ya salieron con el repartidor
+ * dejan de ser asunto de la cocina y no aparecen.
+ */
 export async function listKitchenOrders(prisma: PrismaClient, now = new Date()) {
   const rows = await prisma.order.findMany({
     where: {
       OR: [
-        { status: { in: ["NEW", "ACCEPTED", "PREPARING", "READY", "OUT_FOR_DELIVERY"] } },
+        { status: { in: ["NEW", "ACCEPTED", "PREPARING", "READY"] } },
         {
           status: "COMPLETED",
           completedAt: { gte: new Date(now.getTime() - COMPLETED_VISIBLE_MS) },
@@ -100,9 +104,11 @@ export async function changeKitchenStatus(
   if (!order) throw notFound("Order not found");
 
   const allowed = KITCHEN_TRANSITIONS[order.status] ?? [];
-  // La cocina solo entrega pedidos para recoger; los de reparto los cierra el personal.
-  const deliveryBlocked = status === "COMPLETED" && order.type === "DELIVERY";
-  if (!allowed.includes(status) || deliveryBlocked) {
+  // Recogida: la cocina entrega al cliente. Domicilio: entrega al repartidor y el personal cierra el pedido.
+  const wrongType =
+    (status === "COMPLETED" && order.type === "DELIVERY") ||
+    (status === "OUT_FOR_DELIVERY" && order.type === "PICKUP");
+  if (!allowed.includes(status) || wrongType) {
     throw forbidden("KITCHEN_TRANSITION_NOT_ALLOWED", "The kitchen cannot make this change");
   }
   await changeOrderStatus(prisma, { orderId, to: status, actorId });

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { authErrorMessage, GENERIC_AUTH_ERROR, NETWORK_ERROR } from "@/features/auth/messages";
+import {
+  authErrorMessage,
+  GENERIC_AUTH_ERROR,
+  NETWORK_ERROR,
+  SERVICE_ERROR,
+} from "@/features/auth/messages";
 
 describe("authErrorMessage", () => {
   it("translates the known Supabase error codes to Spanish", () => {
@@ -17,6 +22,8 @@ describe("authErrorMessage", () => {
   it("recognizes connection and rate limit failures without a code", () => {
     expect(authErrorMessage({ name: "AuthRetryableFetchError", status: 0 })).toBe(NETWORK_ERROR);
     expect(authErrorMessage({ status: 429 })).toMatch(/Demasiados intentos/);
+    // Un error del servidor (p. ej. no puede enviar el correo) no es un fallo de conexión.
+    expect(authErrorMessage({ name: "AuthRetryableFetchError", status: 500 })).toBe(SERVICE_ERROR);
   });
 
   it("never shows the original English or internal message", () => {

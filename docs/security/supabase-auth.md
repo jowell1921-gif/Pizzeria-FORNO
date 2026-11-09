@@ -82,7 +82,7 @@ No necesitas pagar: el plan gratuito basta para el desarrollo.
    - La clave **publishable** (`sb_publishable_…`). Es pública por diseño.
 3. En **Project Settings → JWT Keys** comprueba que el proyecto usa claves de firma **asimétricas** (ES256, el valor por defecto en proyectos nuevos). El backend no admite `HS256`.
 
-> **Nombres de las claves.** Supabase ha renombrado las claves: _publishable_ (`sb_publishable_…`) sustituye a `anon`, y _secret_ (`sb_secret_…`) a `service_role`. Las antiguas están en desuso y desaparecerán a finales de 2026. **No pegues nunca la clave secreta ni `service_role` en el frontend ni en Git.** Para esta fase el backend no necesita ninguna clave secreta.
+> **Nombres de las claves.** Supabase ha renombrado las claves: _publishable_ (`sb_publishable_…`) sustituye a `anon`, y _secret_ (`sb_secret_…`) a `service_role`. Las antiguas están en desuso y desaparecerán a finales de 2026. **No pegues nunca la clave secreta ni `service_role` en el frontend ni en Git.** El backend solo usa la clave secreta (`SUPABASE_SECRET_KEY`, opcional y solo en su `.env`) para subir fotos de producto a Storage (ver `docs/decisions/0010-administracion-del-negocio.md`); para verificar sesiones no necesita ninguna.
 
 ### 2. URLs de redirección
 

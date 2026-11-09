@@ -382,9 +382,27 @@ describe("kitchen", () => {
     expect(blocked.status).toBe(403);
     expect(blocked.body.error.code).toBe("KITCHEN_TRANSITION_NOT_ALLOWED");
 
-    for (const status of ["REJECTED", "CANCELLED", "OUT_FOR_DELIVERY"]) {
+    for (const status of ["REJECTED", "CANCELLED"]) {
       expect((await patch(delivery.id, status)).status, status).toBe(400);
     }
+
+    // Recogida: no sale con repartidor. Domicilio: la cocina lo entrega al repartidor y deja de verlo.
+    const another = await newOrder(user.id);
+    for (const status of ["ACCEPTED", "PREPARING", "READY"]) await patch(another.id, status);
+    expect((await patch(another.id, "OUT_FOR_DELIVERY")).status).toBe(403);
+    const handed = await patch(delivery.id, "OUT_FOR_DELIVERY");
+    expect(handed.status).toBe(200);
+    expect(handed.body.data.status).toBe("OUT_FOR_DELIVERY");
+    const board = await api().get("/api/v1/kitchen/orders").set(kitchen.headers);
+    expect(board.body.data.map((order: { id: string }) => order.id)).not.toContain(delivery.id);
+    expect(board.body.data.map((order: { id: string }) => order.id)).toContain(another.id);
+    // El personal lo cierra.
+    const staff = await withRole("STAFF");
+    const closed = await api()
+      .patch(`/api/v1/admin/orders/${delivery.id}/status`)
+      .set(staff.headers)
+      .send({ status: "COMPLETED" });
+    expect(closed.status).toBe(200);
     expect((await patch("11111111-1111-4111-8111-111111111111", "ACCEPTED")).status).toBe(404);
   });
 });

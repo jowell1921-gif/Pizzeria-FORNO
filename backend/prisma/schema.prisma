@@ -446,6 +446,8 @@ model Promotion {
   maxRedemptions Int?
   perUserLimit   Int?
   firstOrderOnly Boolean       @default(false)
+  /// true: se aplica sola al cumplir las condiciones, sin necesidad de código.
+  automatic      Boolean       @default(false)
   conditions     String[]
   active         Boolean       @default(true)
   createdAt      DateTime      @default(now())

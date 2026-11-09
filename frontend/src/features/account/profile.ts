@@ -24,6 +24,8 @@ export const profileSchema = z.object({
   marketingConsent: z.boolean(),
   roles: z.array(z.enum(["ADMIN", "STAFF", "KITCHEN"])),
   permissions: z.array(z.string()),
+  /** El servidor permite hacerse administrador desde la cuenta (solo demostración). */
+  selfAdminAvailable: z.boolean().default(false),
   createdAt: z.string(),
 });
 

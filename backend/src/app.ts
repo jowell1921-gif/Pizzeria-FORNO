@@ -18,6 +18,7 @@ import {
   type RateLimitConfig,
 } from "./middleware/rate-limit.js";
 import { createAdminRouter } from "./modules/admin/admin.routes.js";
+import type { ImageStorage } from "./modules/admin/storage.js";
 import { createAddressesRouter } from "./modules/addresses/addresses.routes.js";
 import { createCartRouter } from "./modules/cart/cart.routes.js";
 import { createCatalogRouter } from "./modules/catalog/catalog.routes.js";
@@ -38,6 +39,8 @@ import { healthRouter } from "./routes/health.js";
 export interface AppDependencies {
   prisma: PrismaClient;
   verifyToken: TokenVerifier;
+  /** Almacén de imágenes (Supabase Storage). Sin él, la subida de fotos responde 503. */
+  storage?: ImageStorage;
 }
 
 export interface AppOptions extends Pick<Env, "CORS_ORIGINS"> {
@@ -47,6 +50,8 @@ export interface AppOptions extends Pick<Env, "CORS_ORIGINS"> {
   LOG_PRETTY?: boolean;
   TRUST_PROXY?: Env["TRUST_PROXY"];
   API_DOCS_ENABLED?: Env["API_DOCS_ENABLED"];
+  /** Si los usuarios pueden hacerse administradores desde su cuenta (solo demo). Por defecto, no. */
+  SELF_ADMIN_ENABLED?: boolean;
   /** Límites de peticiones; por defecto los de producción (las pruebas pasan los suyos). */
   rateLimits?: RateLimitConfig;
 }
@@ -102,8 +107,13 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
     app.use("/api/v1/checkout", createOptionalAuthenticate(deps), createCheckoutRouter(prisma));
     const userLimits = userRateLimits(limits);
     app.use("/api/v1/me/addresses", authenticate, ...userLimits, createAddressesRouter(prisma));
-    app.use("/api/v1/me", authenticate, ...userLimits, createMeRouter(prisma));
-    app.use("/api/v1/admin", authenticate, ...userLimits, createAdminRouter(prisma));
+    app.use(
+      "/api/v1/me",
+      authenticate,
+      ...userLimits,
+      createMeRouter(prisma, options.SELF_ADMIN_ENABLED ?? false),
+    );
+    app.use("/api/v1/admin", authenticate, ...userLimits, createAdminRouter(prisma, deps.storage));
     app.use("/api/v1/kitchen", authenticate, ...userLimits, createKitchenRouter(prisma));
     app.use("/api/v1/cart", authenticate, ...userLimits, createCartRouter(prisma));
     app.use("/api/v1/loyalty/program", createLoyaltyProgramRouter(prisma));

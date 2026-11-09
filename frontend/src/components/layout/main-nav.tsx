@@ -5,7 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { HeaderAction } from "@/components/layout/header-action";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -58,16 +59,7 @@ export function MainNav() {
       <div className="flex items-center gap-2">
         <AuthMenu className="hidden lg:inline-flex" />
         <CartSheet />
-        <Link
-          href="/carta"
-          transitionTypes={FORWARD}
-          className={cn(
-            buttonVariants({ size: "default" }),
-            "tracking-wide uppercase max-[419px]:hidden",
-          )}
-        >
-          Pedir ahora
-        </Link>
+        <HeaderAction />
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
