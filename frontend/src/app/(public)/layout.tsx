@@ -1,5 +1,8 @@
+import { Suspense } from "react";
+
 import { DemoBanner } from "@/components/layout/demo-banner";
 import { CartProvider } from "@/features/cart/cart-provider";
+import { PizzaiAssistant } from "@/features/assistant/pizzai-assistant";
 import { AdminOfferDialog } from "@/features/account/admin-role";
 import { ProfileProvider } from "@/features/account/profile-context";
 import { SiteFooter } from "@/components/layout/site-footer";
@@ -23,6 +26,10 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
           </main>
           <SiteFooter />
           <AdminOfferDialog />
+          {/* Lee la ruta actual: en rutas con parámetros debe ir en Suspense. */}
+          <Suspense fallback={null}>
+            <PizzaiAssistant />
+          </Suspense>
         </CartProvider>
       </ProfileProvider>
     </>

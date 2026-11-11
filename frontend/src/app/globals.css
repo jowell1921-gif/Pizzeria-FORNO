@@ -588,3 +588,108 @@
     animation: auth-swing 5s ease-in-out infinite;
   }
 }
+
+/*
+ * PizzAI, el asistente virtual. Flotación, saludo, parpadeo y puntos de «escribiendo». Todo se
+ * desactiva con «reducir movimiento»; la interfaz funciona igual sin animaciones.
+ */
+@keyframes pizzai-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pizzai-wave {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  40% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes pizzai-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes pizzai-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pizzai-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pizzai-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .pizzai-float {
+    animation: pizzai-float 4s ease-in-out infinite;
+  }
+
+  .pizzai-wave {
+    transform-origin: 50% 90%;
+    animation: pizzai-wave 1.4s ease-in-out 1;
+  }
+
+  .pizzai-eye {
+    animation: pizzai-blink 5s ease-in-out infinite;
+  }
+
+  .pizzai-dot {
+    animation: pizzai-dot 1.2s ease-in-out infinite;
+  }
+
+  .pizzai-pop {
+    animation: pizzai-pop 0.25s ease-out both;
+  }
+
+  .pizzai-launcher:hover .pizzai-body,
+  .pizzai-launcher:focus-visible .pizzai-body {
+    transform: rotate(8deg) scale(1.06);
+  }
+
+  .pizzai-body {
+    transition: transform 0.25s ease;
+  }
+}

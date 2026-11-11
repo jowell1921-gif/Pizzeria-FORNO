@@ -2,6 +2,14 @@
 
 ## [Sin publicar]
 
+### Fase 8C — PizzAI, etapa 1 (interfaz)
+
+- Asistente virtual PizzAI: pizza animada flotante en la esquina inferior derecha de la web pública (no en el panel ni en `/pedido`), con ventana de chat, sugerencias, indicador de «escribiendo» y respuestas de demostración marcadas como provisionales. Sin IA ni acceso a datos.
+- Arquitectura lista para la etapa 2: la interfaz depende solo de `AssistantClient`.
+- Accesibilidad y móvil: foco gestionado, `aria-live`, Escape, movimiento reducido respetado y chat a casi pantalla completa en móvil.
+- Pruebas: 407 unitarias y 343 E2E en el frontend (incluye axe con el chat abierto).
+- Documentación: decisión `0011`.
+
 ### Fase 8B — Administración del negocio
 
 - Backend: carta (productos, categorías, opciones, alérgenos, disponibilidad, precios), establecimiento (datos, horarios, festivos, tiempos, zonas, mínimo, pausa de pedidos, métodos de pago), promociones y cupones (con promociones **automáticas**), FORNO CLUB (puntos por euro, recompensas, movimientos, canjes, clientes y ajustes justificados), registro de auditoría y subida de fotos a Supabase Storage. Cada escritura exige un permiso explícito, se valida en el servidor y deja constancia antes/después.
