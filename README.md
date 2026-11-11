@@ -63,6 +63,9 @@ Solo en `frontend/`:
 | `npx playwright install chromium` | Descarga el navegador para las pruebas E2E (una sola vez)                                                                                                                                                      |
 | `npm run test:e2e`                | Pruebas de navegador (responsive, navegación, accesibilidad y compra). Necesitan PostgreSQL local (docker compose up -d): siembran la base `forno_test`, arrancan la API en el puerto 4100 y la web en el 3100 |
 
+| `npm run test:e2e:panel` | Pruebas de navegador del panel, la cocina y «Mi cuenta» **con sesión** (móvil, tablet y escritorio). Usan la API y la web reales y sustituyen solo Supabase Auth por un servidor local de pruebas (puertos 3200, 4200 y 4300; base `forno_test`) |
+| `npm run test:coverage` | Informe de cobertura de las pruebas unitarias |
+
 Para generar capturas de revisión visual: establece la variable `CAPTURE=1` y ejecuta `npx playwright test screenshots`. Se guardan en `frontend/test-results/screens/`.
 
 Solo en `backend/`:
@@ -74,9 +77,15 @@ Solo en `backend/`:
 | `npm run db:seed`                                 | Siembra los datos de demostración (idempotente)                                           |
 | `npm run db:generate`                             | Genera el cliente de Prisma                                                               |
 | `npm run test:db`                                 | Pruebas de integridad de la base de datos y de la API (necesita Docker; usa `forno_test`) |
+| `npm run test:coverage`                           | Informe de cobertura del servidor (pruebas de base de datos y API)                        |
+| `npm run perf`                                    | Mide el rendimiento de los endpoints principales (autocannon; usa `forno_test`)           |
 | `npm run roles -- grant correo@ejemplo.com ADMIN` | Concede o retira (`revoke`) un rol: `ADMIN`, `STAFF` o `KITCHEN`                          |
 
 `npm test` en el backend no necesita base de datos. Más información en `docs/database/`.
+
+## Calidad y auditoría
+
+Cada subida y cada solicitud de cambios pasan por la integración continua (`.github/workflows/ci.yml`): tipos, lint, formato, pruebas unitarias, de base de datos y de navegador, y compilación. El informe de la fase 10 (pruebas ejecutadas, cobertura, auditoría de seguridad, rendimiento y hallazgos) está en `docs/quality/informe-qa.md`, y la matriz de los casos críticos en `docs/quality/casos-criticos.md`.
 
 ## API y documentación
 
@@ -101,7 +110,7 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos), 4 (autenticación), 5 (API pública, seguridad y documentación) 6 (pedidos y checkout) 7 (FORNO CLUB y promociones) 8A (pedidos del personal, cocina y panel de control) y 8B (administración de la carta, promociones, FORNO CLUB y local) y 8C (PizzAI, asistente virtual: solo interfaz, sin IA) y 9 (pagos con Stripe, correos, facturas y tickets) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
+Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos), 4 (autenticación), 5 (API pública, seguridad y documentación) 6 (pedidos y checkout) 7 (FORNO CLUB y promociones) 8A (pedidos del personal, cocina y panel de control) y 8B (administración de la carta, promociones, FORNO CLUB y local) y 8C (PizzAI, asistente virtual: solo interfaz, sin IA) 9 (pagos con Stripe, correos, facturas y tickets) y 10 (QA y auditoría) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
 
 ### Próximas fases
 

@@ -60,8 +60,9 @@ Pedidos (fase 6):
 
 El cliente solo envía **identificadores y cantidades**: cualquier campo de precio, total o envío se
 rechaza con `400`. El servidor recalcula precios, IVA, gastos de envío, mínimo de la zona, horario,
-franja y método de pago. Hoy solo se admite efectivo (`CASH_PICKUP` en recogida, `CASH_DELIVERY` a
-domicilio); `/store/settings` solo anuncia los métodos de pago que se pueden usar de verdad.
+franja y método de pago. Se admite efectivo (`CASH_PICKUP` en recogida, `CASH_DELIVERY` a domicilio) y, con la
+pasarela configurada, `ONLINE` (el pedido nace `PENDING_PAYMENT` hasta que Stripe confirma el cobro);
+`/store/settings` solo anuncia los métodos de pago que se pueden usar de verdad.
 
 Errores de negocio al crear un pedido (`error.code`): `PROFILE_INCOMPLETE`, `ORDERS_PAUSED`,
 `STORE_CLOSED`, `ORDER_TYPE_UNAVAILABLE`, `PAYMENT_METHOD_UNAVAILABLE`, `PAYMENT_METHOD_MISMATCH`,

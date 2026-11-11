@@ -980,7 +980,7 @@ export function buildOpenApiDocument(): Json {
           tags: ["Pedidos"],
           summary: "Crear un pedido",
           description:
-            "Exige la cabecera `Idempotency-Key` (8–255 caracteres): repetir la misma petición devuelve el mismo pedido (cabecera `Idempotent-Replayed: true`) sin crear otro. El servidor recalcula precios, IVA, envío y mínimo, y valida zona, horario, franja y método de pago. Hoy solo se admite efectivo (`CASH_PICKUP` en recogida, `CASH_DELIVERY` a domicilio): el pago online llega en la fase 9. El pedido nace `NEW` con un pago de efectivo pendiente.",
+            "Exige la cabecera `Idempotency-Key` (8–255 caracteres): repetir la misma petición devuelve el mismo pedido (cabecera `Idempotent-Replayed: true`) sin crear otro. El servidor recalcula precios, IVA, envío y mínimo, y valida zona, horario, franja y método de pago. Métodos de pago: efectivo (`CASH_PICKUP` en recogida, `CASH_DELIVERY` a domicilio) y, solo si la pasarela está configurada, `ONLINE` (`/store/settings` anuncia los disponibles). En efectivo el pedido nace `NEW` con un cobro pendiente; con `ONLINE` nace `PENDING_PAYMENT` y se inicia el pago con `POST /orders/{id}/payment-session`: solo el webhook verificado de Stripe lo pasa a `NEW`.",
           ...secured,
           parameters: [
             {

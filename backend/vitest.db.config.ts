@@ -11,5 +11,13 @@ export default defineConfig({
     fileParallelism: false,
     testTimeout: 30_000,
     hookTimeout: 120_000,
+    // Cobertura de todo el código del servidor con las pruebas de base de datos y de API
+    // (npm run test:coverage). El código generado de Prisma y el arranque no cuentan.
+    coverage: {
+      provider: "v8",
+      include: ["src/**/*.ts"],
+      exclude: ["src/generated/**", "src/server.ts", "src/**/*.d.ts"],
+      reporter: ["text-summary", "json-summary", "html"],
+    },
   },
 });

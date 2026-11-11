@@ -17,6 +17,8 @@ import type { Promotion } from "@/features/catalog/schemas";
 interface PromotionCardProps {
   promotion: Promotion;
   showConditions?: boolean;
+  /** Nivel del título: h2 si la tarjeta cuelga directamente del h1 de la página; h3 dentro de una sección. */
+  headingAs?: "h2" | "h3";
 }
 
 const dateFormat = new Intl.DateTimeFormat("es-ES", {
@@ -69,7 +71,11 @@ function CopyCodeButton({ code }: { code: string }) {
 }
 
 /** Tarjeta de promoción. Al pulsarla se abre una ventana con el detalle y el código para copiar. */
-export function PromotionCard({ promotion, showConditions = false }: PromotionCardProps) {
+export function PromotionCard({
+  promotion,
+  showConditions = false,
+  headingAs: Heading = "h3",
+}: PromotionCardProps) {
   const headingId = `promo-${promotion.id}`;
 
   return (
@@ -81,11 +87,11 @@ export function PromotionCard({ promotion, showConditions = false }: PromotionCa
         {promotion.badge ? (
           <Badge className="bg-charcoal text-cream w-fit">{promotion.badge}</Badge>
         ) : null}
-        <h3 id={headingId} className="text-3xl leading-none font-bold">
+        <Heading id={headingId} className="text-3xl leading-none font-bold">
           <DialogTrigger className="focus-visible:after:ring-ring/60 cursor-pointer text-left outline-none after:absolute after:inset-0 after:rounded-2xl focus-visible:after:ring-3">
             {promotion.name}
           </DialogTrigger>
-        </h3>
+        </Heading>
         <p className="text-sm">{promotion.description}</p>
 
         {promotion.code ? (

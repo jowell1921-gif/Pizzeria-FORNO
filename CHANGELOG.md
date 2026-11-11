@@ -2,6 +2,16 @@
 
 ## [Sin publicar]
 
+### Fase 10 — QA y auditoría
+
+- Suite de aceptación de los **10 casos críticos** (`critical-cases.test.ts`) y auditoría automática de seguridad sobre todas las operaciones de la API (`security-audit.test.ts`: acceso sin sesión, permisos, IDOR, entradas maliciosas, cabeceras, CORS y secretos).
+- Pruebas de navegador del panel, la cocina y «Mi cuenta» con sesión (`npm run test:e2e:panel`) en móvil 320, móvil 390, tablet y escritorio: sin desbordamientos, sin errores de consola y con accesibilidad WCAG 2.2 AA. La sesión usa un servidor local que sustituye solo a Supabase Auth.
+- Integración continua con GitHub Actions; informes de cobertura (`npm run test:coverage`) y de rendimiento (`npm run perf`).
+- Corregido: el editor de productos desbordaba en pantallas de 320 px; nombres accesibles que no contenían el texto visible (`Canjear`, `Quitar grupo`, `Mi cuenta`); orden de encabezados en Promociones; documentación de la API desactualizada tras el pago online.
+- Dependencias de desarrollo nuevas: `@vitest/coverage-v8` (ambos), `lighthouse` (frontend) y `autocannon` (backend).
+- Pruebas: 48 unitarias y 389 de base de datos y API en el backend; 431 unitarias, 347 E2E públicas y 72 E2E del panel en el frontend.
+- Documentación: `docs/quality/informe-qa.md` y `docs/quality/casos-criticos.md`.
+
 ### Fase 9 — Pagos, correos, facturas y tickets
 
 - Pago online con **Stripe Checkout**: el pedido nace «pendiente de pago» y solo un webhook con firma verificada lo confirma (importe y moneda comprobados, idempotente). Pagos fallidos y sesiones caducadas cancelan el pedido; un cobro tardío se devuelve solo. Reembolsos totales o parciales desde el panel, con auditoría, y automáticos al cancelar un pedido pagado.

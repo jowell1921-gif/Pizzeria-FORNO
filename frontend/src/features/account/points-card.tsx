@@ -195,7 +195,6 @@ export function PointsCard({ onRedeemed }: PointsCardProps = {}) {
                           <Button
                             type="button"
                             size="sm"
-                            aria-label={`Canjear ${reward.name} por ${pointsText(reward.pointsCost)}`}
                             onClick={() => {
                               setMessage(null);
                               setError(null);
@@ -203,6 +202,7 @@ export function PointsCard({ onRedeemed }: PointsCardProps = {}) {
                             }}
                           >
                             Canjear · {reward.pointsCost}
+                            <span className="sr-only"> puntos: {reward.name}</span>
                           </Button>
                         )
                       ) : (

@@ -11,7 +11,7 @@ Fecha: 2026-11-08
 | Carrito                | Zustand con persistencia local (`forno-cart-v1`) y sincronización con el servidor para quien tiene sesión: al iniciar sesión, si hay carrito local se sube; si no, se recupera el del servidor. Al cerrar sesión se vacía el local. Sin precios guardados |
 | Compra solo con cuenta | `/pedido` está protegido en el proxy y la API exige permiso `orders:create` y perfil completo (nombre de usuario y teléfono)                                                                                                                              |
 | Horario                | Franjas calculadas en el servidor (`store/scheduling.ts`) con zona horaria del local, días especiales, antelación (preparación o reparto) y límite de días. `scheduledFor` debe ser exactamente una franja ofrecida. Sin hora: solo con el local abierto  |
-| Pago                   | Solo efectivo hasta la fase 9. `usablePaymentMethods` oculta el pago online mientras no haya proveedor integrado, aunque el local lo tenga activado. El pedido nace `NEW` con un pago `CASH_PENDING`; nunca se marca como pagado                          |
+| Pago                   | Efectivo y, desde la fase 9, pago online (ver 0012). `usablePaymentMethods` oculta el pago online mientras no haya pasarela configurada, aunque el local lo tenga activado. El pedido nace `NEW` con un pago `CASH_PENDING`; nunca se marca como pagado   |
 | Idempotencia           | `Idempotency-Key` obligatoria en `POST /orders`, respaldada por `IdempotencyRecord` (el registro actúa como cerrojo; ver `utils/idempotency.ts`). La web usa la misma clave al reintentar el mismo pedido y una nueva si cambia algo                      |
 | Instantáneas           | El pedido copia nombre y precio de los productos, opciones, datos del cliente y dirección: cambiar la carta o la dirección guardada después no altera pedidos anteriores                                                                                  |
 | Datos en la web        | La carta, los favoritos y las promociones salen de la API (Suspense + aviso si no responde). El resto de datos del local (pie, horarios de portada, FORNO CLUB) siguen siendo de demostración hasta el panel de administración (fase 8)                   |
@@ -20,6 +20,5 @@ Fecha: 2026-11-08
 ## Pendiente
 
 - Cancelación de pedidos por el cliente y reversión de puntos (fase 7/8).
-- Factura y ticket (decisión 9 del propietario): fase 8–9.
-- Correos de confirmación del pedido (fase 9).
+- Factura, ticket y correos de pedido: hechos en la fase 9 (ver 0012).
 - Probar el checkout con una sesión real de Supabase (manual).

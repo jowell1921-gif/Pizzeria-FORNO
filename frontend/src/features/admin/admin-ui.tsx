@@ -112,7 +112,7 @@ export function Field({
 }) {
   const id = useId();
   return (
-    <div className={className}>
+    <div className={cn("min-w-0", className)}>
       <label htmlFor={id} className="mb-1 block text-sm font-semibold">
         {label}
       </label>

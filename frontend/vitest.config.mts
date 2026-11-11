@@ -12,6 +12,13 @@ export default defineConfig({
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}", "src/**/*.test.{ts,tsx}"],
     exclude: ["tests/e2e/**", "node_modules/**"],
-    coverage: { provider: "v8", reporter: ["text", "html"] },
+    // Cobertura del código de la web (npm run test:coverage). Las páginas de `src/app` solo componen
+    // componentes ya cubiertos y se comprueban con las pruebas de navegador.
+    coverage: {
+      provider: "v8",
+      include: ["src/features/**", "src/lib/**", "src/components/**"],
+      exclude: ["src/**/*.d.ts", "src/components/ui/**"],
+      reporter: ["text-summary", "json-summary", "html"],
+    },
   },
 });

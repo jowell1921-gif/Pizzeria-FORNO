@@ -24,6 +24,8 @@
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",
     "test:db": "vitest run --config vitest.db.config.ts",
+    "test:coverage": "vitest run --config vitest.db.config.ts --coverage",
+    "perf": "node scripts/perf.mjs",
     "roles": "tsx --env-file-if-exists=.env scripts/manage-roles.ts"
   },
   "dependencies": {
@@ -52,6 +54,8 @@
     "@types/pg": "8.23.1",
     "@types/supertest": "^7.2.1",
     "@types/swagger-ui-dist": "^3.30.6",
+    "@vitest/coverage-v8": "^5.1.0",
+    "autocannon": "^9.0.0",
     "dotenv": "18.0.9",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",

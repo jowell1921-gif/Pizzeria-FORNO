@@ -23,7 +23,7 @@ async function PromotionsList() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {result.data.map((promotion) => (
-        <PromotionCard key={promotion.id} promotion={promotion} showConditions />
+        <PromotionCard key={promotion.id} promotion={promotion} showConditions headingAs="h2" />
       ))}
     </div>
   );

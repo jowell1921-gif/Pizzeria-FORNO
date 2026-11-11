@@ -505,7 +505,7 @@ function ProductEditor({
                 accept="image/jpeg,image/png,image/webp"
                 disabled={uploading}
                 onChange={(event) => void upload(event.target.files?.[0])}
-                className="text-sm"
+                className="w-full min-w-0 text-sm"
               />
             )}
           </Field>
@@ -685,7 +685,7 @@ function ProductEditor({
                 type="button"
                 variant="outline"
                 size="sm"
-                aria-label={`Quitar el grupo ${groupIndex + 1}`}
+                aria-label={`Quitar grupo ${groupIndex + 1}`}
                 onClick={() => setGroups(groups.filter((_, i) => i !== groupIndex))}
               >
                 Quitar grupo

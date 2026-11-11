@@ -37,4 +37,4 @@ Completa la fase 8: el personal autorizado gestiona la carta, el local, las prom
 ## Pendiente
 
 - Prueba de punta a punta del panel con una sesión real de Supabase (manual).
-- Facturas y tickets (fase 9).
+- Facturas y tickets: hechos en la fase 9 (ver 0012).

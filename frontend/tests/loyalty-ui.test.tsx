@@ -158,11 +158,11 @@ describe("PointsCard (redeeming rewards)", () => {
     renderCard(<PointsCard onRedeemed={onRedeemed} />);
 
     expect(
-      await screen.findByRole("button", { name: /Canjear Bebida gratis por 100 puntos/ }),
+      await screen.findByRole("button", { name: /Canjear · 100\s*puntos: Bebida gratis/ }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Canjear Entrante/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /puntos: Entrante/ })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /Canjear Bebida gratis/ }));
+    await user.click(screen.getByRole("button", { name: /Canjear · 100\s*puntos: Bebida gratis/ }));
     expect(posts).toHaveLength(0); // aún no: pide confirmación
     await user.click(screen.getByRole("button", { name: /Confirmar \(100 puntos\)/ }));
 
@@ -184,12 +184,16 @@ describe("PointsCard (redeeming rewards)", () => {
     const user = userEvent.setup();
     renderCard(<PointsCard />);
 
-    await user.click(await screen.findByRole("button", { name: /Canjear Bebida gratis/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /Canjear · 100\s*puntos: Bebida gratis/ }),
+    );
     await user.click(screen.getByRole("button", { name: /Confirmar/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent(/No tienes puntos suficientes/);
 
     await user.click(screen.getByRole("button", { name: "No" }));
-    expect(screen.getByRole("button", { name: /Canjear Bebida gratis/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Canjear · 100\s*puntos: Bebida gratis/ }),
+    ).toBeInTheDocument();
   });
 });
 

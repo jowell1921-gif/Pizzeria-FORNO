@@ -27,10 +27,10 @@ export function AuthMenu({ className, onNavigate }: AuthMenuProps) {
       href={signedIn ? "/cuenta" : "/acceso"}
       onClick={onNavigate}
       transitionTypes={["nav-forward"]}
-      aria-label={signedIn && profile?.username ? `Mi cuenta (${profile.username})` : undefined}
       className={cn(buttonVariants({ variant: "outline" }), "max-w-[11rem]", className)}
     >
       <UserRound aria-hidden className="size-4 shrink-0" />
+      {signedIn && profile?.username ? <span className="sr-only">Mi cuenta: </span> : null}
       <span className="truncate">{label}</span>
     </Link>
   );

@@ -6,6 +6,8 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
   : null;
 
 const nextConfig: NextConfig = {
+  // Las pruebas del panel compilan con otra configuración de Supabase: usan su propia carpeta.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
     remotePatterns: supabaseHost
       ? [

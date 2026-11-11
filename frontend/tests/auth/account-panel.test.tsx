@@ -130,7 +130,7 @@ describe("AccountPanel", () => {
       phone: "+34 600 000 000",
       marketingConsent: false,
     });
-    expect(screen.getByRole("link", { name: "Mi cuenta (ana_l)" })).toHaveTextContent("ana_l");
+    expect(screen.getByRole("link", { name: /Mi cuenta:\s*ana_l/ })).toHaveTextContent("ana_l");
   });
 
   it("shows the dashboard with points and addresses once the data is complete", async () => {
@@ -141,7 +141,7 @@ describe("AccountPanel", () => {
     expect(await screen.findByTestId("points-balance")).toHaveTextContent("120");
     expect(screen.getByRole("heading", { name: "Mis direcciones" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Seguridad" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Mi cuenta (ana_l)" })).toHaveTextContent("ana_l");
+    expect(screen.getByRole("link", { name: /Mi cuenta:\s*ana_l/ })).toHaveTextContent("ana_l");
   });
 
   it("shows the staff roles in Spanish", async () => {
