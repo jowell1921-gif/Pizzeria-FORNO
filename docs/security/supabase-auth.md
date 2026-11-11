@@ -98,7 +98,7 @@ En **Authentication → Sign In / Providers → Email**:
 - Activa **Confirm email** (los usuarios deben confirmar su correo).
 - Longitud mínima de contraseña: 8 o más.
 
-Los correos de Supabase usan, por defecto, su servidor de pruebas con un límite muy bajo de envíos por hora. Para un uso real se configurará un SMTP propio (se decide en la Fase 9).
+Los correos de Supabase usan, por defecto, su servidor de pruebas con un límite muy bajo de envíos por hora. Para un uso real se configurará un SMTP propio. Los correos de pedido (fase 9) los envía la API con su propio servicio: ver `docs/decisions/0012-pagos-correos-y-documentos.md`.
 
 **Opcional, recomendado:** para que el enlace funcione aunque se abra en otro dispositivo (por ejemplo, el móvil), cambia en **Authentication → Email Templates** el enlace de **Confirm signup** y **Reset password** por:
 
@@ -174,4 +174,4 @@ La app móvil usará el mismo proyecto de Supabase (`supabase_flutter`) y el mis
 ## Pendiente
 
 - Políticas RLS en Supabase y limitación de peticiones (_rate limiting_) en los endpoints de la API: Fase 5.
-- Verificar un dominio en Resend y cambiar el remitente para enviar correo a clientes reales: Fase 9.
+- Verificar un dominio en Resend y cambiar el remitente para enviar correo a clientes reales (también activa los correos de pedido: ver 0012).

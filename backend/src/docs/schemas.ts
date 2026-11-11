@@ -478,6 +478,8 @@ export const AdminOrder = z
           method: z.enum(values(PaymentMethod)),
           status: z.enum(values(PaymentStatus)),
           amount: money,
+          refundedAmount: money,
+          failureReason: z.string().nullable(),
           paidAt: isoDate.nullable(),
         }),
       )

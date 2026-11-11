@@ -20,6 +20,7 @@ test.describe("route protection", () => {
     "/admin/club",
     "/admin/establecimiento",
     "/admin/auditoria",
+    "/admin/correos",
     "/kitchen",
   ]) {
     test(`${path} redirects visitors without a session to the login page`, async ({ page }) => {

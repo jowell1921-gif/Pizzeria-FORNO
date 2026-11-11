@@ -61,6 +61,8 @@ import {
   StoreSettings,
   StoreSlots,
 } from "./schemas.js";
+import { invoiceRequestSchema } from "../modules/documents/invoice.service.js";
+import { refundSchema } from "../modules/payments/payment.service.js";
 import { ADMIN_SCHEMAS } from "./schemas-admin.js";
 
 type Json = Record<string, unknown>;
@@ -120,6 +122,8 @@ const pagingParams: Json[] = [
 
 /** Cuerpos de petición: son los mismos esquemas con los que el servidor valida (forma de entrada). */
 const REQUEST_SCHEMAS = {
+  RefundRequest: refundSchema,
+  InvoiceRequest: invoiceRequestSchema,
   ChangeOrderStatusRequest: changeStatusSchema,
   KitchenStatusRequest: kitchenStatusSchema,
   RedeemRewardRequest: z.object({ rewardId: z.uuid() }).strict(),
@@ -616,6 +620,152 @@ function adminPaths(): Record<string, Json> {
   };
 }
 
+// ───────────────────────────── Pagos, correos y documentos (fase 9) ─────────────────────────────
+
+const pdfResponse = (description: string): Json => ({
+  description,
+  content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+});
+
+function paymentPaths(): Record<string, Json> {
+  return {
+    "/orders/{id}/payment-session": {
+      post: {
+        tags: ["Pagos"],
+        summary: "Iniciar el pago online de un pedido",
+        description:
+          "Crea (o reutiliza, si sigue abierta) la sesión de pago de Stripe de un pedido «pendiente de pago» y devuelve la URL a la que enviar al cliente. Volver de esa página NO confirma el pago: el pedido solo pasa a «nuevo» cuando llega el evento verificado de Stripe.",
+        ...secured,
+        parameters: [idParam("Identificador del pedido.")],
+        responses: {
+          "200": ok("URL de pago.", dataOf("PaymentSession")),
+          "404": error("No existe o es de otra persona."),
+          "409": error("`ORDER_NOT_PAYABLE`, `PAYMENT_IN_PROGRESS` o `PAYMENTS_NOT_CONFIGURED`."),
+          "502": error("`PAYMENT_PROVIDER_ERROR`: Stripe no está disponible."),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/orders/{id}/documents": {
+      get: {
+        tags: ["Pagos"],
+        summary: "Tickets y facturas de mi pedido",
+        description: "`settled` indica si el pedido ya está cobrado (y se puede pedir el ticket).",
+        ...secured,
+        parameters: [idParam("Identificador del pedido.")],
+        responses: {
+          "200": ok("Documentos emitidos.", dataOf("OrderDocuments")),
+          "404": error("No existe o es de otra persona."),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/orders/{id}/documents/{type}": {
+      get: {
+        tags: ["Pagos"],
+        summary: "Descargar el ticket o la factura (PDF)",
+        description:
+          "`type` es `ticket` o `invoice`. El ticket se emite al pedirlo si el pedido está cobrado; la factura debe haberse solicitado antes.",
+        ...secured,
+        parameters: [
+          idParam("Identificador del pedido."),
+          { name: "type", in: "path", required: true, schema: { enum: ["ticket", "invoice"] } },
+        ],
+        responses: {
+          "200": pdfResponse("Documento en PDF."),
+          "404": error("No existe o es de otra persona."),
+          "409": error("`DOCUMENT_NOT_AVAILABLE`: el pedido aún no está cobrado."),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/orders/{id}/invoice": {
+      post: {
+        tags: ["Pagos"],
+        summary: "Solicitar la factura de mi pedido",
+        description:
+          "Emite la factura con los datos fiscales del cliente (una por pedido; repetir la petición devuelve la misma). Solo con el pedido cobrado.",
+        ...secured,
+        parameters: [idParam("Identificador del pedido.")],
+        requestBody: { required: true, content: json(ref("InvoiceRequest")) },
+        responses: {
+          "201": ok("Factura emitida.", dataOf("DocumentInfo")),
+          "400": error("Datos no válidos."),
+          "404": error("No existe o es de otra persona."),
+          "409": error("`DOCUMENT_NOT_AVAILABLE`: el pedido aún no está cobrado."),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/webhooks/stripe": {
+      post: {
+        tags: ["Pagos"],
+        summary: "Webhook de Stripe",
+        description:
+          "Lo llama Stripe, no los clientes. Verifica la firma (`Stripe-Signature`) sobre el cuerpo exacto; sin firma válida responde 400 y no hace nada. Es idempotente: cada evento se procesa una sola vez. Solo existe si Stripe está configurado.",
+        responses: {
+          "200": { description: "Evento recibido (procesado, duplicado o ignorado)." },
+          "400": error("`INVALID_SIGNATURE`."),
+          "500": error("Fallo al procesar: Stripe lo reintentará."),
+        },
+      },
+    },
+    "/admin/orders/{id}/refund": {
+      post: {
+        tags: ["Pagos"],
+        summary: "Reembolsar un pago online",
+        description:
+          "Permiso `payments:refund`. Devuelve todo lo pendiente o un importe parcial; con motivo obligatorio y registro de auditoría. Repetir la misma petición no devuelve dos veces.",
+        ...secured,
+        parameters: [idParam("Identificador del pedido.")],
+        requestBody: { required: true, content: json(ref("RefundRequest")) },
+        responses: {
+          "200": ok("Pedido con el pago actualizado.", dataOf("AdminOrder")),
+          "404": error("No hay un pago online cobrado que devolver."),
+          "422": error("`INVALID_REFUND_AMOUNT`: supera lo que se puede devolver."),
+          "502": error("`PAYMENT_PROVIDER_ERROR`."),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/admin/orders/{id}/documents/{type}": {
+      get: {
+        tags: ["Pagos"],
+        summary: "Ticket o factura de un pedido (PDF)",
+        description: "Permiso `orders:read:all`.",
+        ...secured,
+        parameters: [
+          idParam("Identificador del pedido."),
+          { name: "type", in: "path", required: true, schema: { enum: ["ticket", "invoice"] } },
+        ],
+        responses: {
+          "200": pdfResponse("Documento en PDF."),
+          "404": error("No existe."),
+          "409": error("`DOCUMENT_NOT_AVAILABLE`."),
+          ...AUTH_ERRORS,
+          ...COMMON_ERRORS,
+        },
+      },
+    },
+    "/admin/notifications": pagedGet(
+      "Pagos",
+      "Correos de pedido",
+      "settings:manage",
+      "AdminNotification",
+      [
+        queryParam("status", "PENDING, SENT, FAILED o LOGGED (registrado sin enviar)."),
+        queryParam("template", "Plantilla (ORDER_CONFIRMED, ORDER_READY…)."),
+        queryParam("q", "Parte del correo del destinatario."),
+      ],
+    ),
+  };
+}
+
 /** Documento OpenAPI 3.1 de la API v1. Es el contrato que consumen la web y la app Flutter. */
 export function buildOpenApiDocument(): Json {
   return {
@@ -645,6 +795,7 @@ export function buildOpenApiDocument(): Json {
       { name: "Pedidos" },
       { name: "Personal" },
       { name: "Cocina" },
+      { name: "Pagos" },
       { name: "Carta (admin)" },
       { name: "Configuración" },
       { name: "Promociones (admin)" },
@@ -1169,6 +1320,7 @@ export function buildOpenApiDocument(): Json {
         },
       },
       ...adminPaths(),
+      ...paymentPaths(),
       "/loyalty/program": {
         get: {
           tags: ["FORNO CLUB"],

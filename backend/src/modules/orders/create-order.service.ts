@@ -57,14 +57,17 @@ const rejected = (code: string, message: string, details?: unknown) =>
  * Crea un pedido para el usuario autenticado. Todo se decide aquí, nunca en el cliente:
  * precios, IVA, gastos de envío, mínimo del pedido, zona de reparto, horario, franja y método de pago.
  *
- * Pago: solo en efectivo mientras no haya un proveedor de pago online integrado (fase 9). El pedido
- * queda «Nuevo» con un pago de efectivo pendiente; nunca se marca como pagado por adelantado.
+ * Pago: en efectivo el pedido queda «Nuevo» con un cobro pendiente. Online queda «Pendiente de pago»
+ * (la cocina no lo ve) hasta que la pasarela confirma el cobro con un evento verificado; nunca se
+ * marca como pagado por adelantado.
  */
 export async function createOrder(
   prisma: PrismaClient,
   userId: string,
   body: unknown,
   now = new Date(),
+  /** Pasarela de pago online (su nombre, p. ej. «stripe»). Sin ella, el pago online no existe. */
+  options: { onlineProvider?: string | undefined } = {},
 ) {
   const input = createOrderSchema.parse(body);
 
@@ -95,7 +98,11 @@ export async function createOrder(
   }
 
   // Método de pago: debe estar activo, usable y ser coherente con la modalidad.
-  if (!usablePaymentMethods(settings.enabledPaymentMethods).includes(input.paymentMethod)) {
+  const usable = usablePaymentMethods(
+    settings.enabledPaymentMethods,
+    Boolean(options.onlineProvider),
+  );
+  if (!usable.includes(input.paymentMethod)) {
     throw new HttpError(409, "PAYMENT_METHOD_UNAVAILABLE", "This payment method is not available");
   }
   const cashFor = { PICKUP: "CASH_PICKUP", DELIVERY: "CASH_DELIVERY" } as const;
@@ -164,6 +171,8 @@ export async function createOrder(
     (discount) => discount.promotionId && !discount.couponId,
   );
 
+  const initialStatus = input.paymentMethod === "ONLINE" ? "PENDING_PAYMENT" : "NEW";
+
   const orderId = await prisma.$transaction(async (tx) => {
     // Cupón: se bloquea su fila y se vuelven a comprobar los límites de uso dentro de la transacción,
     // de modo que dos pedidos simultáneos no pueden gastar el mismo cupón de un solo uso.
@@ -199,7 +208,7 @@ export async function createOrder(
       data: {
         userId,
         type: input.type,
-        status: "NEW",
+        status: initialStatus,
         scheduledFor,
         estimatedReadyAt,
         notes: input.notes || null,
@@ -253,11 +262,16 @@ export async function createOrder(
             },
           })),
         },
-        statusHistory: { create: { fromStatus: null, toStatus: "NEW", changedById: userId } },
+        statusHistory: {
+          create: { fromStatus: null, toStatus: initialStatus, changedById: userId },
+        },
         payments: {
           create: {
             method: input.paymentMethod,
-            status: "CASH_PENDING",
+            status: input.paymentMethod === "ONLINE" ? "PENDING" : "CASH_PENDING",
+            ...(input.paymentMethod === "ONLINE"
+              ? { provider: options.onlineProvider ?? null }
+              : {}),
             amount: computed.total,
           },
         },
@@ -283,11 +297,14 @@ export async function createOrder(
   });
 
   const created = await getMyOrder(prisma, userId, orderId);
-  orderEvents.publish({
-    kind: "created",
-    orderId,
-    orderNumber: created.orderNumber,
-    status: created.status,
-  });
+  // Un pedido pendiente de pago no se anuncia: la cocina lo verá cuando se confirme el cobro.
+  if (created.status === "NEW") {
+    orderEvents.publish({
+      kind: "created",
+      orderId,
+      orderNumber: created.orderNumber,
+      status: created.status,
+    });
+  }
   return created;
 }

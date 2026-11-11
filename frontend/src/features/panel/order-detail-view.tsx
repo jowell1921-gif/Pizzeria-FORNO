@@ -22,6 +22,7 @@ import {
   STATUS_ACTION_LABELS,
   type OrderStatus,
 } from "./panel-api";
+import { RefundForm, TicketButton } from "./payment-admin";
 import { useOrderStream } from "./use-order-stream";
 
 const dateTime = new Intl.DateTimeFormat("es-ES", { dateStyle: "long", timeStyle: "short" });
@@ -332,12 +333,30 @@ export function OrderDetailView({ orderId }: { orderId: string }) {
                 Pago
               </h2>
               {order.payments.map((payment, index) => (
-                <p key={index} className="text-sm">
-                  {PAYMENT_LABELS[payment.method]} ·{" "}
-                  {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status} ·{" "}
-                  <span className="font-bold">{formatEuro(payment.amount)}</span>
-                </p>
+                <div key={index} className="space-y-1 text-sm">
+                  <p>
+                    {PAYMENT_LABELS[payment.method]} ·{" "}
+                    {PAYMENT_STATUS_LABELS[payment.status] ?? payment.status} ·{" "}
+                    <span className="font-bold">{formatEuro(payment.amount)}</span>
+                  </p>
+                  {Number(payment.refundedAmount) > 0 ? (
+                    <p className="text-muted-foreground">
+                      Devuelto: {formatEuro(payment.refundedAmount)}
+                    </p>
+                  ) : null}
+                  {payment.failureReason ? (
+                    <p className="text-muted-foreground">
+                      Motivo del fallo: {payment.failureReason}
+                    </p>
+                  ) : null}
+                </div>
               ))}
+              <RefundForm
+                orderId={orderId}
+                payments={order.payments}
+                onDone={() => void client.invalidateQueries({ queryKey })}
+              />
+              <TicketButton orderId={orderId} />
             </section>
           ) : null}
 

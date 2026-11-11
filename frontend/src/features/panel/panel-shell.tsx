@@ -7,6 +7,7 @@ import {
   Gift,
   History,
   LayoutDashboard,
+  Mail,
   Megaphone,
   Settings,
   UtensilsCrossed,
@@ -45,6 +46,7 @@ const NAV: NavItem[] = [
     permission: "settings:manage",
     icon: Settings,
   },
+  { href: "/admin/correos", label: "Correos", permission: "settings:manage", icon: Mail },
   { href: "/admin/auditoria", label: "Auditoría", permission: "audit:read", icon: History },
   { href: "/kitchen", label: "Cocina", permission: "kitchen:orders:read", icon: ChefHat },
 ];

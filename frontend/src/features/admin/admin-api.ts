@@ -397,3 +397,21 @@ export async function uploadProductImage(token: string, file: File): Promise<str
   }
   return z.object({ data: z.object({ url: z.string() }) }).parse(payload).data.url;
 }
+
+// ── Correos de pedido (fase 9) ──
+export const notificationSchema = z.object({
+  id,
+  template: z.string(),
+  recipient: z.string(),
+  subject: z.string().nullable(),
+  body: z.string().nullable(),
+  status: z.enum(["PENDING", "SENT", "FAILED", "LOGGED"]),
+  attempts: z.number(),
+  lastError: z.string().nullable(),
+  orderNumber: z.number().nullable(),
+  createdAt: z.string(),
+  sentAt: z.string().nullable(),
+});
+
+export const fetchNotifications = (token: string, query: Record<string, string | number>) =>
+  apiRequestPage("/admin/notifications", { token, query, schema: notificationSchema });

@@ -70,6 +70,8 @@ export const adminOrderSchema = z.object({
         method: paymentMethod,
         status: z.string(),
         amount: z.string(),
+        refundedAmount: z.string().default("0.00"),
+        failureReason: z.string().nullable().default(null),
         paidAt: z.string().nullable(),
       }),
     )
@@ -177,6 +179,20 @@ export const changeAdminOrderStatus = (
     schema: adminOrderSchema,
   });
 
+/** Reembolso (total o parcial) de un pago online ya cobrado. Permiso `payments:refund`. */
+export const refundAdminOrder = (
+  token: string,
+  id: string,
+  body: { amount?: string; reason: string },
+) =>
+  apiRequest(`/admin/orders/${encodeURIComponent(id)}/refund`, {
+    token,
+    method: "POST",
+    body,
+    // La pantalla vuelve a cargar el pedido; la respuesta no se usa.
+    schema: z.unknown(),
+  });
+
 export const fetchKitchenOrders = (token: string) =>
   apiRequest("/kitchen/orders", { token, schema: z.array(kitchenOrderSchema) });
 
@@ -212,6 +228,12 @@ export function errorMessage(error: unknown): string {
       return "Ese cambio ya no es posible: el pedido ha cambiado. Se ha actualizado la pantalla.";
     case "REASON_REQUIRED":
       return "Indica el motivo.";
+    case "INVALID_REFUND_AMOUNT":
+      return "El importe supera lo que se puede devolver.";
+    case "PAYMENT_PROVIDER_ERROR":
+      return "Stripe no ha podido hacer la devolución. Inténtalo de nuevo.";
+    case "PAYMENTS_NOT_CONFIGURED":
+      return "El pago online no está configurado en este entorno.";
     case "KITCHEN_TRANSITION_NOT_ALLOWED":
       return "La cocina no puede hacer este cambio.";
     case "FORBIDDEN":

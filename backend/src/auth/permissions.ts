@@ -27,6 +27,7 @@ export const PERMISSIONS = [
   "settings:manage",
   "customers:read",
   "payments:read",
+  "payments:refund",
   "audit:read",
   "roles:manage",
 ] as const;

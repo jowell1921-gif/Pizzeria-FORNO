@@ -12,7 +12,11 @@ const toDateString = (date: Date) => date.toISOString().slice(0, 10);
  * Datos públicos del local. No incluye los datos fiscales internos. `open` indica si está abierto
  * ahora mismo según el horario y los días especiales; `ordersPaused` es la pausa manual de pedidos.
  */
-export async function getStoreSettings(prisma: PrismaClient, now = new Date()) {
+export async function getStoreSettings(
+  prisma: PrismaClient,
+  now = new Date(),
+  onlineAvailable = false,
+) {
   const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
   if (!settings)
     throw new HttpError(503, "STORE_NOT_CONFIGURED", "The store is not configured yet");
@@ -59,8 +63,8 @@ export async function getStoreSettings(prisma: PrismaClient, now = new Date()) {
     deliveryEnabled: settings.deliveryEnabled,
     ordersPaused: settings.ordersPaused,
     pausedMessage: settings.pausedMessage,
-    // Solo los métodos que se pueden usar de verdad ahora (sin pago online hasta la fase 9).
-    enabledPaymentMethods: usablePaymentMethods(settings.enabledPaymentMethods),
+    // Solo los métodos que se pueden usar de verdad ahora (el pago online, solo con la pasarela configurada).
+    enabledPaymentMethods: usablePaymentMethods(settings.enabledPaymentMethods, onlineAvailable),
     slotMinutes: settings.slotMinutes,
     maxAdvanceDays: settings.maxAdvanceDays,
     loyalty: {

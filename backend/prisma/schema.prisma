@@ -98,6 +98,8 @@ enum NotificationStatus {
   PENDING
   SENT
   FAILED
+  /// Registrado pero no enviado (modo sin proveedor de correo, o destinatario no permitido).
+  LOGGED
 }
 
 enum InvoiceType {
@@ -869,6 +871,10 @@ model NotificationLog {
   channel       String             @default("EMAIL")
   template      String
   recipient     String
+  /// Contenido ya redactado, para poder consultarlo aunque no se haya enviado.
+  subject       String?
+  bodyText      String?
+  bodyHtml      String?
   status        NotificationStatus @default(PENDING)
   attempts      Int                @default(0)
   lastError     String?

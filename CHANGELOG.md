@@ -2,6 +2,16 @@
 
 ## [Sin publicar]
 
+### Fase 9 — Pagos, correos, facturas y tickets
+
+- Pago online con **Stripe Checkout**: el pedido nace «pendiente de pago» y solo un webhook con firma verificada lo confirma (importe y moneda comprobados, idempotente). Pagos fallidos y sesiones caducadas cancelan el pedido; un cobro tardío se devuelve solo. Reembolsos totales o parciales desde el panel, con auditoría, y automáticos al cancelar un pedido pagado.
+- Correos de pedido (siete avisos) con cola, reintentos y registro; por defecto se guardan sin enviar y se leen en el panel (**Correos**). Envío real opcional con Resend (`EMAIL_DRIVER=resend`, `EMAIL_ONLY_TO` para el modo sin dominio).
+- Tickets y facturas en PDF con numeración correlativa e inmutable y desglose del IVA; descarga desde el pedido y desde el panel; factura con los datos fiscales del cliente.
+- Web: elegir pago con tarjeta o efectivo, «Pagar ahora» y espera de confirmación en el pedido, ticket y factura, y en el panel el reembolso y los correos.
+- Base de datos: contenido de los avisos y estado «registrado» (migración `notification_content`).
+- Dependencias nuevas: `stripe` y `pdfkit` (backend).
+- Documentación: decisión `0012`, `docs/api/README.md`, OpenAPI y `.env.example`.
+
 ### Fase 8C — PizzAI, etapa 1 (interfaz)
 
 - Asistente virtual PizzAI: pizza animada flotante en la esquina inferior derecha de la web pública (no en el panel ni en `/pedido`), con ventana de chat, sugerencias, indicador de «escribiendo» y respuestas de demostración marcadas como provisionales. Sin IA ni acceso a datos.

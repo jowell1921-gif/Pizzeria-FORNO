@@ -28,6 +28,7 @@ import {
   createOrder,
   orderErrorMessage,
   PAYMENT_LABELS,
+  startPayment,
   type CreateOrderBody,
   type PaymentMethod,
 } from "./order";
@@ -166,9 +167,11 @@ export function CheckoutFlow() {
 
   const store = settings.data;
   const typeEnabled = { PICKUP: store.pickupEnabled, DELIVERY: store.deliveryEnabled };
-  const paymentMethod = PAYMENT_BY_TYPE[type];
-  const paymentAvailable = store.enabledPaymentMethods.includes(paymentMethod);
-  const selectedPayment = payment === paymentMethod && paymentAvailable ? payment : null;
+  // Métodos posibles para esta modalidad: pago online (si la pasarela está activa) o efectivo.
+  const paymentOptions = (["ONLINE", PAYMENT_BY_TYPE[type]] as const).filter((method) =>
+    store.enabledPaymentMethods.includes(method),
+  );
+  const selectedPayment = payment !== null && paymentOptions.includes(payment) ? payment : null;
 
   const delivery = quote.data?.delivery;
   const deliveryOk =
@@ -239,6 +242,17 @@ export function CheckoutFlow() {
     try {
       const order = await createOrder(token, body, attempt.current.key);
       clear();
+      if (selectedPayment === "ONLINE") {
+        // Pago con tarjeta: se sigue en la página segura de la pasarela. El pedido no se confirma hasta
+        // que ella lo comunica; si algo falla aquí, el cliente puede reintentar desde su pedido.
+        try {
+          const session = await startPayment(token, order.id);
+          window.location.assign(session.url);
+          return;
+        } catch {
+          // Se sigue a la página del pedido, que ofrece «Pagar ahora».
+        }
+      }
       router.push(`/pedido/${order.id}`);
     } catch (caught) {
       setError(orderErrorMessage(caught));
@@ -331,29 +345,38 @@ export function CheckoutFlow() {
         </Step>
 
         <Step number={4} title="Pago">
-          {paymentAvailable ? (
-            <label
-              className={cn(
-                "border-border flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm",
-                selectedPayment === paymentMethod && "border-tomato-strong bg-cream-soft",
-              )}
-            >
-              <input
-                type="radio"
-                name="payment"
-                checked={selectedPayment === paymentMethod}
-                onChange={() => setPayment(paymentMethod)}
-                className="accent-tomato-strong size-5"
-              />
-              <span className="font-semibold">{PAYMENT_LABELS[paymentMethod]}</span>
-            </label>
+          {paymentOptions.length > 0 ? (
+            <div role="radiogroup" aria-label="Método de pago" className="grid gap-2">
+              {paymentOptions.map((method) => (
+                <label
+                  key={method}
+                  className={cn(
+                    "border-border flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm",
+                    selectedPayment === method && "border-tomato-strong bg-cream-soft",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    name="payment"
+                    checked={selectedPayment === method}
+                    onChange={() => setPayment(method)}
+                    className="accent-tomato-strong size-5"
+                  />
+                  <span className="font-semibold">{PAYMENT_LABELS[method]}</span>
+                </label>
+              ))}
+            </div>
           ) : (
             <p role="alert" className="text-destructive text-sm font-medium">
               No hay ningún método de pago disponible para esta modalidad.
             </p>
           )}
           <p className="text-muted-foreground text-sm">
-            El pago online todavía no está disponible. El pedido se paga en efectivo.
+            {selectedPayment === "ONLINE"
+              ? "Al confirmar te llevaremos a la página segura de Stripe para pagar con tarjeta. Tu pedido se confirma cuando comprobamos el pago."
+              : paymentOptions.includes("ONLINE")
+                ? "Con el efectivo, pagas cuando recibes o recoges el pedido."
+                : "El pago online no está disponible ahora mismo: el pedido se paga en efectivo."}
           </p>
         </Step>
 
@@ -417,7 +440,7 @@ export function CheckoutFlow() {
             {submitting
               ? "Enviando pedido…"
               : quote.data
-                ? `Confirmar pedido · ${formatEuro(quote.data.totals.total)}`
+                ? `${selectedPayment === "ONLINE" ? "Pagar y confirmar" : "Confirmar pedido"} · ${formatEuro(quote.data.totals.total)}`
                 : "Confirmar pedido"}
           </Button>
           <p className="text-muted-foreground text-center text-xs">

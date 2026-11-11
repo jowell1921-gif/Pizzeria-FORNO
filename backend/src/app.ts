@@ -30,6 +30,8 @@ import {
   createLoyaltyRouter,
 } from "./modules/loyalty/loyalty.routes.js";
 import { createMeRouter } from "./modules/me/me.routes.js";
+import type { PaymentGateway } from "./modules/payments/gateway.js";
+import { createWebhookRouter } from "./modules/payments/webhook.routes.js";
 import { createOrdersRouter } from "./modules/orders/orders.routes.js";
 import { createPromotionsRouter } from "./modules/promotions/promotions.routes.js";
 import { createStoreRouter } from "./modules/store/store.routes.js";
@@ -41,6 +43,8 @@ export interface AppDependencies {
   verifyToken: TokenVerifier;
   /** Almacén de imágenes (Supabase Storage). Sin él, la subida de fotos responde 503. */
   storage?: ImageStorage;
+  /** Pasarela de pago (Stripe). Sin ella no hay pago online ni webhook. */
+  payments?: PaymentGateway;
 }
 
 export interface AppOptions extends Pick<Env, "CORS_ORIGINS"> {
@@ -52,6 +56,8 @@ export interface AppOptions extends Pick<Env, "CORS_ORIGINS"> {
   API_DOCS_ENABLED?: Env["API_DOCS_ENABLED"];
   /** Si los usuarios pueden hacerse administradores desde su cuenta (solo demo). Por defecto, no. */
   SELF_ADMIN_ENABLED?: boolean;
+  /** URL pública de la web, a donde vuelve el cliente tras pagar. */
+  FRONTEND_URL?: string;
   /** Límites de peticiones; por defecto los de producción (las pruebas pasan los suyos). */
   rateLimits?: RateLimitConfig;
 }
@@ -85,7 +91,11 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
   // La comprobación de salud no cuenta para el límite (la usan monitores y el despliegue).
   app.use("/api/v1/health", healthRouter);
   app.use("/api/v1", ipRateLimit(limits));
-  app.use(express.json({ limit: "100kb" }));
+  // El webhook de pago necesita el cuerpo en bruto (para verificar la firma): no pasa por el lector de JSON.
+  const jsonBody = express.json({ limit: "100kb" });
+  app.use((req, res, next) =>
+    req.path.startsWith("/api/v1/webhooks/") ? next() : jsonBody(req, res, next),
+  );
 
   if (
     docsEnabled({
@@ -98,9 +108,12 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
 
   if (deps) {
     const { prisma } = deps;
+    if (deps.payments) {
+      app.use("/api/v1/webhooks", createWebhookRouter(prisma, deps.payments));
+    }
     app.use("/api/v1", createCatalogRouter(prisma));
     app.use("/api/v1/promotions", createPromotionsRouter(prisma));
-    app.use("/api/v1/store", createStoreRouter(prisma));
+    app.use("/api/v1/store", createStoreRouter(prisma, Boolean(deps.payments)));
     app.use("/api/v1/delivery-zones", createDeliveryRouter(prisma));
 
     const authenticate = createAuthenticate(deps);
@@ -113,12 +126,25 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
       ...userLimits,
       createMeRouter(prisma, options.SELF_ADMIN_ENABLED ?? false),
     );
-    app.use("/api/v1/admin", authenticate, ...userLimits, createAdminRouter(prisma, deps.storage));
+    app.use(
+      "/api/v1/admin",
+      authenticate,
+      ...userLimits,
+      createAdminRouter(prisma, deps.storage, deps.payments),
+    );
     app.use("/api/v1/kitchen", authenticate, ...userLimits, createKitchenRouter(prisma));
     app.use("/api/v1/cart", authenticate, ...userLimits, createCartRouter(prisma));
     app.use("/api/v1/loyalty/program", createLoyaltyProgramRouter(prisma));
     app.use("/api/v1/loyalty", authenticate, ...userLimits, createLoyaltyRouter(prisma));
-    app.use("/api/v1/orders", authenticate, ...userLimits, createOrdersRouter(prisma));
+    app.use(
+      "/api/v1/orders",
+      authenticate,
+      ...userLimits,
+      createOrdersRouter(prisma, {
+        gateway: deps.payments,
+        frontendUrl: options.FRONTEND_URL ?? options.CORS_ORIGINS[0] ?? "http://localhost:3000",
+      }),
+    );
   }
 
   app.use(notFoundHandler);

@@ -13,6 +13,8 @@ import { ApiError } from "@/lib/api";
 import { formatEuro } from "@/lib/format";
 
 import { FormError } from "@/features/auth/form-parts";
+import { DocumentsSection } from "./documents-section";
+import { PaymentSection } from "./payment-section";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -33,6 +35,12 @@ export function OrderView({ orderId }: { orderId: string }) {
   const order = useApiResource(token, load);
   const { reload } = order;
   const finished = order.data ? FINAL_STATUSES.has(order.data.status) : false;
+  // Cómo volvió el cliente de la pasarela de pago (solo informativo: el pago lo confirma el servidor).
+  const [returned] = useState<"ok" | "cancelado" | null>(() => {
+    if (typeof window === "undefined") return null;
+    const value = new URLSearchParams(window.location.search).get("pago");
+    return value === "ok" || value === "cancelado" ? value : null;
+  });
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
@@ -79,6 +87,10 @@ export function OrderView({ orderId }: { orderId: string }) {
 
   const data = order.data;
   const payment = data.payments[0];
+  const awaitingPayment = data.status === "PENDING_PAYMENT" && payment?.method === "ONLINE";
+  const settled = data.payments.some((item) =>
+    ["PAID", "CASH_COLLECTED", "PARTIALLY_REFUNDED", "REFUNDED"].includes(item.status),
+  );
 
   return (
     <div className="space-y-6">
@@ -101,6 +113,17 @@ export function OrderView({ orderId }: { orderId: string }) {
           </p>
         </div>
       </div>
+
+      {awaitingPayment ? (
+        <PaymentSection orderId={orderId} returned={returned} onPoll={reload} />
+      ) : returned === "ok" && data.status === "NEW" ? (
+        <p
+          role="status"
+          className="rounded-2xl bg-green-50 p-4 text-sm font-semibold text-green-900"
+        >
+          ¡Pago recibido! Tu pedido está confirmado.
+        </p>
+      ) : null}
 
       <div className="grid gap-6 md:grid-cols-2">
         <section
@@ -206,6 +229,8 @@ export function OrderView({ orderId }: { orderId: string }) {
           </dl>
         </section>
       </div>
+
+      {settled ? <DocumentsSection orderId={orderId} /> : null}
 
       {data.status === "NEW" || data.status === "PENDING_PAYMENT" ? (
         <section

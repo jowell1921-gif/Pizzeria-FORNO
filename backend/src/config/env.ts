@@ -25,6 +25,28 @@ const envSchema = z.object({
   SUPABASE_SECRET_KEY: z.string().min(20).optional(),
   /** Bucket público de Storage para las fotos de producto. */
   SUPABASE_STORAGE_BUCKET: z.string().min(3).max(63).default("products"),
+  /**
+   * Stripe (pagos online). Con la clave secreta Y el secreto del webhook el pago online queda
+   * disponible; sin alguno de los dos no se ofrece. Usa siempre claves de prueba (sk_test_…) fuera de
+   * producción. Nunca deben llegar al navegador.
+   */
+  STRIPE_SECRET_KEY: z.string().min(20).optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().min(10).optional(),
+  /** URL pública de la web (a donde vuelve el cliente tras pagar). Por defecto, el primer origen de CORS. */
+  FRONTEND_URL: z.url().optional(),
+  /**
+   * Correo transaccional. `log`: se redacta y se guarda sin enviar (se puede leer en el panel).
+   * `resend`: se envía con Resend (requiere RESEND_API_KEY).
+   */
+  EMAIL_DRIVER: z.enum(["log", "resend"]).default("log"),
+  RESEND_API_KEY: z.string().min(10).optional(),
+  /** Remitente. Sin dominio verificado en Resend solo vale «FORNO <onboarding@resend.dev>». */
+  EMAIL_FROM: z.string().min(3).default("FORNO <onboarding@resend.dev>"),
+  /**
+   * Si se indica, solo se envían correos a esa dirección (la de tu cuenta de Resend, mientras no haya
+   * dominio verificado). El resto se registra sin enviar.
+   */
+  EMAIL_ONLY_TO: z.email().optional(),
   /** Nivel de los registros (logs). */
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   /**
@@ -64,4 +86,10 @@ export function selfAdminEnabled(env: Pick<Env, "SELF_ADMIN_ENABLED">): boolean 
 /** ¿Se publica la documentación de la API? Por defecto sí, salvo en producción. */
 export function docsEnabled(env: Pick<Env, "NODE_ENV" | "API_DOCS_ENABLED">): boolean {
   return env.API_DOCS_ENABLED ?? env.NODE_ENV !== "production";
+}
+
+/** URL de la web para los enlaces de vuelta de Stripe. */
+export function frontendUrl(env: Pick<Env, "FRONTEND_URL" | "CORS_ORIGINS">): string {
+  const url = env.FRONTEND_URL ?? env.CORS_ORIGINS[0] ?? "http://localhost:3000";
+  return url.replace(/\/+$/, "");
 }

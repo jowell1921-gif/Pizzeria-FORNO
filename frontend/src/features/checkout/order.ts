@@ -69,7 +69,7 @@ export interface CreateOrderBody {
 }
 
 export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
-  ONLINE: "Pago online",
+  ONLINE: "Pago online con tarjeta",
   CASH_PICKUP: "Efectivo al recoger",
   CASH_DELIVERY: "Efectivo al recibir",
 };
@@ -94,6 +94,46 @@ export const createOrder = (token: string, body: CreateOrderBody, idempotencyKey
     body,
     headers: { "Idempotency-Key": idempotencyKey },
     schema: orderSchema,
+  });
+
+/** Crea la sesión de pago online (Stripe) del pedido y devuelve la URL a la que ir. */
+export const startPayment = (token: string, id: string) =>
+  apiRequest(`/orders/${encodeURIComponent(id)}/payment-session`, {
+    token,
+    method: "POST",
+    schema: z.object({ url: z.url() }),
+  });
+
+export const documentInfoSchema = z.object({
+  type: z.enum(["INVOICE", "RECEIPT"]),
+  number: z.string(),
+  issuedAt: z.string(),
+  total: z.string(),
+});
+
+export const orderDocumentsSchema = z.object({
+  settled: z.boolean(),
+  documents: z.array(documentInfoSchema),
+});
+
+export const fetchOrderDocuments = (token: string, id: string) =>
+  apiRequest(`/orders/${encodeURIComponent(id)}/documents`, {
+    token,
+    schema: orderDocumentsSchema,
+  });
+
+export interface InvoiceData {
+  name: string;
+  taxId: string;
+  address: string;
+}
+
+export const requestInvoice = (token: string, id: string, body: InvoiceData) =>
+  apiRequest(`/orders/${encodeURIComponent(id)}/invoice`, {
+    token,
+    method: "POST",
+    body: { ...body },
+    schema: documentInfoSchema,
   });
 
 /** El cliente cancela su pedido mientras el local no lo haya aceptado. */
@@ -139,6 +179,16 @@ export function orderErrorMessage(error: unknown): string {
       return "Algún producto de tu pedido ya no está disponible o ha cambiado. Revisa tu pedido.";
     case "REQUEST_IN_PROGRESS":
       return "Tu pedido se está procesando. Espera un momento y revisa «Mis pedidos».";
+    case "ORDER_NOT_PAYABLE":
+      return "Este pedido ya no está pendiente de pago.";
+    case "PAYMENT_IN_PROGRESS":
+      return "Estamos confirmando tu pago. Espera un momento.";
+    case "PAYMENTS_NOT_CONFIGURED":
+      return "El pago online no está disponible ahora mismo.";
+    case "PAYMENT_PROVIDER_ERROR":
+      return "No hemos podido conectar con la pasarela de pago. Inténtalo de nuevo en unos minutos.";
+    case "DOCUMENT_NOT_AVAILABLE":
+      return "Todavía no puedes descargar este documento: el pedido aún no está cobrado.";
     case "CANNOT_CANCEL":
       return "El local ya ha empezado a preparar tu pedido: llámanos para cancelarlo.";
     case "RATE_LIMITED":

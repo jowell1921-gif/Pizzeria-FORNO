@@ -125,9 +125,22 @@ Administración del negocio (fase 8B). Todas exigen sesión y el permiso indicad
 | `POST /admin/loyalty/adjustments`                                         | `loyalty:manage`    | Ajuste de puntos con motivo obligatorio (nunca se edita el saldo directamente)            |
 | `GET /admin/audit`                                                        | `audit:read`        | Registro de operaciones (`entityType`, `action`, `actorId`, `entityId`) paginado          |
 
-Solo demostración: `PUT /me/admin-role` y `DELETE /me/admin-role` (sesión) hacen que el propio usuario se haga o deje de ser administrador. Responden `403 SELF_ADMIN_DISABLED` si el servidor tiene `SELF_ADMIN_ENABLED=false` (por defecto está activo, al ser una demostración). La cocina puede pasar un pedido a domicilio listo a `OUT_FOR_DELIVERY` (`PATCH /kitchen/orders/{id}/status`).
+Pagos, documentos y correos (fase 9):
 
-Pagos y webhooks llegan en la fase 9.
+| Método y ruta                                  | Permiso           | Descripción                                                                           |
+| ---------------------------------------------- | ----------------- | ------------------------------------------------------------------------------------- |
+| `POST /orders/{id}/payment-session`            | sesión            | Inicia (o reutiliza) el pago online de un pedido pendiente: devuelve la URL de Stripe |
+| `POST /webhooks/stripe`                        | firma de Stripe   | Confirma pagos, fallos, caducidades y devoluciones (solo lo llama Stripe)             |
+| `GET /orders/{id}/documents`                   | sesión            | Si el pedido está cobrado y qué documentos tiene                                      |
+| `GET /orders/{id}/documents/{ticket\|invoice}` | sesión            | PDF del ticket (se emite al pedirlo) o de la factura (ya solicitada)                  |
+| `POST /orders/{id}/invoice`                    | sesión            | Emite la factura con los datos fiscales (`name`, `taxId`, `address`)                  |
+| `POST /admin/orders/{id}/refund`               | `payments:refund` | Reembolso total o parcial (`amount` opcional, `reason` obligatorio)                   |
+| `GET /admin/orders/{id}/documents/{type}`      | `orders:read:all` | PDF de un pedido para el personal                                                     |
+| `GET /admin/notifications`                     | `settings:manage` | Correos de pedido enviados o registrados (filtros `status`, `template`, `q`)          |
+
+Un pedido con `paymentMethod: "ONLINE"` nace `PENDING_PAYMENT`; solo el webhook verificado lo pasa a `NEW`. Errores: `409 PAYMENTS_NOT_CONFIGURED`, `409 ORDER_NOT_PAYABLE`, `409 PAYMENT_IN_PROGRESS`, `409 DOCUMENT_NOT_AVAILABLE`, `422 INVALID_REFUND_AMOUNT`, `502 PAYMENT_PROVIDER_ERROR`.
+
+Solo demostración: `PUT /me/admin-role` y `DELETE /me/admin-role` (sesión) hacen que el propio usuario se haga o deje de ser administrador. Responden `403 SELF_ADMIN_DISABLED` si el servidor tiene `SELF_ADMIN_ENABLED=false` (por defecto está activo, al ser una demostración). La cocina puede pasar un pedido a domicilio listo a `OUT_FOR_DELIVERY` (`PATCH /kitchen/orders/{id}/status`).
 
 ## Ejemplos
 

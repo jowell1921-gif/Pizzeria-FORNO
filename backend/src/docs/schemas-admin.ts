@@ -257,6 +257,37 @@ export const AuditEntry = z
   })
   .meta({ id: "AuditEntry" });
 
+export const AdminNotification = z
+  .object({
+    id,
+    template: z.string(),
+    recipient: z.string(),
+    subject: z.string().nullable(),
+    body: z.string().nullable(),
+    status: z.enum(["PENDING", "SENT", "FAILED", "LOGGED"]),
+    attempts: z.number().int(),
+    lastError: z.string().nullable(),
+    orderNumber: z.number().int().nullable(),
+    createdAt: isoDate,
+    sentAt: isoDate.nullable(),
+  })
+  .meta({ id: "AdminNotification" });
+
+export const DocumentInfo = z
+  .object({
+    type: z.enum(["INVOICE", "RECEIPT"]),
+    number: z.string(),
+    issuedAt: isoDate,
+    total: money,
+  })
+  .meta({ id: "DocumentInfo" });
+
+export const OrderDocuments = z
+  .object({ settled: z.boolean(), documents: z.array(DocumentInfo) })
+  .meta({ id: "OrderDocuments" });
+
+export const PaymentSession = z.object({ url: z.url() }).meta({ id: "PaymentSession" });
+
 export const UploadResult = z.object({ url: z.string() }).meta({ id: "UploadResult" });
 
 /** Referencias para que TypeScript no elimine los esquemas registrados con `.meta({ id })`. */
@@ -277,4 +308,8 @@ export const ADMIN_SCHEMAS = [
   PointsAdjustment,
   AuditEntry,
   UploadResult,
+  AdminNotification,
+  DocumentInfo,
+  OrderDocuments,
+  PaymentSession,
 ];

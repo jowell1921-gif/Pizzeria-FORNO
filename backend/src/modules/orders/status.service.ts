@@ -50,8 +50,8 @@ export const changeStatusSchema = z
 export interface StatusChange {
   orderId: string;
   to: OrderStatus;
-  /** Quien realiza el cambio (personal o cliente). */
-  actorId: string;
+  /** Quien realiza el cambio (personal o cliente). Nulo si lo hace el sistema (por ejemplo, un pago). */
+  actorId: string | null;
   reason?: string;
 }
 
@@ -149,7 +149,7 @@ export async function changeOrderStatus(
     }
 
     // Operación del personal: queda en el registro de auditoría (el cliente al cancelar, no).
-    if (change.actorId !== order.userId) {
+    if (change.actorId && change.actorId !== order.userId) {
       await tx.auditLog.create({
         data: {
           actorId: change.actorId,

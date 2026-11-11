@@ -28,7 +28,10 @@ const invalid = (code: string, message: string, details?: unknown) =>
   new HttpError(422, code, message, details);
 
 /** Distribuye un descuento entre las líneas en proporción a su importe (el resto, a las mayores). */
-export function allocateDiscount(lines: readonly PricedLine[], discount: Prisma.Decimal) {
+export function allocateDiscount(
+  lines: readonly { lineTotal: Prisma.Decimal }[],
+  discount: Prisma.Decimal,
+) {
   const subtotal = lines.reduce((sum, line) => sum.add(line.lineTotal), ZERO);
   if (discount.lessThanOrEqualTo(ZERO) || subtotal.lessThanOrEqualTo(ZERO)) {
     return lines.map(() => ZERO);

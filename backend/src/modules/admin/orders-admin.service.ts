@@ -188,6 +188,8 @@ export async function getAdminOrder(
           method: payment.method,
           status: payment.status,
           amount: money(payment.amount),
+          refundedAmount: money(payment.refundedAmount),
+          failureReason: payment.failureReason,
           paidAt: payment.paidAt?.toISOString() ?? null,
         }))
       : null,
