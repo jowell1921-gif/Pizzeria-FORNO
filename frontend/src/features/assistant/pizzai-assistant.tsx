@@ -5,7 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import type { AssistantClient } from "./assistant-client";
+import type { AssistantClient, AssistantMode } from "./assistant-client";
+import { createApiAssistant, fetchAssistantStatus } from "./api-assistant";
 import { ChatWindow } from "./chat-window";
 import { createDemoAssistant } from "./demo-assistant";
 import { PizzaiCharacter } from "./pizzai-character";
@@ -19,15 +20,28 @@ const GREET_EVERY_MS = 40_000;
 const GREET_FOR_MS = 4_000;
 
 interface PizzaiAssistantProps {
-  /** Quien genera las respuestas. Por defecto, el asistente de demostración. */
+  /**
+   * Quien genera las respuestas. Por defecto, la web pregunta al servidor si hay IA disponible y usa
+   * la IA real; si no la hay, el asistente de demostración. Con `client` (pruebas) no se pregunta.
+   */
   client?: AssistantClient;
+  /** Modo que se muestra cuando se inyecta `client`. */
+  mode?: AssistantMode;
 }
 
 /** PizzAI: personaje flotante en la esquina inferior derecha que abre el chat al pulsarlo. */
-export function PizzaiAssistant({ client }: PizzaiAssistantProps) {
+export function PizzaiAssistant({ client, mode: injectedMode = "demo" }: PizzaiAssistantProps) {
   const pathname = usePathname();
-  const assistant = useMemo(() => client ?? createDemoAssistant(), [client]);
+  const injected = client !== undefined;
   const [open, setOpen] = useState(false);
+  // null = todavía no se ha preguntado al servidor (solo se pregunta al abrir el chat por primera vez).
+  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
+  const assistant = useMemo(
+    () => client ?? (aiAvailable ? createApiAssistant() : createDemoAssistant()),
+    [client, aiAvailable],
+  );
+  const mode: AssistantMode = injected ? injectedMode : aiAvailable ? "ai" : "demo";
+  const checking = !injected && open && aiAvailable === null;
   const [greeting, setGreeting] = useState(false);
   const launcher = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -52,6 +66,17 @@ export function PizzaiAssistant({ client }: PizzaiAssistantProps) {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open || injected || aiAvailable !== null) return;
+    let cancelled = false;
+    void fetchAssistantStatus().then((available) => {
+      if (!cancelled) setAiAvailable(available);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, injected, aiAvailable]);
+
   // El foco pasa al campo al abrir y vuelve al personaje al cerrar.
   useEffect(() => {
     if (open) input.current?.focus();
@@ -64,7 +89,13 @@ export function PizzaiAssistant({ client }: PizzaiAssistantProps) {
   return (
     <>
       {open ? (
-        <ChatWindow client={assistant} inputRef={input} onClose={() => setOpen(false)} />
+        <ChatWindow
+          client={assistant}
+          mode={mode}
+          checking={checking}
+          inputRef={input}
+          onClose={() => setOpen(false)}
+        />
       ) : (
         <div className="fixed right-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 flex flex-col items-end gap-2 sm:right-4 sm:bottom-4">
           {greeting ? (

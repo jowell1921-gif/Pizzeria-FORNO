@@ -27,6 +27,8 @@ interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   query?: Record<string, string | number>;
+  /** Para cancelar la petición (por ejemplo, al cerrar un chat). */
+  signal?: AbortSignal;
 }
 
 /**
@@ -52,6 +54,7 @@ async function send(path: string, options: RequestOptions): Promise<unknown> {
       },
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
       cache: "no-store",
+      ...(options.signal ? { signal: options.signal } : {}),
     });
   } catch {
     throw new ApiError(0, "NETWORK_ERROR", "No se pudo conectar con el servidor.");

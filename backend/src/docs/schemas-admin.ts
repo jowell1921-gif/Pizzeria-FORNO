@@ -286,6 +286,15 @@ export const OrderDocuments = z
   .object({ settled: z.boolean(), documents: z.array(DocumentInfo) })
   .meta({ id: "OrderDocuments" });
 
+export const AssistantStatus = z.object({ available: z.boolean() }).meta({ id: "AssistantStatus" });
+
+export const AssistantAnswer = z
+  .object({
+    text: z.string(),
+    links: z.array(z.object({ label: z.string(), href: z.string() })),
+  })
+  .meta({ id: "AssistantAnswer" });
+
 export const PaymentSession = z.object({ url: z.url() }).meta({ id: "PaymentSession" });
 
 export const UploadResult = z.object({ url: z.string() }).meta({ id: "UploadResult" });
@@ -312,4 +321,6 @@ export const ADMIN_SCHEMAS = [
   DocumentInfo,
   OrderDocuments,
   PaymentSession,
+  AssistantStatus,
+  AssistantAnswer,
 ];

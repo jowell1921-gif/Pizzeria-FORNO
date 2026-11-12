@@ -110,9 +110,8 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fases 1 (configuración), 2 (diseño e interfaz), 3 (base de datos), 4 (autenticación), 5 (API pública, seguridad y documentación) 6 (pedidos y checkout) 7 (FORNO CLUB y promociones) 8A (pedidos del personal, cocina y panel de control) y 8B (administración de la carta, promociones, FORNO CLUB y local) y 8C (PizzAI, asistente virtual: solo interfaz, sin IA) 9 (pagos con Stripe, correos, facturas y tickets) y 10 (QA y auditoría) completadas; el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
+Fases 1 a 11 completadas: configuración, diseño e interfaz, base de datos, autenticación, API y seguridad, pedidos y checkout, FORNO CLUB y promociones, panel del personal y cocina, administración del negocio, PizzAI (interfaz y, desde la 9B, IA real, desactivada hasta configurar una clave), pagos con Stripe, correos, facturas y tickets, QA y auditoría, y preparación de la producción (guía en `docs/deployment/`; no se ha publicado nada); el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
 
 ### Próximas fases
 
-- **Fase 9B — PizzAI, etapa 2 (inteligencia artificial):** conectar un proveedor de IA, crear el endpoint en el backend y dar acceso controlado a la carta y a la información del local. Requiere autorización expresa, elegir proveedor y una clave de API (la clave solo en el backend), y se audita en la fase de QA.
-- **Fases 10–12 — QA y auditoría, producción, documentación y preparación para Flutter.**
+- **Fase 12 — Documentación y preparación para Flutter:** contratos y ejemplos de la API, flujo de autenticación y renovación de sesión para la app móvil, y prueba de consumo de la API desde un cliente independiente.

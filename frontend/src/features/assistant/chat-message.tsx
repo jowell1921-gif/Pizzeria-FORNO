@@ -41,6 +41,11 @@ export function ChatBubble({
           ))}
         </div>
       ) : null}
+      {message.ai ? (
+        <span className="text-muted-foreground text-xs">
+          Generado por IA: puede contener errores
+        </span>
+      ) : null}
       {message.provisional ? (
         <span className="text-muted-foreground text-xs">
           Respuesta de demostración (provisional)

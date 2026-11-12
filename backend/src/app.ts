@@ -30,12 +30,14 @@ import {
   createLoyaltyRouter,
 } from "./modules/loyalty/loyalty.routes.js";
 import { createMeRouter } from "./modules/me/me.routes.js";
+import { createAssistantRouter } from "./modules/assistant/assistant.routes.js";
+import type { AssistantService } from "./modules/assistant/assistant.service.js";
 import type { PaymentGateway } from "./modules/payments/gateway.js";
 import { createWebhookRouter } from "./modules/payments/webhook.routes.js";
 import { createOrdersRouter } from "./modules/orders/orders.routes.js";
 import { createPromotionsRouter } from "./modules/promotions/promotions.routes.js";
 import { createStoreRouter } from "./modules/store/store.routes.js";
-import { healthRouter } from "./routes/health.js";
+import { createReadinessRouter, healthRouter } from "./routes/health.js";
 
 /** Servicios externos que necesitan las rutas con base de datos. */
 export interface AppDependencies {
@@ -45,6 +47,8 @@ export interface AppDependencies {
   storage?: ImageStorage;
   /** Pasarela de pago (Stripe). Sin ella no hay pago online ni webhook. */
   payments?: PaymentGateway;
+  /** Asistente con IA (PizzAI). Sin él, `/assistant/chat` responde 503 y la web usa el modo de demostración. */
+  assistant?: AssistantService;
 }
 
 export interface AppOptions extends Pick<Env, "CORS_ORIGINS"> {
@@ -90,6 +94,7 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
 
   // La comprobación de salud no cuenta para el límite (la usan monitores y el despliegue).
   app.use("/api/v1/health", healthRouter);
+  if (deps) app.use("/api/v1/health", createReadinessRouter(deps.prisma));
   app.use("/api/v1", ipRateLimit(limits));
   // El webhook de pago necesita el cuerpo en bruto (para verificar la firma): no pasa por el lector de JSON.
   const jsonBody = express.json({ limit: "100kb" });
@@ -115,6 +120,8 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
     app.use("/api/v1/promotions", createPromotionsRouter(prisma));
     app.use("/api/v1/store", createStoreRouter(prisma, Boolean(deps.payments)));
     app.use("/api/v1/delivery-zones", createDeliveryRouter(prisma));
+
+    app.use("/api/v1/assistant", createAssistantRouter(deps.assistant));
 
     const authenticate = createAuthenticate(deps);
     app.use("/api/v1/checkout", createOptionalAuthenticate(deps), createCheckoutRouter(prisma));

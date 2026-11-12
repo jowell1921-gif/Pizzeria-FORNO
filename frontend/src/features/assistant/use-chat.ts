@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { AssistantClient, ChatMessage } from "./assistant-client";
+import { AssistantError, type AssistantClient, type ChatMessage } from "./assistant-client";
 import { WELCOME_MESSAGE } from "./suggestions";
 
 const WELCOME: ChatMessage = { id: "welcome", role: "assistant", text: WELCOME_MESSAGE };
@@ -14,7 +14,7 @@ const WELCOME: ChatMessage = { id: "welcome", role: "assistant", text: WELCOME_M
 export function useChat(client: AssistantClient) {
   const [messages, setMessages] = useState<ChatMessage[]>([WELCOME]);
   const [typing, setTyping] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
   const counter = useRef(0);
   const controller = useRef<AbortController | null>(null);
   const history = useRef<ChatMessage[]>([WELCOME]);
@@ -30,7 +30,7 @@ export function useChat(client: AssistantClient) {
       history.current = [...history.current, userMessage];
       setMessages(history.current);
       setTyping(true);
-      setFailed(false);
+      setFailure(null);
 
       const abort = new AbortController();
       controller.current = abort;
@@ -44,12 +44,19 @@ export function useChat(client: AssistantClient) {
             role: "assistant",
             text: reply.text,
             provisional: reply.provisional,
+            ...(reply.ai ? { ai: true } : {}),
             ...(reply.links ? { links: reply.links } : {}),
           },
         ];
         setMessages(history.current);
       } catch (error) {
-        if ((error as { name?: string }).name !== "AbortError") setFailed(true);
+        if ((error as { name?: string }).name !== "AbortError") {
+          setFailure(
+            error instanceof AssistantError
+              ? error.userMessage
+              : "No he podido responder. Inténtalo de nuevo.",
+          );
+        }
       } finally {
         if (controller.current === abort) controller.current = null;
         setTyping(false);
@@ -58,5 +65,5 @@ export function useChat(client: AssistantClient) {
     [client],
   );
 
-  return { messages, typing, failed, send };
+  return { messages, typing, failure, send };
 }

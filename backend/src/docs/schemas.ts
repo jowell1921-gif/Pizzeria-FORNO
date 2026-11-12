@@ -45,7 +45,7 @@ export const ErrorResponse = z
   })
   .meta({ id: "ErrorResponse" });
 
-export const Health = z.object({ status: z.literal("ok") }).meta({ id: "Health" });
+export const Health = z.object({ status: z.enum(["ok", "ready"]) }).meta({ id: "Health" });
 
 export const Category = z
   .object({

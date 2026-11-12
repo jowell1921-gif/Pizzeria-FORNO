@@ -2,6 +2,22 @@
 
 ## [Sin publicar]
 
+### Fase 11 — Preparación de la producción
+
+- Guía de despliegue en `docs/deployment/`: orden de pasos, variables por servicio, Supabase, Railway, Vercel, dominio y HTTPS, Stripe, Resend, copias de seguridad y operación; lista de seguridad y datos legales en `docs/security/lista-produccion.md`.
+- `backend/railway.json` (compilación, migraciones antes de cada despliegue, arranque y comprobación de salud).
+- `GET /health/ready` (comprueba la base de datos) además de `/health`; avisos de configuración peligrosa al arrancar (claves de prueba, localhost, proxy, administrador libre…).
+- Cabeceras de seguridad en la web (`nosniff`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, HSTS).
+- Ensayo real de copia y restauración de la base de datos (comparación tabla a tabla y RLS conservada).
+
+### Fase 9B — PizzAI con inteligencia artificial
+
+- Chat con IA real (Claude, SDK oficial) en `POST /assistant/chat`: la IA solo ve los datos públicos de la carta, promociones, reparto, horarios y FORNO CLUB; responde con esos datos, sin acceso a clientes ni pedidos y sin poder hacer operaciones.
+- Límites: 20 mensajes por IP cada 10 minutos, tope diario global configurable, conversación acotada y cancelación al cerrar la pestaña. Sin clave de API, PizzAI sigue en modo de demostración.
+- Transparencia en la web: «Asistente con inteligencia artificial» y «Generado por IA: puede contener errores».
+- Dependencia nueva: `@anthropic-ai/sdk` (backend). Variables: `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`, `ASSISTANT_DAILY_LIMIT`.
+- Documentación: decisión `0013`. No probado contra el proveedor real (no hay clave configurada).
+
 ### Fase 10 — QA y auditoría
 
 - Suite de aceptación de los **10 casos críticos** (`critical-cases.test.ts`) y auditoría automática de seguridad sobre todas las operaciones de la API (`security-audit.test.ts`: acceso sin sesión, permisos, IDOR, entradas maliciosas, cabeceras, CORS y secretos).

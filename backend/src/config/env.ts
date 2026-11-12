@@ -47,6 +47,15 @@ const envSchema = z.object({
    * dominio verificado). El resto se registra sin enviar.
    */
   EMAIL_ONLY_TO: z.email().optional(),
+  /**
+   * PizzAI con IA (Claude, de Anthropic). Con la clave, el chat responde con IA usando solo los datos
+   * públicos de la carta; sin ella, la web muestra el modo de demostración. Cada respuesta tiene un
+   * coste: ASSISTANT_DAILY_LIMIT acota el gasto. La clave solo debe estar en el servidor.
+   */
+  ANTHROPIC_API_KEY: z.string().min(20).optional(),
+  ASSISTANT_MODEL: z.string().min(3).default("claude-opus-5-5"),
+  /** Máximo de mensajes al modelo por día, entre todos los visitantes. */
+  ASSISTANT_DAILY_LIMIT: z.coerce.number().int().min(1).max(100_000).default(200),
   /** Nivel de los registros (logs). */
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   /**
@@ -86,6 +95,51 @@ export function selfAdminEnabled(env: Pick<Env, "SELF_ADMIN_ENABLED">): boolean 
 /** ¿Se publica la documentación de la API? Por defecto sí, salvo en producción. */
 export function docsEnabled(env: Pick<Env, "NODE_ENV" | "API_DOCS_ENABLED">): boolean {
   return env.API_DOCS_ENABLED ?? env.NODE_ENV !== "production";
+}
+
+/**
+ * Avisos de configuración peligrosa o incoherente al arrancar. No impiden el arranque (puede ser
+ * intencionado, por ejemplo en una demostración), pero quedan en el registro para que no pasen
+ * desapercibidos.
+ */
+export function configurationWarnings(env: Env): string[] {
+  const warnings: string[] = [];
+  const production = env.NODE_ENV === "production";
+  const stripeKey = env.STRIPE_SECRET_KEY ?? "";
+
+  if (stripeKey.startsWith("sk_live_") && !production) {
+    warnings.push("Hay una clave de Stripe REAL (sk_live_) fuera de producción.");
+  }
+  if (production) {
+    if (stripeKey.startsWith("sk_test_")) {
+      warnings.push("Producción usa una clave de prueba de Stripe: los pagos no serán reales.");
+    }
+    if (env.CORS_ORIGINS.some((origin) => /localhost|127\.0\.0\.1/.test(origin))) {
+      warnings.push("CORS_ORIGINS permite localhost en producción.");
+    }
+    if (env.TRUST_PROXY === 0) {
+      warnings.push(
+        "TRUST_PROXY=0 detrás de un proxy: el límite de peticiones por IP no distinguirá visitantes.",
+      );
+    }
+    if (selfAdminEnabled(env)) {
+      warnings.push(
+        "SELF_ADMIN_ENABLED está activo: cualquier cliente puede hacerse administrador.",
+      );
+    }
+    if (env.API_DOCS_ENABLED) {
+      warnings.push("La documentación de la API está publicada.");
+    }
+    if (env.FRONTEND_URL && !env.FRONTEND_URL.startsWith("https://")) {
+      warnings.push("FRONTEND_URL no usa HTTPS.");
+    }
+    if (env.STRIPE_SECRET_KEY && !env.STRIPE_WEBHOOK_SECRET) {
+      warnings.push(
+        "Hay clave de Stripe pero falta STRIPE_WEBHOOK_SECRET: el pago online no se ofrece.",
+      );
+    }
+  }
+  return warnings;
 }
 
 /** URL de la web para los enlaces de vuelta de Stripe. */

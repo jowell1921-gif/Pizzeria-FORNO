@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type RefObject } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import type { AssistantClient } from "./assistant-client";
+import type { AssistantClient, AssistantMode } from "./assistant-client";
 import { ChatBubble } from "./chat-message";
 import { PizzaiCharacter } from "./pizzai-character";
 import { SUGGESTIONS } from "./suggestions";
@@ -14,13 +14,17 @@ import { useChat } from "./use-chat";
 
 interface ChatWindowProps {
   client: AssistantClient;
+  /** «ai»: responde una IA real; «demo»: respuestas fijas provisionales. */
+  mode: AssistantMode;
+  /** Mientras se comprueba si hay IA disponible no se puede escribir. */
+  checking?: boolean;
   onClose: () => void;
   inputRef: RefObject<HTMLInputElement | null>;
 }
 
 /** Ventana de conversación con PizzAI: cabecera, mensajes, sugerencias y campo de texto. */
-export function ChatWindow({ client, onClose, inputRef }: ChatWindowProps) {
-  const { messages, typing, failed, send } = useChat(client);
+export function ChatWindow({ client, mode, checking = false, onClose, inputRef }: ChatWindowProps) {
+  const { messages, typing, failure, send } = useChat(client);
   const [draft, setDraft] = useState("");
   const log = useRef<HTMLDivElement>(null);
 
@@ -29,7 +33,7 @@ export function ChatWindow({ client, onClose, inputRef }: ChatWindowProps) {
   }, [messages, typing]);
 
   function submit(text: string) {
-    if (!text.trim() || typing) return;
+    if (!text.trim() || typing || checking) return;
     setDraft("");
     void send(text);
   }
@@ -48,7 +52,11 @@ export function ChatWindow({ client, onClose, inputRef }: ChatWindowProps) {
         <PizzaiCharacter mood={typing ? "typing" : "happy"} className="size-11 shrink-0" />
         <div className="min-w-0 flex-1">
           <h2 className="font-heading text-2xl leading-none font-extrabold normal-case">PizzAI</h2>
-          <p className="text-cream/80 text-xs">Modo demostración · respuestas provisionales</p>
+          <p className="text-cream/80 text-xs">
+            {mode === "ai"
+              ? "Asistente con inteligencia artificial"
+              : "Modo demostración · respuestas provisionales"}
+          </p>
         </div>
         <Button
           type="button"
@@ -80,8 +88,9 @@ export function ChatWindow({ client, onClose, inputRef }: ChatWindowProps) {
               <button
                 key={suggestion}
                 type="button"
+                disabled={checking}
                 onClick={() => submit(suggestion)}
-                className="border-foreground/40 hover:bg-cream min-h-11 rounded-full border bg-white px-4 text-sm font-semibold"
+                className="border-foreground/40 hover:bg-cream min-h-11 rounded-full border bg-white px-4 text-sm font-semibold disabled:opacity-60"
               >
                 {suggestion}
               </button>
@@ -89,9 +98,9 @@ export function ChatWindow({ client, onClose, inputRef }: ChatWindowProps) {
           </div>
         ) : null}
         {typing ? <TypingIndicator /> : null}
-        {failed ? (
+        {failure ? (
           <p role="alert" className="text-destructive text-sm font-medium">
-            No he podido responder. Inténtalo de nuevo.
+            {failure}
           </p>
         ) : null}
       </div>
@@ -121,7 +130,7 @@ export function ChatWindow({ client, onClose, inputRef }: ChatWindowProps) {
           <Button
             type="submit"
             size="icon"
-            disabled={!draft.trim() || typing}
+            disabled={!draft.trim() || typing || checking}
             aria-label="Enviar mensaje"
             className="size-11"
           >
@@ -129,7 +138,9 @@ export function ChatWindow({ client, onClose, inputRef }: ChatWindowProps) {
           </Button>
         </div>
         <p className="text-muted-foreground mt-2 text-xs">
-          PizzAI aún no usa inteligencia artificial: las respuestas son de demostración.
+          {mode === "ai"
+            ? "PizzAI usa inteligencia artificial y puede equivocarse: comprueba precios y alérgenos en la carta. No escribas datos personales."
+            : "PizzAI aún no usa inteligencia artificial: las respuestas son de demostración."}
         </p>
       </form>
     </section>

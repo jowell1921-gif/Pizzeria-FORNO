@@ -19,7 +19,25 @@ const nextConfig: NextConfig = {
         ]
       : [],
   },
-  /* config options here */
+  // Cabeceras de seguridad en todas las respuestas. Sin Content-Security-Policy por ahora: exige nonces
+  // para los scripts de Next.js (ver docs/security/lista-produccion.md).
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+          },
+          { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+        ],
+      },
+    ];
+  },
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

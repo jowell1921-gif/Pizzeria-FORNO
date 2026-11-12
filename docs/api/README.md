@@ -126,6 +126,13 @@ Administración del negocio (fase 8B). Todas exigen sesión y el permiso indicad
 | `POST /admin/loyalty/adjustments`                                         | `loyalty:manage`    | Ajuste de puntos con motivo obligatorio (nunca se edita el saldo directamente)            |
 | `GET /admin/audit`                                                        | `audit:read`        | Registro de operaciones (`entityType`, `action`, `actorId`, `entityId`) paginado          |
 
+Asistente PizzAI (fase 9B), público:
+
+| Método y ruta           | Descripción                                                                                                                                                                                                                                                                                                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /assistant/status` | `{ available }`: si el servidor tiene IA configurada. Si es `false`, usa el modo de demostración y dilo al usuario                                                                                                                                                                                                                                                               |
+| `POST /assistant/chat`  | `{ messages: [{ role: "user"\|"assistant", content }] }` (hasta 12 mensajes de 500 caracteres; el último, del usuario) → `{ text, links }`. La IA solo conoce los datos públicos del negocio. Errores: `400`, `429 RATE_LIMITED` (20 por IP cada 10 min) o `429 ASSISTANT_LIMIT_REACHED` (tope diario), `502 ASSISTANT_ERROR`, `503 ASSISTANT_NOT_CONFIGURED` / `ASSISTANT_BUSY` |
+
 Pagos, documentos y correos (fase 9):
 
 | Método y ruta                                  | Permiso           | Descripción                                                                           |

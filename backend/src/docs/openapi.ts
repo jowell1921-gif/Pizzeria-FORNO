@@ -61,6 +61,7 @@ import {
   StoreSettings,
   StoreSlots,
 } from "./schemas.js";
+import { chatRequestSchema } from "../modules/assistant/assistant.service.js";
 import { invoiceRequestSchema } from "../modules/documents/invoice.service.js";
 import { refundSchema } from "../modules/payments/payment.service.js";
 import { ADMIN_SCHEMAS } from "./schemas-admin.js";
@@ -122,6 +123,7 @@ const pagingParams: Json[] = [
 
 /** Cuerpos de petición: son los mismos esquemas con los que el servidor valida (forma de entrada). */
 const REQUEST_SCHEMAS = {
+  AssistantChatRequest: chatRequestSchema,
   RefundRequest: refundSchema,
   InvoiceRequest: invoiceRequestSchema,
   ChangeOrderStatusRequest: changeStatusSchema,
@@ -795,6 +797,7 @@ export function buildOpenApiDocument(): Json {
       { name: "Pedidos" },
       { name: "Personal" },
       { name: "Cocina" },
+      { name: "Asistente" },
       { name: "Pagos" },
       { name: "Carta (admin)" },
       { name: "Configuración" },
@@ -807,6 +810,47 @@ export function buildOpenApiDocument(): Json {
           tags: ["Sistema"],
           summary: "Estado del servicio",
           responses: { "200": ok("El servicio responde.", dataOf("Health")) },
+        },
+      },
+      "/assistant/status": {
+        get: {
+          tags: ["Asistente"],
+          summary: "¿Está disponible PizzAI con IA?",
+          description:
+            "`available: false` significa que el servidor no tiene proveedor de IA configurado: los clientes deben usar el modo de demostración y decirlo.",
+          responses: {
+            "200": ok("Estado del asistente.", dataOf("AssistantStatus")),
+            ...COMMON_ERRORS,
+          },
+        },
+      },
+      "/assistant/chat": {
+        post: {
+          tags: ["Asistente"],
+          summary: "Conversar con PizzAI",
+          description:
+            "Público. Se envía la conversación (hasta 12 mensajes de 500 caracteres; el último, del usuario) y se recibe la respuesta de la IA. El asistente solo conoce los datos públicos de la carta, las promociones, el reparto y FORNO CLUB; no accede a clientes ni pedidos y no puede hacer operaciones. Límites: 20 mensajes por IP cada 10 minutos y un tope diario global.",
+          requestBody: { required: true, content: json(ref("AssistantChatRequest")) },
+          responses: {
+            "200": ok("Respuesta (texto plano) y enlaces útiles.", dataOf("AssistantAnswer")),
+            "400": error("Conversación no válida."),
+            "502": error("`ASSISTANT_ERROR`: el proveedor de IA falló."),
+            "503": error("`ASSISTANT_NOT_CONFIGURED` o `ASSISTANT_BUSY`."),
+            ...COMMON_ERRORS,
+            "429": error("`RATE_LIMITED` (por IP) o `ASSISTANT_LIMIT_REACHED` (tope diario)."),
+          },
+        },
+      },
+      "/health/ready": {
+        get: {
+          tags: ["Sistema"],
+          summary: "Disponibilidad (con base de datos)",
+          description:
+            "Como `/health`, pero comprueba también la conexión con la base de datos. Para monitores de disponibilidad, no para reinicios.",
+          responses: {
+            "200": ok("Servicio y base de datos disponibles.", dataOf("Health")),
+            "503": error("`NOT_READY`: la base de datos no responde."),
+          },
         },
       },
       "/categories": {
