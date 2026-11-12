@@ -102,7 +102,7 @@ export function ProfileDataForm({ profile, token, mode, onSaved, onCancel }: Pro
           {...register("marketingConsent")}
         />
         <span>
-          Quiero recibir ofertas y novedades de FORNO por correo (opcional). Puedes retirar el
+          Quiero recibir ofertas y novedades de FORNEA por correo (opcional). Puedes retirar el
           consentimiento cuando quieras.
         </span>
       </label>

@@ -97,7 +97,7 @@ export function makePromotion(overrides: Partial<Promotion> = {}): Promotion {
 
 export const comboPromotion = makePromotion({
   id: "55555555-5555-4555-8555-555555555555",
-  name: "Menú FORNO",
+  name: "Menú FORNEA",
   badge: "Combo",
   kind: "COMBO",
   code: null,

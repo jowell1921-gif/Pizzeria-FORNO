@@ -7,7 +7,7 @@ interface FornoWatermarkProps {
 }
 
 /**
- * Marca de agua «FORNO» en contorno, detrás del contenido. Es decorativa (`aria-hidden`).
+ * Marca de agua «FORNEA» en contorno, detrás del contenido. Es decorativa (`aria-hidden`).
  * Debe colocarse en un contenedor `relative isolate overflow-hidden`; la posición vertical se
  * indica con `className` (por ejemplo `top-1/2 -translate-y-1/2`).
  */
@@ -23,7 +23,7 @@ export function FornoWatermark({ tone = "dark", className }: FornoWatermarkProps
         className,
       )}
     >
-      FORNO
+      FORNEA
     </div>
   );
 }

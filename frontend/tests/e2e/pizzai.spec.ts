@@ -29,7 +29,7 @@ test("the chat opens, answers a suggestion as a demo and closes", async ({ page 
   const chat = page.getByRole("dialog", { name: "Chat con PizzAI" });
   await expect(chat).toBeVisible();
   await expect(
-    chat.getByText("¡Hola! Soy PizzAI, tu asistente de FORNO. ¿Qué te apetece hoy?"),
+    chat.getByText("¡Hola! Soy PizzAI, tu asistente de FORNEA. ¿Qué te apetece hoy?"),
   ).toBeVisible();
 
   const viewport = page.viewportSize()!;

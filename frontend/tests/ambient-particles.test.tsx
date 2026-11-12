@@ -38,10 +38,10 @@ describe("AmbientParticles", () => {
 });
 
 describe("FornoWatermark", () => {
-  it("renders the FORNO letters as a decorative element", () => {
+  it("renders the FORNEA letters as a decorative element", () => {
     const { container } = render(<FornoWatermark />);
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
-    expect(container.firstElementChild).toHaveTextContent("FORNO");
+    expect(container.firstElementChild).toHaveTextContent("FORNEA");
   });
 
   it("uses a stroke that contrasts with the background tone", () => {

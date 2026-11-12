@@ -53,7 +53,7 @@ const product = (overrides: object = {}) => ({
 });
 
 const settings = {
-  name: "FORNO",
+  name: "FORNEA",
   legalName: null,
   taxId: null,
   addressLine: "Calle Demo 1",
@@ -198,7 +198,7 @@ describe("panel navigation", () => {
     expect(await screen.findByRole("link", { name: /carta/i })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /establecimiento/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /auditoría/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /forno club/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /fornea club/i })).not.toBeInTheDocument();
   });
 
   it("blocks a screen without its permission", async () => {
@@ -376,7 +376,7 @@ describe("store administration", () => {
   });
 });
 
-describe("promotions and FORNO CLUB", () => {
+describe("promotions and FORNEA CLUB", () => {
   it("creates an automatic percentage promotion", async () => {
     const api = mockApi(ALL, {
       "POST /admin/promotions": () => Response.json({ data: {} }, { status: 201 }),

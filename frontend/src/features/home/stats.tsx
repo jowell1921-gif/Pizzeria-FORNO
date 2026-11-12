@@ -30,7 +30,7 @@ export function StatsView({
   const stats = buildStats(productCount, cheapestReward);
 
   return (
-    <section aria-label="FORNO en cifras" className="border-border bg-cream border-y">
+    <section aria-label="FORNEA en cifras" className="border-border bg-cream border-y">
       <dl className="container-page grid grid-cols-2 gap-x-4 gap-y-8 py-10 lg:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.label} className="text-center">

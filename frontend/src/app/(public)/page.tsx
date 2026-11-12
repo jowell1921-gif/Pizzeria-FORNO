@@ -12,7 +12,7 @@ import { DEMO_STORE } from "@/lib/demo-data";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: { absolute: "FORNO · Pizzería con pedidos online" },
+  title: { absolute: "FORNEA · Pizzería con pedidos online" },
   alternates: { canonical: "/" },
 };
 

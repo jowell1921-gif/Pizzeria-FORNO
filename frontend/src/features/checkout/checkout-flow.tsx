@@ -411,7 +411,7 @@ export function CheckoutFlow() {
               {quote.data.pointsToEarn > 0 ? (
                 <p className="bg-cream-soft rounded-lg p-3 text-sm">
                   Con este pedido sumarás unos <strong>{quote.data.pointsToEarn} puntos</strong> de
-                  FORNO CLUB cuando se complete.
+                  FORNEA CLUB cuando se complete.
                 </p>
               ) : null}
             </>

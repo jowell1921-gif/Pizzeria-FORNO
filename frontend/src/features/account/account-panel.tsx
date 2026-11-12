@@ -20,7 +20,7 @@ function describeError(error: unknown): string {
     if (error.status === 401) return "Tu sesión no es válida. Cierra sesión y vuelve a entrar.";
     if (error.status === 403) return "Esta cuenta está desactivada. Contacta con el local.";
     if (error.status === 409) {
-      return "Este correo ya está asociado a otra cuenta de FORNO. Contacta con el local para recuperarla.";
+      return "Este correo ya está asociado a otra cuenta de FORNEA. Contacta con el local para recuperarla.";
     }
   }
   return "No hemos podido cargar tu perfil. Inténtalo de nuevo.";

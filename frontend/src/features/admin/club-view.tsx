@@ -57,7 +57,7 @@ const STATUS_LABELS = {
 
 type Tab = "rule" | "rewards" | "movements" | "redemptions" | "customers";
 
-/** Administración de FORNO CLUB: regla de puntos, recompensas, movimientos, canjes y ajustes. */
+/** Administración de FORNEA CLUB: regla de puntos, recompensas, movimientos, canjes y ajustes. */
 export function ClubView() {
   const { profile } = useProfile();
   const [tab, setTab] = useState<Tab>("rule");
@@ -74,8 +74,8 @@ export function ClubView() {
   ];
   return (
     <div className="space-y-6">
-      <PageTitle>FORNO CLUB</PageTitle>
-      <Tabs label="Sección de FORNO CLUB" tabs={tabs} value={tab} onChange={setTab} />
+      <PageTitle>FORNEA CLUB</PageTitle>
+      <Tabs label="Sección de FORNEA CLUB" tabs={tabs} value={tab} onChange={setTab} />
       {tab === "rule" ? <RuleSection /> : null}
       {tab === "rewards" ? <RewardsSection /> : null}
       {tab === "movements" ? <MovementsSection /> : null}

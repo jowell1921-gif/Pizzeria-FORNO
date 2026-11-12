@@ -14,9 +14,9 @@ import type { SiteImage } from "@/types/media";
 export const IMAGES = {
   logo: {
     src: "/image/logo-forno.webp",
-    width: 900,
-    height: 612,
-    alt: "FORNO Pizzeria",
+    width: 1456,
+    height: 1088,
+    alt: "FORNEA Pizzeria",
   },
   heroPizza: {
     src: "/image/pizza-margherita-hero.webp",

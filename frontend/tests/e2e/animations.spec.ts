@@ -234,9 +234,9 @@ test.describe("page backgrounds", () => {
   test.use({ reducedMotion: "no-preference" });
 
   const watermark = (page: import("@playwright/test").Page) =>
-    page.locator('[aria-hidden="true"]').filter({ hasText: /^FORNO$/ });
+    page.locator('[aria-hidden="true"]').filter({ hasText: /^FORNEA$/ });
 
-  test("promotions shows the same FORNO letters as the home page", async ({ page }) => {
+  test("promotions shows the same FORNEA letters as the home page", async ({ page }) => {
     const read = async (path: string) => {
       await page.goto(path);
       const letters = watermark(page);
@@ -259,7 +259,9 @@ test.describe("page backgrounds", () => {
     expect(promotions.stroke).toBe("2px");
   });
 
-  test("FORNO CLUB has the animated dark background without letters or image", async ({ page }) => {
+  test("FORNEA CLUB has the animated dark background without letters or image", async ({
+    page,
+  }) => {
     await page.goto("/");
     const heroBackground = await page
       .locator("#hero-title")

@@ -69,7 +69,7 @@ export async function SiteFooter() {
 
       <div className="border-cream/20 border-t">
         <div className="container-page flex flex-col gap-3 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} FORNO. Proyecto de demostración.</p>
+          <p>© {new Date().getFullYear()} FORNEA. Proyecto de demostración.</p>
           <nav aria-label="Información legal">
             <ul className="flex flex-wrap gap-x-4 gap-y-2">
               {LEGAL_PAGES.map((page) => (

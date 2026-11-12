@@ -21,7 +21,7 @@ async function ClubTeaserContent() {
         <SectionHeading
           id="club-title"
           eyebrow="Fidelización"
-          title="FORNO CLUB"
+          title="FORNEA CLUB"
           tone="light"
           description={description}
         />

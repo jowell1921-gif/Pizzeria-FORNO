@@ -1,4 +1,4 @@
-export const WELCOME_MESSAGE = "¡Hola! Soy PizzAI, tu asistente de FORNO. ¿Qué te apetece hoy?";
+export const WELCOME_MESSAGE = "¡Hola! Soy PizzAI, tu asistente de FORNEA. ¿Qué te apetece hoy?";
 
 export const SUGGESTIONS = [
   "¿Qué pizzas tenéis?",

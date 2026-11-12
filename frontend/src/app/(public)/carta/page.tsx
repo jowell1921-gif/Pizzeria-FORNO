@@ -11,7 +11,7 @@ import { IMAGES } from "@/lib/images";
 
 export const metadata: Metadata = {
   title: "Carta",
-  description: "Pizzas, entrantes, bebidas y postres de FORNO, con ingredientes y alérgenos.",
+  description: "Pizzas, entrantes, bebidas y postres de FORNEA, con ingredientes y alérgenos.",
   alternates: { canonical: "/carta" },
 };
 

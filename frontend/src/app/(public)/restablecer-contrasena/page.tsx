@@ -13,7 +13,7 @@ export default function ResetPasswordPage() {
   return (
     <AuthShell
       title="Nueva contraseña"
-      description="Elige la contraseña con la que vas a entrar a FORNO."
+      description="Elige la contraseña con la que vas a entrar a FORNEA."
     >
       <NotConfiguredNotice />
       <ResetPasswordForm />

@@ -208,7 +208,7 @@ describe("RedemptionsCard", () => {
 });
 
 const checkoutSettings = {
-  name: "FORNO",
+  name: "FORNEA",
   timezone: "Europe/Madrid",
   slotMinutes: 15,
   maxAdvanceDays: 2,

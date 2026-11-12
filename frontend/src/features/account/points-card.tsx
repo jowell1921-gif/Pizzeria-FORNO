@@ -46,7 +46,7 @@ interface PointsCardProps {
   onRedeemed?: () => void;
 }
 
-/** Puntos de FORNO CLUB: saldo, progreso, recompensas que se pueden canjear y últimos movimientos. */
+/** Puntos de FORNEA CLUB: saldo, progreso, recompensas que se pueden canjear y últimos movimientos. */
 export function PointsCard({ onRedeemed }: PointsCardProps = {}) {
   const { token } = useProfile();
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -91,7 +91,7 @@ export function PointsCard({ onRedeemed }: PointsCardProps = {}) {
   const ready = account.status === "ready" && rewards.status === "ready";
 
   return (
-    <CardSection id="points-title" title="Mis puntos FORNO CLUB" icon={Gift}>
+    <CardSection id="points-title" title="Mis puntos FORNEA CLUB" icon={Gift}>
       {failed ? (
         <div className="space-y-3">
           <CardMessage>No hemos podido cargar tus puntos.</CardMessage>
@@ -263,7 +263,7 @@ export function PointsCard({ onRedeemed }: PointsCardProps = {}) {
               href="/forno-club"
               className="text-tomato-strong font-semibold underline underline-offset-4"
             >
-              Cómo funciona FORNO CLUB
+              Cómo funciona FORNEA CLUB
             </Link>
           </p>
         </>

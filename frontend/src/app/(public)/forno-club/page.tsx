@@ -16,8 +16,8 @@ import { CatalogSkeleton, CatalogUnavailable } from "@/features/catalog/catalog-
 import { pointsRuleText } from "@/features/club/format";
 
 export const metadata: Metadata = {
-  title: "FORNO CLUB",
-  description: "Acumula puntos en cada pedido y canjéalos por recompensas en FORNO.",
+  title: "FORNEA CLUB",
+  description: "Acumula puntos en cada pedido y canjéalos por recompensas en FORNEA.",
   alternates: { canonical: "/forno-club" },
 };
 
@@ -55,7 +55,7 @@ function ClubHeading({ description }: { description: string | undefined }) {
       as="h1"
       tone="light"
       eyebrow="Fidelización"
-      title="FORNO CLUB"
+      title="FORNEA CLUB"
       description={description}
     />
   );

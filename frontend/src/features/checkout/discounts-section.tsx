@@ -21,7 +21,7 @@ interface DiscountsSectionProps {
   rewardError: string | null;
 }
 
-/** Cupón promocional y recompensa de FORNO CLUB. Los descuentos los valida y calcula el servidor. */
+/** Cupón promocional y recompensa de FORNEA CLUB. Los descuentos los valida y calcula el servidor. */
 export function DiscountsSection({
   coupon,
   onApplyCoupon,
@@ -88,7 +88,7 @@ export function DiscountsSection({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-semibold">Recompensas FORNO CLUB</p>
+        <p className="text-sm font-semibold">Recompensas FORNEA CLUB</p>
         {redemptions.length === 0 ? (
           <p className="text-muted-foreground text-sm">
             No tienes recompensas disponibles. Canjea tus puntos desde «Mi cuenta».

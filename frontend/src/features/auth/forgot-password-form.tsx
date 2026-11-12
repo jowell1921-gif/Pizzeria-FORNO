@@ -50,7 +50,7 @@ export function ForgotPasswordForm() {
       <FormSuccess>
         <p className="font-semibold">Revisa tu correo</p>
         <p className="mt-1">
-          Si <strong>{sentTo}</strong> tiene una cuenta en FORNO, recibirás en unos minutos un
+          Si <strong>{sentTo}</strong> tiene una cuenta en FORNEA, recibirás en unos minutos un
           enlace para crear una nueva contraseña.
         </p>
       </FormSuccess>

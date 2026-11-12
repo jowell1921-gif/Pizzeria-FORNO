@@ -8,7 +8,7 @@ interface LogoProps {
   className?: string;
   /**
    * `image`: logotipo completo (para fondos claros).
-   * `wordmark`: texto «FORNO», para fondos oscuros donde el logotipo no tiene contraste.
+   * `wordmark`: texto «FORNEA», para fondos oscuros donde el logotipo no tiene contraste.
    */
   variant?: "image" | "wordmark";
 }
@@ -18,7 +18,7 @@ export function Logo({ className, variant = "image" }: LogoProps) {
     <Link
       href="/"
       transitionTypes={["nav-back"]}
-      aria-label="FORNO, ir al inicio"
+      aria-label="FORNEA, ir al inicio"
       className={cn("inline-flex items-center", className)}
     >
       {variant === "image" ? (
@@ -34,7 +34,7 @@ export function Logo({ className, variant = "image" }: LogoProps) {
       ) : (
         <span className="font-heading text-cream inline-flex items-center gap-2 text-3xl leading-none font-extrabold tracking-wide uppercase">
           <span aria-hidden className="bg-tomato inline-block size-3 rounded-full" />
-          FORNO
+          FORNEA
         </span>
       )}
     </Link>

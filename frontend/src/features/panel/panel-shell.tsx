@@ -39,7 +39,7 @@ const NAV: NavItem[] = [
     permission: "promotions:manage",
     icon: Megaphone,
   },
-  { href: "/admin/club", label: "FORNO CLUB", permission: "loyalty:manage", icon: Gift },
+  { href: "/admin/club", label: "FORNEA CLUB", permission: "loyalty:manage", icon: Gift },
   {
     href: "/admin/establecimiento",
     label: "Establecimiento",

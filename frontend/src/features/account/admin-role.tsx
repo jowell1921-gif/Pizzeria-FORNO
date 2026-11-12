@@ -130,15 +130,15 @@ export function AdminOfferDialog() {
         <div className="space-y-4">
           <DialogTitle className="pr-10">¿Quieres ver el panel del personal?</DialogTitle>
           <DialogDescription className="text-base">
-            FORNO tiene dos caras: la <strong>web para los clientes</strong> (la que ves ahora, con
+            FORNEA tiene dos caras: la <strong>web para los clientes</strong> (la que ves ahora, con
             la carta y tus pedidos) y el <strong>panel del personal</strong>, que es la parte
             privada con la que el restaurante gestiona su día a día.
           </DialogDescription>
           <ul className="list-disc space-y-1 pl-5 text-sm">
             <li>
               Si <strong>aceptas</strong>, tu cuenta será de administrador y podrás ver todo el
-              panel: pedidos, cocina, carta, promociones, FORNO CLUB, ajustes del local y auditoría.
-              También podrás cambiarlos.
+              panel: pedidos, cocina, carta, promociones, FORNEA CLUB, ajustes del local y
+              auditoría. También podrás cambiarlos.
             </li>
             <li>
               Si eliges <strong>solo como cliente</strong>, seguirás como cliente normal: solo verás

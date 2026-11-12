@@ -21,15 +21,15 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "FORNO · Pizzería con pedidos online",
-    template: "%s · FORNO",
+    default: "FORNEA · Pizzería con pedidos online",
+    template: "%s · FORNEA",
   },
   description:
-    "Pide online las pizzas de FORNO para recoger o a domicilio y acumula puntos con FORNO CLUB. Sitio de demostración.",
+    "Pide online las pizzas de FORNEA para recoger o a domicilio y acumula puntos con FORNEA CLUB. Sitio de demostración.",
   openGraph: {
     type: "website",
     locale: "es_ES",
-    siteName: "FORNO",
+    siteName: "FORNEA",
   },
 };
 

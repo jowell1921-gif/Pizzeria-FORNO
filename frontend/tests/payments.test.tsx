@@ -35,7 +35,7 @@ const profile = {
 };
 
 const settings = (methods: string[]) => ({
-  name: "FORNO",
+  name: "FORNEA",
   timezone: "Europe/Madrid",
   slotMinutes: 15,
   maxAdvanceDays: 2,

@@ -337,7 +337,7 @@ export const updateCoupon = (token: string, couponId: string, body: Body) =>
 export const deleteCoupon = (token: string, couponId: string) =>
   apiRequestVoid(`/admin/coupons/${couponId}`, { token, method: "DELETE" });
 
-// ── FORNO CLUB ──
+// ── FORNEA CLUB ──
 export const fetchLoyaltySettings = (token: string) =>
   apiRequest("/admin/loyalty/settings", { token, schema: loyaltySettingsSchema });
 export const saveLoyaltySettings = (token: string, body: Body) =>

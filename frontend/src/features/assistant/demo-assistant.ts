@@ -38,8 +38,8 @@ const RULES: Rule[] = [
   {
     keywords: ["punto", "club", "premio", "recompensa"],
     reply: {
-      text: "Con FORNO CLUB acumulas puntos con tus pedidos y los canjeas por recompensas.",
-      links: [{ label: "Conocer FORNO CLUB", href: "/forno-club" }],
+      text: "Con FORNEA CLUB acumulas puntos con tus pedidos y los canjeas por recompensas.",
+      links: [{ label: "Conocer FORNEA CLUB", href: "/forno-club" }],
     },
   },
   {
@@ -52,7 +52,7 @@ const RULES: Rule[] = [
 ];
 
 const FALLBACK: Omit<AssistantReply, "provisional"> = {
-  text: "Todavía soy una versión de demostración y no puedo responder a eso. Puedes preguntarme por las pizzas, las promociones, el reparto o FORNO CLUB.",
+  text: "Todavía soy una versión de demostración y no puedo responder a eso. Puedes preguntarme por las pizzas, las promociones, el reparto o FORNEA CLUB.",
 };
 
 export function demoReply(text: string): AssistantReply {

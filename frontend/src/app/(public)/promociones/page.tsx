@@ -10,7 +10,7 @@ import { PromotionCard } from "@/features/promotions/promotion-card";
 
 export const metadata: Metadata = {
   title: "Promociones",
-  description: "Ofertas, combos y descuentos vigentes en FORNO, con sus condiciones.",
+  description: "Ofertas, combos y descuentos vigentes en FORNEA, con sus condiciones.",
   alternates: { canonical: "/promociones" },
 };
 

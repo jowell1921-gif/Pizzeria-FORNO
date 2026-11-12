@@ -3,7 +3,7 @@
 @import "shadcn/tailwind.css";
 
 /*
- * Sistema de diseño FORNO.
+ * Sistema de diseño FORNEA.
  * Colores de marca: tomate #D94A32, carbón #171717, crema #F5E6C8, dorado #D6A84B, blanco #FFFFFF.
  *
  * Accesibilidad (WCAG 2.2 AA): el tomate de marca da 4,22:1 con blanco, por debajo de 4,5:1.
@@ -420,7 +420,7 @@
 }
 
 /*
- * Fondo animado (hero y FORNO CLUB).
+ * Fondo animado (hero y FORNEA CLUB).
  *
  * - .ambient-leaf: hojas de albahaca que caen balanceándose y girando.
  * - .ambient-ember: chispas de brasa que suben, como las de un horno de leña.

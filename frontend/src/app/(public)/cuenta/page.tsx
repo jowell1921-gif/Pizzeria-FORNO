@@ -16,7 +16,7 @@ export default function AccountPage() {
         <SectionHeading
           as="h1"
           eyebrow="Mi cuenta"
-          title="Tu cuenta FORNO"
+          title="Tu cuenta FORNEA"
           description="Tus datos, puntos, pedidos y direcciones en un solo lugar."
         />
         <AccountPanel />

@@ -4,7 +4,7 @@ export const MAIN_NAV = [
   { href: "/", label: "Principal" },
   { href: "/carta", label: "Carta" },
   { href: "/promociones", label: "Promociones" },
-  { href: "/forno-club", label: "FORNO CLUB" },
+  { href: "/forno-club", label: "FORNEA CLUB" },
   { href: "/#ubicacion", label: "Dónde estamos" },
 ] as const;
 

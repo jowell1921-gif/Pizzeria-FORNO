@@ -16,7 +16,7 @@ const BENEFITS = [
   {
     icon: Gift,
     title: "Puntos en cada pedido",
-    text: "Pedir directamente te da puntos canjeables en FORNO CLUB.",
+    text: "Pedir directamente te da puntos canjeables en FORNEA CLUB.",
   },
   {
     icon: Clock,

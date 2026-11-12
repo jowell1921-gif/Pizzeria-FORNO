@@ -11,7 +11,7 @@ import { safeNextPath } from "@/features/auth/routes";
 
 export const metadata: Metadata = {
   title: "Acceder",
-  description: "Inicia sesión en FORNO para hacer pedidos y acumular puntos.",
+  description: "Inicia sesión en FORNEA para hacer pedidos y acumular puntos.",
   robots: { index: false },
 };
 

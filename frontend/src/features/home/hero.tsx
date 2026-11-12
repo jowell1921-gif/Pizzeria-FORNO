@@ -36,7 +36,7 @@ export function Hero() {
           </h1>
           <p className="text-cream/85 max-w-xl text-lg">
             {DEMO_STORE.tagline}. Pide online, elige recogida o entrega a domicilio y suma puntos en
-            cada pedido con FORNO CLUB.
+            cada pedido con FORNEA CLUB.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link

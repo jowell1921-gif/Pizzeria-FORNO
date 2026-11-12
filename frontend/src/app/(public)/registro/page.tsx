@@ -10,7 +10,7 @@ import { safeNextPath } from "@/features/auth/routes";
 
 export const metadata: Metadata = {
   title: "Crear cuenta",
-  description: "Crea tu cuenta en FORNO para hacer pedidos y acumular puntos con FORNO CLUB.",
+  description: "Crea tu cuenta en FORNEA para hacer pedidos y acumular puntos con FORNEA CLUB.",
   robots: { index: false },
 };
 

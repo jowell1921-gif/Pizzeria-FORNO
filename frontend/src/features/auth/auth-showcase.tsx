@@ -29,7 +29,7 @@ const TONES: Record<FloatingIcon["tone"], string> = {
 };
 
 const PERKS = [
-  "Suma puntos en cada pedido con FORNO CLUB",
+  "Suma puntos en cada pedido con FORNEA CLUB",
   "Canjea tus puntos por recompensas",
   "Promociones y cupones solo para clientes",
 ];
@@ -42,7 +42,7 @@ const PERKS = [
 export function AuthShowcase() {
   return (
     <aside
-      aria-label="Ventajas de tener cuenta en FORNO"
+      aria-label="Ventajas de tener cuenta en FORNEA"
       className="auth-showcase bg-charcoal text-cream relative isolate hidden min-h-[34rem] overflow-hidden rounded-2xl lg:flex lg:flex-col lg:justify-end"
     >
       <div aria-hidden className="auth-ring absolute top-1/2 left-1/2 -z-10" />
@@ -95,7 +95,7 @@ export function AuthShowcase() {
 export function AuthPerksStrip() {
   return (
     <ul
-      aria-label="Ventajas de tener cuenta en FORNO"
+      aria-label="Ventajas de tener cuenta en FORNEA"
       className="bg-charcoal text-cream flex flex-wrap justify-center gap-x-5 gap-y-2 rounded-2xl px-4 py-3 text-sm lg:hidden"
     >
       {[
