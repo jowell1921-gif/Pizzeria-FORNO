@@ -69,7 +69,13 @@ export async function SiteFooter() {
 
       <div className="border-cream/20 border-t">
         <div className="container-page flex flex-col gap-3 py-6 text-xs sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} FORNEA. Proyecto de demostración.</p>
+          <div className="space-y-1">
+            <p>© {new Date().getFullYear()} Lowbit Kode</p>
+            <p className="text-cream/70">
+              Sitio de demostración: la carta, los precios, los horarios y los datos del local son
+              de ejemplo.
+            </p>
+          </div>
           <nav aria-label="Información legal">
             <ul className="flex flex-wrap gap-x-4 gap-y-2">
               {LEGAL_PAGES.map((page) => (

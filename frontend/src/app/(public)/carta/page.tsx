@@ -27,7 +27,7 @@ async function MenuContent() {
 
   return (
     <>
-      <div className="border-border bg-background sticky top-16 z-30 border-b md:top-20">
+      <div className="border-border bg-background sticky top-20 z-30 border-b md:top-24">
         <nav aria-label="Categorías de la carta" className="container-page">
           <ul className="flex gap-2 overflow-x-auto py-3">
             {categories.data.map((category) => (
@@ -53,7 +53,7 @@ async function MenuContent() {
               key={category.id}
               id={category.slug}
               aria-labelledby={`${category.slug}-title`}
-              className="scroll-mt-40 space-y-5 md:scroll-mt-44"
+              className="scroll-mt-44 space-y-5 md:scroll-mt-48"
             >
               <SectionHeading
                 id={`${category.slug}-title`}

@@ -415,10 +415,10 @@ export async function seedDemoData(prisma: PrismaClient): Promise<SeedSummary> {
   // Ajustes de la tienda (fila única).
   const settings = {
     name: "FORNO",
-    addressLine: "Calle Ejemplo 12",
-    postalCode: "28000",
+    addressLine: "Avenida de Asturias",
+    postalCode: "28029",
     city: "Madrid",
-    phone: "+34 900 000 000",
+    phone: "+34 631 00 85 76",
     email: "hola@forno.example",
     prepTimeMinutes: 20,
     deliveryTimeMinutes: 40,

@@ -29,7 +29,7 @@ export function Logo({ className, variant = "image" }: LogoProps) {
           alt=""
           priority
           sizes="(min-width: 768px) 96px, 72px"
-          className="h-11 w-auto md:h-14"
+          className="h-14 w-auto md:h-[4.5rem]"
         />
       ) : (
         <span className="font-heading text-cream inline-flex items-center gap-2 text-3xl leading-none font-extrabold tracking-wide uppercase">

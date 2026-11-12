@@ -9,7 +9,7 @@ export function SiteHeader() {
       style={{ viewTransitionName: "site-header" }}
       className="border-border bg-background/95 sticky top-0 z-40 border-b backdrop-blur"
     >
-      <div className="container-page flex h-16 items-center justify-between gap-4 md:h-20">
+      <div className="container-page flex h-20 items-center justify-between gap-4 md:h-24">
         <Logo />
         {/* La navegación lee la ruta actual: en rutas con parámetros (p. ej. /pedido/[id]) debe ir en Suspense. */}
         <Suspense fallback={<div aria-hidden className="h-11" />}>

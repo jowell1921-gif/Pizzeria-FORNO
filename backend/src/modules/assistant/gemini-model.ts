@@ -21,9 +21,11 @@ interface GeminiResponse {
 
 const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
 const MAX_OUTPUT_TOKENS = 2000;
-const TIMEOUT_MS = 30_000;
+/** Tiempo máximo por intento: el nivel gratuito a veces tarda decenas de segundos. */
+const ATTEMPT_TIMEOUT_MS = 12_000;
 const RETRY_DELAY_MS = 800;
-const RETRYABLE_STATUS = new Set([429, 500, 503]);
+/** Respuestas tras las que se prueba otro intento: saturación, límite momentáneo o modelo retirado. */
+const FALLBACK_STATUS = new Set([404, 429, 500, 503]);
 const BLOCKED_FINISH_REASONS = new Set(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII"]);
 
 /**
@@ -37,36 +39,57 @@ export function createGeminiModel(options: {
 }): AssistantModel {
   const doFetch: FetchLike = options.fetch ?? ((url, init) => fetch(url, init));
 
+  // Varios modelos separados por comas: si uno está saturado, no existe o tarda demasiado, se prueba
+  // el siguiente. Con un solo modelo se reintenta una vez sobre el mismo.
+  const listed = options.model
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const models = listed.length === 1 ? [listed[0]!, listed[0]!] : listed;
+
   return {
-    name: options.model,
+    name: listed[0] ?? options.model,
     async complete(request) {
-      const timeout = AbortSignal.timeout(TIMEOUT_MS);
-      const signal = request.signal ? AbortSignal.any([request.signal, timeout]) : timeout;
+      const payload = JSON.stringify({
+        systemInstruction: {
+          parts: [{ text: request.system.instructions }, { text: request.system.knowledge }],
+        },
+        contents: request.messages.map((turn) => ({
+          role: turn.role === "assistant" ? "model" : "user",
+          parts: [{ text: turn.content }],
+        })),
+        generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS, temperature: 0.4 },
+      });
 
-      const init = {
-        method: "POST" as const,
-        // La clave va en una cabecera, no en la URL, para que no acabe en registros.
-        headers: { "content-type": "application/json", "x-goog-api-key": options.apiKey },
-        signal,
-        body: JSON.stringify({
-          systemInstruction: {
-            parts: [{ text: request.system.instructions }, { text: request.system.knowledge }],
-          },
-          contents: request.messages.map((turn) => ({
-            role: turn.role === "assistant" ? "model" : "user",
-            parts: [{ text: turn.content }],
-          })),
-          generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS, temperature: 0.4 },
-        }),
-      };
-      const url = `${ENDPOINT}/${encodeURIComponent(options.model)}:generateContent`;
-
-      let response = await doFetch(url, init);
-      // Los picos de demanda de Google (503) y los límites momentáneos (429) suelen ser pasajeros.
-      if (RETRYABLE_STATUS.has(response.status)) {
-        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-        response = await doFetch(url, init);
+      let response: Awaited<ReturnType<FetchLike>> | undefined;
+      let failure: unknown;
+      for (const [index, model] of models.entries()) {
+        if (index > 0 && listed.length === 1) {
+          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        }
+        const timeout = AbortSignal.timeout(ATTEMPT_TIMEOUT_MS);
+        const signal = request.signal ? AbortSignal.any([request.signal, timeout]) : timeout;
+        try {
+          const attempt = await doFetch(
+            `${ENDPOINT}/${encodeURIComponent(model)}:generateContent`,
+            {
+              method: "POST",
+              // La clave va en una cabecera, no en la URL, para que no acabe en registros.
+              headers: { "content-type": "application/json", "x-goog-api-key": options.apiKey },
+              signal,
+              body: payload,
+            },
+          );
+          response = attempt;
+          if (!FALLBACK_STATUS.has(attempt.status)) break;
+        } catch (error) {
+          // El cliente cerró la conexión: no tiene sentido seguir. Un tiempo agotado, sí.
+          if (request.signal?.aborted) throw error;
+          failure = error;
+          response = undefined;
+        }
       }
+      if (!response) throw failure instanceof Error ? failure : new Error("Gemini did not answer");
       if (!response.ok) throw new Error(`Gemini responded with HTTP ${response.status}`);
 
       const body = (await response.json()) as GeminiResponse;

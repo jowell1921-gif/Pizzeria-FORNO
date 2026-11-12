@@ -61,7 +61,7 @@ PizzAI admite dos proveedores detrás de la misma interfaz (`AssistantModel`). S
 
 | Proveedor | Variables                                             | Uso recomendado                                                                                                                                                               |
 | --------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Gemini    | `GEMINI_API_KEY`, `GEMINI_MODEL` (`gemini-flash-lite-latest`) | Demostraciones y pruebas: tiene nivel gratuito con límites bajos que Google puede cambiar. Google puede usar las conversaciones del nivel gratuito para mejorar sus productos |
+| Gemini    | `GEMINI_API_KEY`, `GEMINI_MODEL` (`gemini-3.1-flash-lite,gemini-flash-lite-latest`) | Demostraciones y pruebas: tiene nivel gratuito con límites bajos que Google puede cambiar. Google puede usar las conversaciones del nivel gratuito para mejorar sus productos |
 | Claude    | `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`                | Producción de un cliente: de pago, con `claude-haiku-5-5` basta para una carta                                                                                                |
 
 Estimación del coste con Claude Haiku 5.5 (0,10 $ por millón de tokens de entrada y 0,50 $ de salida; unos

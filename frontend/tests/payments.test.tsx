@@ -219,6 +219,11 @@ describe("checkout with online payment", () => {
     expect(screen.getByText(/página segura de Stripe/)).toBeInTheDocument();
     await user.click(await screen.findByRole("button", { name: /Pagar y confirmar · 19,00/ }));
 
+    const dialog = await screen.findByRole("dialog", { name: "Pago de demostración" });
+    expect(within(dialog).getByText("4242 4242 4242 4242")).toBeInTheDocument();
+    expect(within(dialog).getByText(/únicamente demostrativo/)).toBeInTheDocument();
+    expect(assign).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: "Continuar al pago" }));
     await waitFor(() =>
       expect(assign).toHaveBeenCalledWith("https://checkout.stripe.com/c/pay/cs_test_1"),
     );
@@ -257,10 +262,32 @@ describe("order page awaiting payment", () => {
     expect(screen.queryByText(/Pago recibido/)).not.toBeInTheDocument();
 
     await user.click(within(section).getByRole("button", { name: "Pagar ahora con tarjeta" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pago de demostración" });
+    expect(assign).not.toHaveBeenCalled();
+    await user.click(within(dialog).getByRole("button", { name: "Continuar al pago" }));
     await waitFor(() =>
       expect(assign).toHaveBeenCalledWith("https://checkout.stripe.com/c/pay/cs_test_1"),
     );
     expect(calls.map((call) => call.key)).toContain(`POST /orders/${ORDER_ID}/payment-session`);
+  });
+
+  it("does not open the payment page when the customer dismisses the demo notice", async () => {
+    mockApi();
+    const user = userEvent.setup();
+    wrap(<OrderView orderId={ORDER_ID} />);
+
+    const section = await screen.findByRole("region", { name: "Pago pendiente" });
+    await user.click(within(section).getByRole("button", { name: "Pagar ahora con tarjeta" }));
+    const dialog = await screen.findByRole("dialog", { name: "Pago de demostración" });
+    await user.click(within(dialog).getByRole("button", { name: "Ahora no" }));
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("dialog", { name: "Pago de demostración" }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(assign).not.toHaveBeenCalled();
+    expect(within(section).getByRole("button", { name: "Pagar ahora con tarjeta" })).toBeEnabled();
   });
 
   it("after returning from the payment page it waits for the server and does not trust the URL", async () => {

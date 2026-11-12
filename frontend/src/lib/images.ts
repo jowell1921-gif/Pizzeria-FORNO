@@ -13,9 +13,10 @@ import type { SiteImage } from "@/types/media";
  */
 export const IMAGES = {
   logo: {
-    src: "/image/logo-forno.webp",
-    width: 1456,
-    height: 1088,
+    // «?v=N»: súbelo al cambiar el archivo, para que el navegador y Next no sirvan la copia antigua.
+    src: "/image/logo-fornea.webp?v=2",
+    width: 1451,
+    height: 1084,
     alt: "FORNEA Pizzeria",
   },
   heroPizza: {

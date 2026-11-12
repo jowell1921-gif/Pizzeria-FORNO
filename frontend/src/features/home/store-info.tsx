@@ -11,7 +11,7 @@ export function StoreInfo() {
     <section
       id="ubicacion"
       aria-labelledby="store-title"
-      className="section-y bg-cream-soft scroll-mt-20"
+      className="section-y bg-cream-soft scroll-mt-24"
     >
       <div className="container-page space-y-8">
         <SectionHeading id="store-title" eyebrow="Visítanos" title="Dónde estamos" />

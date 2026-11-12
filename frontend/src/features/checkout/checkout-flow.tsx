@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 
 import { DeliverySection } from "./delivery-section";
 import { discountErrorMessage, isCouponError } from "./discount-errors";
+import { DemoPaymentDialog } from "./demo-payment-dialog";
 import { DiscountsSection } from "./discounts-section";
 import { useCheckoutQuote } from "./use-checkout-quote";
 import {
@@ -96,6 +97,8 @@ export function CheckoutFlow() {
   const redemptions = useApiResource(token, fetchAvailableRedemptions);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // Pedido ya creado que espera a que el cliente acepte el aviso de pago de demostración.
+  const [demoPayment, setDemoPayment] = useState<{ url: string; orderId: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const attempt = useRef<{ signature: string; key: string } | null>(null);
 
@@ -132,6 +135,15 @@ export function CheckoutFlow() {
     queryFn: () => fetchSlots(type),
   });
 
+  // El pedido ya está creado y el carrito vacío: el aviso debe seguir visible aunque la pantalla cambie.
+  const demoDialog = (
+    <DemoPaymentDialog
+      open={demoPayment !== null}
+      onContinue={() => demoPayment && window.location.assign(demoPayment.url)}
+      onCancel={() => demoPayment && router.push(`/pedido/${demoPayment.orderId}`)}
+    />
+  );
+
   if (!hydrated || profileStatus === "loading" || profileStatus === "idle" || settings.isLoading) {
     return <p className="text-muted-foreground">Preparando tu pedido…</p>;
   }
@@ -139,6 +151,7 @@ export function CheckoutFlow() {
     return <FormError>No hemos podido cargar los datos del local. Recarga la página.</FormError>;
   }
   if (lines.length === 0) {
+    if (demoPayment) return demoDialog;
     return (
       <div className="space-y-4">
         <p>Tu pedido está vacío.</p>
@@ -247,7 +260,7 @@ export function CheckoutFlow() {
         // que ella lo comunica; si algo falla aquí, el cliente puede reintentar desde su pedido.
         try {
           const session = await startPayment(token, order.id);
-          window.location.assign(session.url);
+          setDemoPayment({ url: session.url, orderId: order.id });
           return;
         } catch {
           // Se sigue a la página del pedido, que ofrece «Pagar ahora».
@@ -262,6 +275,7 @@ export function CheckoutFlow() {
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      {demoDialog}
       <div className="space-y-6">
         {store.ordersPaused ? (
           <FormError>
@@ -396,7 +410,7 @@ export function CheckoutFlow() {
         </Step>
       </div>
 
-      <aside aria-label="Resumen del pedido" className="space-y-4 lg:sticky lg:top-28">
+      <aside aria-label="Resumen del pedido" className="space-y-4 lg:sticky lg:top-32">
         <div className="border-border bg-card space-y-4 rounded-2xl border p-5 shadow-sm sm:p-6">
           <h2 className="text-2xl leading-none font-bold">Tu pedido</h2>
           <CartLines quote={quote.data} readOnly />

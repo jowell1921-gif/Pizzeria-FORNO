@@ -91,6 +91,54 @@ describe("createGeminiModel", () => {
     expect(result.text).toBe("La Margherita.");
   });
 
+  it("tries the next listed model when one is overloaded or retired", async () => {
+    const fn = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({}) })
+      .mockResolvedValueOnce({ ok: false, status: 404, json: async () => ({}) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => answer });
+    const result = await createGeminiModel({
+      apiKey: "k".repeat(30),
+      model: "first, second ,third",
+      fetch: fn as unknown as FetchLike,
+    }).complete(request);
+
+    expect(fn.mock.calls.map(([url]) => String(url).split("/models/")[1])).toEqual([
+      "first:generateContent",
+      "second:generateContent",
+      "third:generateContent",
+    ]);
+    expect(result.text).toBe("La Margherita.");
+  });
+
+  it("moves on to the next model when one takes too long", async () => {
+    const fn = vi
+      .fn()
+      .mockRejectedValueOnce(new DOMException("timed out", "TimeoutError"))
+      .mockResolvedValueOnce({ ok: true, status: 200, json: async () => answer });
+    const result = await createGeminiModel({
+      apiKey: "k".repeat(30),
+      model: "slow,fast",
+      fetch: fn as unknown as FetchLike,
+    }).complete(request);
+    expect(fn).toHaveBeenCalledTimes(2);
+    expect(result.text).toBe("La Margherita.");
+  });
+
+  it("does not keep trying once the customer has closed the connection", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const fn = vi.fn().mockRejectedValue(new DOMException("aborted", "AbortError"));
+    await expect(
+      createGeminiModel({
+        apiKey: "k".repeat(30),
+        model: "a,b",
+        fetch: fn as unknown as FetchLike,
+      }).complete({ ...request, signal: controller.signal }),
+    ).rejects.toThrow();
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
   it("fails on an HTTP error without leaking the response", async () => {
     const { fetch } = fakeFetch({ error: { message: "secret detail" } }, 429);
     await expect(

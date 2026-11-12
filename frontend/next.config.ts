@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   // Las pruebas del panel compilan con otra configuración de Supabase: usan su propia carpeta.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   images: {
+    // Permite versionar las imágenes locales con «?v=N» para saltarse la caché al cambiarlas.
+    localPatterns: [{ pathname: "/image/**" }],
     remotePatterns: supabaseHost
       ? [
           {

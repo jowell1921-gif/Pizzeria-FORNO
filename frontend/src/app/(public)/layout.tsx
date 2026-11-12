@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 
-import { DemoBanner } from "@/components/layout/demo-banner";
 import { CartProvider } from "@/features/cart/cart-provider";
 import { PizzaiAssistant } from "@/features/assistant/pizzai-assistant";
 import { AdminOfferDialog } from "@/features/account/admin-role";
@@ -19,7 +18,6 @@ export default function PublicLayout({ children }: LayoutProps<"/">) {
       </a>
       <ProfileProvider>
         <CartProvider>
-          <DemoBanner />
           <SiteHeader />
           <main id="contenido" className="flex-1">
             {children}

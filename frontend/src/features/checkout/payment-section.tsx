@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useProfile } from "@/features/account/profile-context";
 import { FormError } from "@/features/auth/form-parts";
 
+import { DemoPaymentDialog } from "./demo-payment-dialog";
 import { orderErrorMessage, startPayment } from "./order";
 
 /** Cada cuánto y cuántas veces se consulta el pedido tras volver de la página de pago. */
@@ -28,6 +29,7 @@ interface PaymentSectionProps {
 export function PaymentSection({ orderId, returned, onPoll }: PaymentSectionProps) {
   const { token } = useProfile();
   const [paying, setPaying] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [polls, setPolls] = useState(0);
   const waiting = returned === "ok" && polls < POLL_MAX;
@@ -47,7 +49,7 @@ export function PaymentSection({ orderId, returned, onPoll }: PaymentSectionProp
     setError(null);
     try {
       const session = await startPayment(token, orderId);
-      window.location.assign(session.url);
+      setPaymentUrl(session.url);
     } catch (caught) {
       setError(orderErrorMessage(caught));
       setPaying(false);
@@ -59,6 +61,14 @@ export function PaymentSection({ orderId, returned, onPoll }: PaymentSectionProp
       aria-label="Pago pendiente"
       className="border-tomato-strong space-y-3 rounded-2xl border-2 p-5"
     >
+      <DemoPaymentDialog
+        open={paymentUrl !== null}
+        onContinue={() => paymentUrl && window.location.assign(paymentUrl)}
+        onCancel={() => {
+          setPaymentUrl(null);
+          setPaying(false);
+        }}
+      />
       <h2 className="text-2xl leading-none font-bold">Pago pendiente</h2>
       {waiting ? (
         <p role="status" className="flex items-center gap-2 text-sm font-medium">
