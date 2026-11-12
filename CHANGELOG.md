@@ -2,6 +2,16 @@
 
 ## [Sin publicar]
 
+### Fase 12 — Cierre y preparación para Flutter
+
+- **Contrato OpenAPI como archivo** (`docs/api/openapi.json`, `npm run docs:openapi`), siempre sincronizado con el código, con `operationId` estable en cada operación.
+- **Cliente independiente de pruebas de consumo** (`backend/tests/consumer/`): recorre el viaje de la app móvil por HTTP usando solo el contrato y valida cada petición y respuesta contra sus esquemas. Cubre todas las operaciones de la app.
+- Guía para Flutter (`docs/flutter/`): autenticación y renovación de sesión, convenciones, flujos, estados del pedido, **ejemplos con respuestas reales**, catálogo de errores (comprobado contra el código) y reglas de negocio centralizadas.
+- Diagrama de la base de datos generado desde el esquema (`docs/database/diagrama.md`, `npm run docs:schema`) y arquitectura actualizada.
+- Criterios de aceptación finales con su evidencia y las limitaciones conocidas (`docs/quality/criterios-aceptacion.md`).
+- Dependencias de desarrollo nuevas: `ajv` y `ajv-formats`.
+- Documentación: decisión `0014`.
+
 ### Fase 11 — Preparación de la producción
 
 - Guía de despliegue en `docs/deployment/`: orden de pasos, variables por servicio, Supabase, Railway, Vercel, dominio y HTTPS, Stripe, Resend, copias de seguridad y operación; lista de seguridad y datos legales en `docs/security/lista-produccion.md`.

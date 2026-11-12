@@ -769,7 +769,7 @@ function paymentPaths(): Record<string, Json> {
 }
 
 /** Documento OpenAPI 3.1 de la API v1. Es el contrato que consumen la web y la app Flutter. */
-export function buildOpenApiDocument(): Json {
+function buildBaseDocument(): Json {
   return {
     openapi: "3.1.0",
     info: {
@@ -1466,4 +1466,39 @@ export function buildOpenApiDocument(): Json {
       schemas: components(),
     },
   };
+}
+
+/**
+ * Nombre estable de cada operación (`getProducts`, `getOrdersById`, `postOrdersByIdCancel`…), para
+ * que los generadores de clientes (por ejemplo, el de Dart para Flutter) produzcan métodos con nombres
+ * legibles y que no cambian entre versiones mientras la ruta no cambie.
+ */
+export function operationIdFor(method: string, path: string): string {
+  const words = path
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => {
+      const param = /^\{(\w+)\}$/.exec(segment);
+      const text = param ? `By ${param[1]}` : segment;
+      return text
+        .split(/[^A-Za-z0-9]+/)
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join("");
+    });
+  return method.toLowerCase() + words.join("");
+}
+
+/** Documento OpenAPI 3.1 de la API v1 (con `operationId` en cada operación). */
+export function buildOpenApiDocument(): Json {
+  const document = buildBaseDocument();
+  const paths = document["paths"] as Record<string, Record<string, Json>>;
+  for (const [path, item] of Object.entries(paths)) {
+    for (const [method, operation] of Object.entries(item)) {
+      if (["get", "post", "put", "patch", "delete"].includes(method)) {
+        operation["operationId"] = operationIdFor(method, path);
+      }
+    }
+  }
+  return document;
 }

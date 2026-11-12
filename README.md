@@ -79,9 +79,25 @@ Solo en `backend/`:
 | `npm run test:db`                                 | Pruebas de integridad de la base de datos y de la API (necesita Docker; usa `forno_test`) |
 | `npm run test:coverage`                           | Informe de cobertura del servidor (pruebas de base de datos y API)                        |
 | `npm run perf`                                    | Mide el rendimiento de los endpoints principales (autocannon; usa `forno_test`)           |
+| `npm run docs:openapi`                            | Regenera `docs/api/openapi.json` (el contrato para Flutter)                               |
+| `npm run docs:schema`                             | Regenera el diagrama de la base de datos `docs/database/diagrama.md`                      |
 | `npm run roles -- grant correo@ejemplo.com ADMIN` | Concede o retira (`revoke`) un rol: `ADMIN`, `STAFF` o `KITCHEN`                          |
 
 `npm test` en el backend no necesita base de datos. Más información en `docs/database/`.
+
+## Documentación
+
+| Tema                                                                           | Dónde                           |
+| ------------------------------------------------------------------------------ | ------------------------------- |
+| Arquitectura                                                                   | `docs/architecture/overview.md` |
+| Base de datos y diagrama                                                       | `docs/database/`                |
+| API: convenciones, endpoints y contrato OpenAPI                                | `docs/api/` (`openapi.json`)    |
+| App Flutter: guía de integración, ejemplos reales, errores y reglas de negocio | `docs/flutter/`                 |
+| Autenticación y seguridad                                                      | `docs/security/`                |
+| Despliegue y operación                                                         | `docs/deployment/`              |
+| Calidad, casos críticos y criterios de aceptación                              | `docs/quality/`                 |
+| Decisiones técnicas                                                            | `docs/decisions/`               |
+| Registro de cambios                                                            | `CHANGELOG.md`                  |
 
 ## Calidad y auditoría
 
@@ -110,8 +126,6 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-Fases 1 a 11 completadas: configuración, diseño e interfaz, base de datos, autenticación, API y seguridad, pedidos y checkout, FORNO CLUB y promociones, panel del personal y cocina, administración del negocio, PizzAI (interfaz y, desde la 9B, IA real, desactivada hasta configurar una clave), pagos con Stripe, correos, facturas y tickets, QA y auditoría, y preparación de la producción (guía en `docs/deployment/`; no se ha publicado nada); el flujo real de correo y Google está pendiente de verificar con un proyecto de Supabase. La web pública usa datos de demostración (`frontend/src/lib/demo-data.ts`). El plan por fases y las decisiones técnicas están en `docs/`.
+**Las 12 fases están completadas.** Plataforma de pedidos con carta dinámica, carrito y checkout, recogida y domicilio, pago en efectivo y con tarjeta (Stripe), FORNO CLUB, promociones, panel del personal, pantalla de cocina en directo, correos de pedido, tickets y facturas, y PizzAI (asistente, con IA real opcional). API documentada y lista para la futura app Flutter. Criterios de aceptación y limitaciones conocidas: `docs/quality/criterios-aceptacion.md`.
 
-### Próximas fases
-
-- **Fase 12 — Documentación y preparación para Flutter:** contratos y ejemplos de la API, flujo de autenticación y renovación de sesión para la app móvil, y prueba de consumo de la API desde un cliente independiente.
+Es una demostración: los datos comerciales son de ejemplo y **no se ha publicado nada**. Para publicarla, sigue `docs/deployment/`; para activar lo que depende de cuentas externas (pagos reales, correo con dominio, IA), consulta cada decisión en `docs/decisions/`.

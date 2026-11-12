@@ -5,7 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["tests/db/**/*.test.ts", "tests/api/**/*.test.ts"],
+    include: ["tests/db/**/*.test.ts", "tests/api/**/*.test.ts", "tests/consumer/**/*.test.ts"],
     globalSetup: ["tests/db/global-setup.ts"],
     // Todos los archivos comparten una misma base de datos: se ejecutan uno tras otro.
     fileParallelism: false,

@@ -26,6 +26,8 @@
     "test:db": "vitest run --config vitest.db.config.ts",
     "test:coverage": "vitest run --config vitest.db.config.ts --coverage",
     "perf": "node scripts/perf.mjs",
+    "docs:openapi": "tsx scripts/export-openapi.ts",
+    "docs:schema": "tsx scripts/export-schema-diagram.ts",
     "roles": "tsx --env-file-if-exists=.env scripts/manage-roles.ts"
   },
   "dependencies": {
@@ -56,6 +58,8 @@
     "@types/supertest": "^7.2.1",
     "@types/swagger-ui-dist": "^3.30.6",
     "@vitest/coverage-v8": "^5.1.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "autocannon": "^9.0.0",
     "dotenv": "18.0.9",
     "eslint": "^10.14.0",

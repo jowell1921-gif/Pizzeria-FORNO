@@ -2,6 +2,8 @@
 
 PostgreSQL + Prisma 7. El esquema está en `backend/prisma/schema.prisma` y las migraciones en `backend/prisma/migrations/`. La base la usa **únicamente el backend**; ni la web ni Flutter acceden a ella directamente.
 
+El diagrama entidad-relación completo está en [`diagrama.md`](./diagrama.md): se genera desde el esquema (`npm run docs:schema`) y una prueba comprueba que no se desactualiza.
+
 ## Comandos (desde `backend/`)
 
 | Comando               | Acción                                                                       |

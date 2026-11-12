@@ -4,6 +4,8 @@ Base: `/api/v1`. La documentación interactiva (Swagger UI) está en `/api/v1/do
 OpenAPI 3.1 en `/api/v1/openapi.json`. Se publican en desarrollo y pruebas; en producción hay que
 activarlas con `API_DOCS_ENABLED=true`.
 
+El contrato también se entrega como archivo, **sin necesidad de arrancar el servidor**: [`openapi.json`](./openapi.json) (se regenera con `npm run docs:openapi` en `backend/` y una prueba impide que se desactualice). Cada operación tiene un `operationId` estable. Para la app móvil, ver [`../flutter/`](../flutter/README.md).
+
 Las respuestas están definidas una sola vez en `backend/src/docs/schemas.ts`. De ahí salen la
 documentación y las pruebas de contrato (`backend/tests/api/contract.test.ts`), de modo que el
 contrato y el servidor no pueden separarse sin que una prueba falle.
