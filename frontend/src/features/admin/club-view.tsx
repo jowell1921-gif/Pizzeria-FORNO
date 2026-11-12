@@ -35,6 +35,8 @@ import {
   toDateInput,
   toInt,
   useAdminMutation,
+  EditButton,
+  EditForm,
   useAdminQuery,
 } from "./admin-ui";
 
@@ -97,7 +99,7 @@ function RuleSection() {
     <Section title="Regla de conversión">
       <QueryState query={query}>
         {query.data ? (
-          <form
+          <EditForm
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
@@ -145,7 +147,7 @@ function RuleSection() {
               error={mutation.error}
               saved={mutation.isSuccess}
             />
-          </form>
+          </EditForm>
         ) : null}
       </QueryState>
     </Section>
@@ -163,9 +165,9 @@ function RewardsSection() {
     <Section
       title="Recompensas"
       actions={
-        <Button type="button" onClick={() => setEditing("new")}>
+        <EditButton type="button" onClick={() => setEditing("new")}>
           Nueva recompensa
-        </Button>
+        </EditButton>
       }
     >
       {editing ? (
@@ -197,7 +199,7 @@ function RewardsSection() {
                 {reward.active ? null : <Badge variant="secondary">Inactiva</Badge>}
               </div>
               <div className="flex gap-2">
-                <Button
+                <EditButton
                   type="button"
                   variant="outline"
                   size="sm"
@@ -205,8 +207,8 @@ function RewardsSection() {
                   onClick={() => setEditing(reward)}
                 >
                   Editar
-                </Button>
-                <Button
+                </EditButton>
+                <EditButton
                   type="button"
                   variant="outline"
                   size="sm"
@@ -214,7 +216,7 @@ function RewardsSection() {
                   onClick={() => remove.mutate(reward)}
                 >
                   Borrar
-                </Button>
+                </EditButton>
               </div>
             </li>
           ))}

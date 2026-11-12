@@ -200,18 +200,6 @@ export const customerSchema = z.object({
   createdAt: z.string(),
 });
 
-export const auditSchema = z.object({
-  id,
-  action: z.string(),
-  entityType: z.string(),
-  entityId: z.string().nullable(),
-  actor: z.object({ fullName: z.string(), email: z.string() }).nullable(),
-  before: z.unknown(),
-  after: z.unknown(),
-  reason: z.string().nullable(),
-  createdAt: z.string(),
-});
-
 export type AdminCategory = z.infer<typeof categorySchema>;
 export type AdminProduct = z.infer<typeof productSchema>;
 export type StoreSettings = z.infer<typeof storeSettingsSchema>;
@@ -370,10 +358,7 @@ export const adjustPoints = (token: string, body: Body) =>
     schema: z.object({ balance: z.number() }),
   });
 
-// ── Auditoría y fotos ──
-export const fetchAudit = (token: string, query: Record<string, string | number>) =>
-  apiRequestPage("/admin/audit", { token, query, schema: auditSchema });
-
+// ── Fotos ──
 /** Sube una foto de producto (cuerpo binario, no JSON). Devuelve la URL pública. */
 export async function uploadProductImage(token: string, file: File): Promise<string> {
   let response: Response;

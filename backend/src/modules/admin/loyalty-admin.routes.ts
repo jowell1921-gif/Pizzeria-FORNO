@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { requirePermission } from "../../auth/authenticate.js";
+import { requireAccess, requirePermission } from "../../auth/authenticate.js";
 import type { PrismaClient } from "../../db/client.js";
 import { unauthorized } from "../../errors.js";
 import { paginationArgs } from "../../utils/pagination.js";
@@ -22,7 +22,7 @@ import {
 /** Administración de FORNO CLUB. Permiso `loyalty:manage` (y `customers:read` para ver clientes). */
 export function createLoyaltyAdminRouter(prisma: PrismaClient): Router {
   const router = Router();
-  const guard = requirePermission("loyalty:manage");
+  const guard = requireAccess("loyalty:read", "loyalty:manage");
   const actor = (req: { auth?: { userId: string } }) => {
     if (!req.auth) throw unauthorized();
     return req.auth.userId;

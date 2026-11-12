@@ -1498,6 +1498,13 @@ export function buildOpenApiDocument(): Json {
       if (["get", "post", "put", "patch", "delete"].includes(method)) {
         operation["operationId"] = operationIdFor(method, path);
       }
+      // Consultar estas secciones del panel exige el permiso de lectura; modificarlas, el de gestión.
+      if (method === "get" && typeof operation["description"] === "string") {
+        operation["description"] = operation["description"].replace(
+          /`(catalog|promotions|loyalty|settings):manage`/g,
+          "`$1:read`",
+        );
+      }
     }
   }
   return document;

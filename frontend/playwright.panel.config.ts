@@ -57,6 +57,7 @@ export default defineConfig({
         CORS_ORIGINS: `http://localhost:${WEB}`,
         SUPABASE_URL: `http://localhost:${AUTH}`,
         SELF_ADMIN_ENABLED: "false",
+        OWNER_EMAIL: "admin@e2e.test",
       },
     },
     {

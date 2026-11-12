@@ -17,6 +17,8 @@ export const E2E_USERS = {
     role: "KITCHEN",
   },
   customer: { id: "a0000000-0000-4000-8000-000000000004", email: "cliente@e2e.test", role: null },
+  // Administrador que NO es el propietario (OWNER_EMAIL = admin@e2e.test): ve todo en modo lectura.
+  viewer: { id: "a0000000-0000-4000-8000-000000000005", email: "viewer@e2e.test", role: "ADMIN" },
 } as const;
 
 async function main() {
@@ -28,14 +30,14 @@ async function main() {
     await seedDemoData(prisma);
 
     let index = 0;
-    for (const user of Object.values(E2E_USERS)) {
+    for (const [key, user] of Object.entries(E2E_USERS)) {
       index += 1;
       await prisma.profile.create({
         data: {
           id: user.id,
           email: user.email,
           fullName: `Usuario ${user.role ?? "cliente"}`,
-          username: `e2e_${user.role?.toLowerCase() ?? "cliente"}`,
+          username: `e2e_${key === "customer" ? "cliente" : key}`,
           phone: `+34 600 000 00${index}`,
         },
       });

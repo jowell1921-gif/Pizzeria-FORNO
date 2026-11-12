@@ -7,7 +7,7 @@ import {
   type QueryKey,
   type UseQueryResult,
 } from "@tanstack/react-query";
-import { useId, type ReactNode } from "react";
+import { createContext, useContext, useId, type ComponentProps, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/features/account/profile-context";
@@ -73,6 +73,56 @@ export function useAdminMutation<Input, Output>(
       onDone?.(output);
     },
   });
+}
+
+/**
+ * ¿Puede el usuario modificar esta sección? Lo decide el servidor (permiso «…:manage»); la interfaz solo
+ * lo refleja desactivando los controles. Por defecto sí, para vistas fuera de una sección protegida.
+ */
+const EditAccessContext = createContext(true);
+
+export function useCanEdit(): boolean {
+  return useContext(EditAccessContext);
+}
+
+const READ_ONLY_HINT = "Solo el propietario de la web puede modificar esto";
+
+export function EditAccess({ canEdit, children }: { canEdit: boolean; children: ReactNode }) {
+  return (
+    <EditAccessContext.Provider value={canEdit}>
+      {canEdit ? null : (
+        <p role="note" className="bg-cream-soft border-border rounded-xl border px-4 py-3 text-sm">
+          <strong>Modo lectura.</strong> Puedes ver todo, pero solo el propietario de la web puede
+          modificar esta sección.
+        </p>
+      )}
+      {children}
+    </EditAccessContext.Provider>
+  );
+}
+
+/** Botón que modifica datos: queda desactivado en modo lectura. */
+export function EditButton({ disabled, title, ...props }: ComponentProps<typeof Button>) {
+  const canEdit = useCanEdit();
+  return (
+    <Button {...props} disabled={disabled || !canEdit} title={canEdit ? title : READ_ONLY_HINT} />
+  );
+}
+
+/** Formulario que modifica datos: todos sus controles se desactivan en modo lectura. */
+export function EditForm({ children, ...props }: ComponentProps<"form">) {
+  const canEdit = useCanEdit();
+  return (
+    <form {...props}>
+      <fieldset
+        disabled={!canEdit}
+        title={canEdit ? undefined : READ_ONLY_HINT}
+        className="contents"
+      >
+        {children}
+      </fieldset>
+    </form>
+  );
 }
 
 export function PageTitle({ children }: { children: ReactNode }) {

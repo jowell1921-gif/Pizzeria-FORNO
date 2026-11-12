@@ -60,6 +60,8 @@ export interface AppOptions extends Pick<Env, "CORS_ORIGINS"> {
   API_DOCS_ENABLED?: Env["API_DOCS_ENABLED"];
   /** Si los usuarios pueden hacerse administradores desde su cuenta (solo demo). Por defecto, no. */
   SELF_ADMIN_ENABLED?: boolean;
+  /** Único correo que puede modificar carta, promociones, FORNEA CLUB y local. Sin él, sin restricción. */
+  OWNER_EMAIL?: string | undefined;
   /** URL pública de la web, a donde vuelve el cliente tras pagar. */
   FRONTEND_URL?: string;
   /** Límites de peticiones; por defecto los de producción (las pruebas pasan los suyos). */
@@ -123,15 +125,16 @@ export function createApp(options: AppOptions, deps?: AppDependencies): Express 
 
     app.use("/api/v1/assistant", createAssistantRouter(deps.assistant));
 
-    const authenticate = createAuthenticate(deps);
-    app.use("/api/v1/checkout", createOptionalAuthenticate(deps), createCheckoutRouter(prisma));
+    const authDeps = { ...deps, ownerEmail: options.OWNER_EMAIL };
+    const authenticate = createAuthenticate(authDeps);
+    app.use("/api/v1/checkout", createOptionalAuthenticate(authDeps), createCheckoutRouter(prisma));
     const userLimits = userRateLimits(limits);
     app.use("/api/v1/me/addresses", authenticate, ...userLimits, createAddressesRouter(prisma));
     app.use(
       "/api/v1/me",
       authenticate,
       ...userLimits,
-      createMeRouter(prisma, options.SELF_ADMIN_ENABLED ?? false),
+      createMeRouter(prisma, options.SELF_ADMIN_ENABLED ?? false, options.OWNER_EMAIL),
     );
     app.use(
       "/api/v1/admin",

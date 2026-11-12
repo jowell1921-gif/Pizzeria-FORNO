@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { requirePermission } from "../../auth/authenticate.js";
+import { requireAccess } from "../../auth/authenticate.js";
 import type { PrismaClient } from "../../db/client.js";
 import { unauthorized } from "../../errors.js";
 import {
@@ -20,7 +20,7 @@ import {
 /** Configuración del local: datos, horarios, festivos y zonas de reparto. Permiso `settings:manage`. */
 export function createStoreAdminRouter(prisma: PrismaClient): Router {
   const router = Router();
-  const guard = requirePermission("settings:manage");
+  const guard = requireAccess("settings:read", "settings:manage");
   const actor = (req: { auth?: { userId: string } }) => {
     if (!req.auth) throw unauthorized();
     return req.auth.userId;

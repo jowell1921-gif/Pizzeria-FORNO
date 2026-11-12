@@ -5,7 +5,6 @@ import {
   ChefHat,
   ClipboardList,
   Gift,
-  History,
   LayoutDashboard,
   Mail,
   Megaphone,
@@ -19,6 +18,7 @@ import { Suspense, useState, type ReactNode } from "react";
 import { Logo } from "@/components/brand/logo";
 import { buttonVariants } from "@/components/ui/button";
 import { SignOutButton } from "@/features/account/sign-out-button";
+import { EditAccess } from "@/features/admin/admin-ui";
 import { ProfileProvider, useProfile } from "@/features/account/profile-context";
 import { cn } from "@/lib/utils";
 
@@ -32,22 +32,21 @@ interface NavItem {
 const NAV: NavItem[] = [
   { href: "/admin", label: "Panel", permission: "dashboard:read", icon: LayoutDashboard },
   { href: "/admin/pedidos", label: "Pedidos", permission: "orders:read:all", icon: ClipboardList },
-  { href: "/admin/carta", label: "Carta", permission: "catalog:manage", icon: UtensilsCrossed },
+  { href: "/admin/carta", label: "Carta", permission: "catalog:read", icon: UtensilsCrossed },
   {
     href: "/admin/promociones",
     label: "Promociones",
-    permission: "promotions:manage",
+    permission: "promotions:read",
     icon: Megaphone,
   },
-  { href: "/admin/club", label: "FORNEA CLUB", permission: "loyalty:manage", icon: Gift },
+  { href: "/admin/club", label: "FORNEA CLUB", permission: "loyalty:read", icon: Gift },
   {
     href: "/admin/establecimiento",
     label: "Establecimiento",
-    permission: "settings:manage",
+    permission: "settings:read",
     icon: Settings,
   },
-  { href: "/admin/correos", label: "Correos", permission: "settings:manage", icon: Mail },
-  { href: "/admin/auditoria", label: "Auditoría", permission: "audit:read", icon: History },
+  { href: "/admin/correos", label: "Correos", permission: "settings:read", icon: Mail },
   { href: "/kitchen", label: "Cocina", permission: "kitchen:orders:read", icon: ChefHat },
 ];
 
@@ -147,6 +146,29 @@ export function PanelShell({ children }: { children: ReactNode }) {
         </Suspense>
       </QueryClientProvider>
     </ProfileProvider>
+  );
+}
+
+/**
+ * Pantalla de una sección editable: se ve con el permiso de lectura; si falta el de gestión, todo queda
+ * en modo lectura (controles desactivados). El servidor rechaza igualmente cualquier modificación.
+ */
+export function RequireSection({
+  read,
+  manage,
+  children,
+}: {
+  read: string;
+  manage: string;
+  children: ReactNode;
+}) {
+  const { profile } = useProfile();
+  return (
+    <RequirePermission permission={read}>
+      <EditAccess canEdit={profile?.permissions.includes(manage) ?? false}>
+        <div className="space-y-6">{children}</div>
+      </EditAccess>
+    </RequirePermission>
   );
 }
 

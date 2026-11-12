@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { requirePermission } from "../../auth/authenticate.js";
+import { requireAccess } from "../../auth/authenticate.js";
 import type { PrismaClient } from "../../db/client.js";
 import { unauthorized } from "../../errors.js";
 import {
@@ -17,7 +17,7 @@ import {
 /** Promociones y cupones. Permiso `promotions:manage`. */
 export function createPromotionsAdminRouter(prisma: PrismaClient): Router {
   const router = Router();
-  const guard = requirePermission("promotions:manage");
+  const guard = requireAccess("promotions:read", "promotions:manage");
   const actor = (req: { auth?: { userId: string } }) => {
     if (!req.auth) throw unauthorized();
     return req.auth.userId;

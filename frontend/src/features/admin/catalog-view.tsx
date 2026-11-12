@@ -32,6 +32,7 @@ import {
   adminErrorMessage,
   fieldClass,
   useAdminMutation,
+  EditButton,
   useAdminQuery,
 } from "./admin-ui";
 
@@ -154,9 +155,9 @@ function ProductsSection() {
           </Button>
         </div>
         <div className="flex items-end">
-          <Button type="button" className="h-11 w-full" onClick={() => setEditing("new")}>
+          <EditButton type="button" className="h-11 w-full" onClick={() => setEditing("new")}>
             Nuevo producto
-          </Button>
+          </EditButton>
         </div>
       </form>
 
@@ -188,7 +189,7 @@ function ProductsSection() {
                 <div className="flex flex-wrap gap-2">
                   {product.deleted ? null : (
                     <>
-                      <Button
+                      <EditButton
                         type="button"
                         variant="outline"
                         size="sm"
@@ -196,8 +197,8 @@ function ProductsSection() {
                         onClick={() => setEditing(product)}
                       >
                         Editar
-                      </Button>
-                      <Button
+                      </EditButton>
+                      <EditButton
                         type="button"
                         variant="outline"
                         size="sm"
@@ -205,10 +206,10 @@ function ProductsSection() {
                         onClick={() => toggle.mutate(product)}
                       >
                         {product.available ? "Agotado" : "Disponible"}
-                      </Button>
+                      </EditButton>
                     </>
                   )}
-                  <Button
+                  <EditButton
                     type="button"
                     variant="outline"
                     size="sm"
@@ -216,7 +217,7 @@ function ProductsSection() {
                     onClick={() => remove.mutate(product)}
                   >
                     {product.deleted ? "Restaurar" : "Borrar"}
-                  </Button>
+                  </EditButton>
                 </div>
               </li>
             ))}
@@ -720,9 +721,9 @@ function CategoriesSection() {
     <Section
       title="Categorías"
       actions={
-        <Button type="button" onClick={() => setEditing("new")}>
+        <EditButton type="button" onClick={() => setEditing("new")}>
           Nueva categoría
-        </Button>
+        </EditButton>
       }
     >
       {editing ? (
@@ -750,7 +751,7 @@ function CategoriesSection() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Button
+                <EditButton
                   type="button"
                   variant="outline"
                   size="sm"
@@ -758,8 +759,8 @@ function CategoriesSection() {
                   onClick={() => setEditing(category)}
                 >
                   Editar
-                </Button>
-                <Button
+                </EditButton>
+                <EditButton
                   type="button"
                   variant="outline"
                   size="sm"
@@ -767,7 +768,7 @@ function CategoriesSection() {
                   onClick={() => remove.mutate(category)}
                 >
                   Borrar
-                </Button>
+                </EditButton>
               </div>
             </li>
           ))}

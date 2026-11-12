@@ -14,6 +14,7 @@ const USERS = {
   staff: { id: "a0000000-0000-4000-8000-000000000002", email: "staff@e2e.test" },
   kitchen: { id: "a0000000-0000-4000-8000-000000000003", email: "kitchen@e2e.test" },
   customer: { id: "a0000000-0000-4000-8000-000000000004", email: "cliente@e2e.test" },
+  viewer: { id: "a0000000-0000-4000-8000-000000000005", email: "viewer@e2e.test" },
 } as const;
 
 type Role = keyof typeof USERS;
@@ -140,7 +141,6 @@ const ADMIN_PAGES: Array<{ path: string; heading: string | RegExp }> = [
   { path: "/admin/promociones", heading: "Promociones" },
   { path: "/admin/club", heading: "FORNEA CLUB" },
   { path: "/admin/establecimiento", heading: "Establecimiento" },
-  { path: "/admin/auditoria", heading: "Auditoría" },
   { path: "/admin/correos", heading: "Correos" },
   { path: "/kitchen", heading: "Cocina" },
 ];
@@ -200,7 +200,6 @@ test.describe("administrator", () => {
       "FORNEA CLUB",
       "Establecimiento",
       "Correos",
-      "Auditoría",
       "Cocina",
     ]) {
       await expect(nav.getByRole("link", { name, exact: true })).toBeVisible();
@@ -241,27 +240,67 @@ test.describe("kitchen", () => {
 });
 
 test.describe("staff", () => {
-  test("sees orders but not the menu, settings, club, audit or emails", async ({
-    page,
-    context,
-  }) => {
+  test("sees orders but not the menu, settings, club or emails", async ({ page, context }) => {
     await signIn(context, "staff");
     await page.goto("/admin/pedidos");
     await expect(page.getByRole("heading", { level: 1, name: "Pedidos" })).toBeVisible();
     const nav = page.getByRole("navigation", { name: "Navegación del panel" });
-    for (const hidden of [
-      "Carta",
-      "Promociones",
-      "FORNEA CLUB",
-      "Establecimiento",
-      "Correos",
-      "Auditoría",
-    ]) {
+    for (const hidden of ["Carta", "Promociones", "FORNEA CLUB", "Establecimiento", "Correos"]) {
       await expect(nav.getByRole("link", { name: hidden, exact: true })).toHaveCount(0);
     }
-    await page.goto("/admin/auditoria");
+    await page.goto("/admin/carta");
     await expect(page.getByRole("heading", { name: "Sin permiso" })).toBeVisible();
     await expectNoOverflow(page);
+  });
+});
+
+test.describe("administrator who is not the owner", () => {
+  const SECTIONS: Array<{ path: string; heading: string; locked: Array<string | RegExp> }> = [
+    { path: "/admin/carta", heading: "Carta", locked: ["Nuevo producto"] },
+    { path: "/admin/promociones", heading: "Promociones", locked: ["Nueva promoción"] },
+    { path: "/admin/club", heading: "FORNEA CLUB", locked: ["Guardar cambios"] },
+    {
+      path: "/admin/establecimiento",
+      heading: "Establecimiento",
+      locked: ["Aplicar", "Nueva zona"],
+    },
+  ];
+
+  for (const { path, heading, locked } of SECTIONS) {
+    test(`${path} is read-only: visible, with the editing controls disabled`, async ({
+      page,
+      context,
+    }) => {
+      await signIn(context, "viewer");
+      const errors = consoleErrors(page);
+      await page.goto(path);
+      await expect(page.getByRole("heading", { level: 1, name: heading })).toBeVisible();
+      await expect(page.getByText("Modo lectura.")).toBeVisible();
+      for (const name of locked) {
+        await expect(page.getByRole("button", { name, exact: true })).toBeDisabled();
+      }
+      await expectNoOverflow(page);
+      await expectAccessible(page);
+      expect(errors).toEqual([]);
+    });
+  }
+
+  test("the server also refuses their changes, and the audit is gone from the menu", async ({
+    context,
+    page,
+  }) => {
+    const token = await signIn(context, "viewer");
+    const response = await fetch(`${API}/admin/categories`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ name: "Ensaladas" }),
+    });
+    expect(response.status).toBe(403);
+
+    await page.goto("/admin/pedidos");
+    const nav = page.getByRole("navigation", { name: "Navegación del panel" });
+    await expect(nav.getByRole("link", { name: "Carta", exact: true })).toBeVisible();
+    await expect(nav.getByRole("link", { name: "Auditoría", exact: true })).toHaveCount(0);
   });
 });
 

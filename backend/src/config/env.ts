@@ -59,7 +59,8 @@ const envSchema = z.object({
    * PizzAI solo envía datos públicos de la carta y lo que escribe el visitante.
    */
   GEMINI_API_KEY: z.string().min(20).optional(),
-  GEMINI_MODEL: z.string().min(3).default("gemini-flash-lite-latest"),
+  /** Uno o varios modelos separados por comas, en orden de preferencia. */
+  GEMINI_MODEL: z.string().min(3).default("gemini-3.1-flash-lite,gemini-flash-lite-latest"),
   ASSISTANT_MODEL: z.string().min(3).default("claude-opus-5-5"),
   /** Máximo de mensajes al modelo por día, entre todos los visitantes. */
   ASSISTANT_DAILY_LIMIT: z.coerce.number().int().min(1).max(100_000).default(200),
@@ -79,6 +80,11 @@ const envSchema = z.object({
    * los roles los asigna un administrador.
    */
   SELF_ADMIN_ENABLED: booleanString.optional(),
+  /**
+   * Único correo que puede modificar carta, promociones, FORNEA CLUB y ajustes del local. El resto de
+   * administradores los ve en modo lectura. Sin configurar, no hay restricción.
+   */
+  OWNER_EMAIL: z.email().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -2992,7 +2992,7 @@
           "Carta (admin)"
         ],
         "summary": "Listar categorías",
-        "description": "Permiso `catalog:manage`.",
+        "description": "Permiso `catalog:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -3440,7 +3440,7 @@
           "Carta (admin)"
         ],
         "summary": "Listar productos",
-        "description": "Permiso `catalog:manage`.",
+        "description": "Permiso `catalog:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -3641,7 +3641,7 @@
           "Carta (admin)"
         ],
         "summary": "Detalle de productos",
-        "description": "Permiso `catalog:manage`.",
+        "description": "Permiso `catalog:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -4140,7 +4140,7 @@
           "Carta (admin)"
         ],
         "summary": "Alérgenos disponibles",
-        "description": "Permiso `catalog:manage`.",
+        "description": "Permiso `catalog:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -4346,7 +4346,7 @@
           "Configuración"
         ],
         "summary": "Datos del local",
-        "description": "Permiso `settings:manage`.",
+        "description": "Permiso `settings:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -4544,7 +4544,7 @@
           "Configuración"
         ],
         "summary": "Horario semanal",
-        "description": "Permiso `settings:manage`. Día ISO 1 = lunes … 7 = domingo; minutos desde las 00:00.",
+        "description": "Permiso `settings:read`. Día ISO 1 = lunes … 7 = domingo; minutos desde las 00:00.",
         "security": [
           {
             "bearerAuth": []
@@ -4748,7 +4748,7 @@
           "Configuración"
         ],
         "summary": "Festivos y horarios especiales",
-        "description": "Permiso `settings:manage`. Desde hace una semana en adelante.",
+        "description": "Permiso `settings:read`. Desde hace una semana en adelante.",
         "security": [
           {
             "bearerAuth": []
@@ -5061,7 +5061,7 @@
           "Configuración"
         ],
         "summary": "Listar zonas de reparto",
-        "description": "Permiso `settings:manage`.",
+        "description": "Permiso `settings:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -5509,7 +5509,7 @@
           "Promociones (admin)"
         ],
         "summary": "Listar promociones",
-        "description": "Permiso `promotions:manage`.",
+        "description": "Permiso `promotions:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -5710,7 +5710,7 @@
           "Promociones (admin)"
         ],
         "summary": "Detalle de promociones",
-        "description": "Permiso `promotions:manage`.",
+        "description": "Permiso `promotions:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -6466,7 +6466,7 @@
           "Configuración"
         ],
         "summary": "Regla de puntos de FORNO CLUB",
-        "description": "Permiso `loyalty:manage`.",
+        "description": "Permiso `loyalty:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -6664,7 +6664,7 @@
           "FORNO CLUB (admin)"
         ],
         "summary": "Listar recompensas",
-        "description": "Permiso `loyalty:manage`.",
+        "description": "Permiso `loyalty:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -7112,7 +7112,7 @@
           "FORNO CLUB (admin)"
         ],
         "summary": "Movimientos de puntos de todos los clientes",
-        "description": "Permiso `loyalty:manage`.",
+        "description": "Permiso `loyalty:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -7255,7 +7255,7 @@
           "FORNO CLUB (admin)"
         ],
         "summary": "Recompensas canjeadas por los clientes",
-        "description": "Permiso `loyalty:manage`.",
+        "description": "Permiso `loyalty:read`.",
         "security": [
           {
             "bearerAuth": []
@@ -8497,7 +8497,7 @@
           "Pagos"
         ],
         "summary": "Correos de pedido",
-        "description": "Permiso `settings:manage`.",
+        "description": "Permiso `settings:read`.",
         "security": [
           {
             "bearerAuth": []

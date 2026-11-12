@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { requirePermission } from "../../auth/authenticate.js";
+import { requireAccess } from "../../auth/authenticate.js";
 import type { PrismaClient } from "../../db/client.js";
 import { unauthorized } from "../../errors.js";
 import {
@@ -20,7 +20,7 @@ import {
 /** Gestión de la carta (categorías, productos, opciones, alérgenos). Permiso `catalog:manage`. */
 export function createCatalogAdminRouter(prisma: PrismaClient): Router {
   const router = Router();
-  const guard = requirePermission("catalog:manage");
+  const guard = requireAccess("catalog:read", "catalog:manage");
   const actor = (req: { auth?: { userId: string } }) => {
     if (!req.auth) throw unauthorized();
     return req.auth.userId;

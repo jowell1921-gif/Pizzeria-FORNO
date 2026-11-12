@@ -19,16 +19,29 @@ import { CatalogView } from "@/features/admin/catalog-view";
 import { ClubView } from "@/features/admin/club-view";
 import { PromotionsView } from "@/features/admin/promotions-view";
 import { StoreView } from "@/features/admin/store-view";
-import { PanelShell, RequirePermission } from "@/features/panel/panel-shell";
+import { PanelShell, RequirePermission, RequireSection } from "@/features/panel/panel-shell";
 
 const ALL = [
   "dashboard:read",
+  "catalog:read",
   "catalog:manage",
+  "settings:read",
   "settings:manage",
+  "promotions:read",
   "promotions:manage",
+  "loyalty:read",
   "loyalty:manage",
   "customers:read",
-  "audit:read",
+];
+
+/** Lo que ve un administrador que no es el propietario: todo en lectura, nada de gestión. */
+const READ_ONLY = [
+  "dashboard:read",
+  "catalog:read",
+  "settings:read",
+  "promotions:read",
+  "loyalty:read",
+  "customers:read",
 ];
 
 const product = (overrides: object = {}) => ({
@@ -189,7 +202,7 @@ afterEach(() => {
 
 describe("panel navigation", () => {
   it("shows only the sections the role may use", async () => {
-    mockApi(["dashboard:read", "catalog:manage"]);
+    mockApi(["dashboard:read", "catalog:read"]);
     render(
       <PanelShell>
         <p>contenido</p>
@@ -204,12 +217,82 @@ describe("panel navigation", () => {
   it("blocks a screen without its permission", async () => {
     mockApi(["dashboard:read"]);
     renderWith(
-      <RequirePermission permission="catalog:manage">
+      <RequirePermission permission="catalog:read">
         <CatalogView />
       </RequirePermission>,
     );
     expect(await screen.findByText("Sin permiso")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Carta" })).not.toBeInTheDocument();
+  });
+});
+
+describe("read-only mode (administrators other than the owner)", () => {
+  it("lists the sections they can see and no longer offers the audit", async () => {
+    mockApi(READ_ONLY);
+    render(
+      <PanelShell>
+        <p>contenido</p>
+      </PanelShell>,
+    );
+    for (const name of [/carta/i, /promociones/i, /fornea club/i, /establecimiento/i]) {
+      expect(await screen.findByRole("link", { name })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole("link", { name: /auditoría/i })).not.toBeInTheDocument();
+  });
+
+  it("shows the menu with every editing control disabled and a notice", async () => {
+    const api = mockApi(READ_ONLY);
+    const user = userEvent.setup();
+    renderWith(
+      <RequireSection read="catalog:read" manage="catalog:manage">
+        <CatalogView />
+      </RequireSection>,
+    );
+    expect(await screen.findByText(/Modo lectura/)).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Editar Margherita" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Marcar agotado: Margherita/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Borrar Margherita/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Nuevo producto" })).toBeDisabled();
+
+    // Se puede seguir consultando: la pestaña de categorías funciona.
+    await user.click(screen.getByRole("tab", { name: /Categorías/ }));
+    expect(await screen.findByRole("button", { name: "Nueva categoría" })).toBeDisabled();
+    expect(api.requests.filter((request) => request.key.startsWith("PATCH"))).toHaveLength(0);
+  });
+
+  it("disables the forms and actions of the establishment", async () => {
+    mockApi(READ_ONLY);
+    renderWith(
+      <RequireSection read="settings:read" manage="settings:manage">
+        <StoreView />
+      </RequireSection>,
+    );
+    expect(await screen.findByRole("checkbox", { name: /Pausar la recepción/ })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Aplicar" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Nueva zona" })).toBeDisabled();
+  });
+
+  it("disables the points rule of FORNEA CLUB and hides the points adjustments", async () => {
+    mockApi(READ_ONLY);
+    renderWith(
+      <RequireSection read="loyalty:read" manage="loyalty:manage">
+        <ClubView />
+      </RequireSection>,
+    );
+    expect(await screen.findByLabelText(/Puntos por cada euro/)).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeDisabled();
+    expect(screen.queryByRole("tab", { name: /Clientes y ajustes/ })).not.toBeInTheDocument();
+  });
+
+  it("keeps everything enabled for the owner", async () => {
+    mockApi(ALL);
+    renderWith(
+      <RequireSection read="catalog:read" manage="catalog:manage">
+        <CatalogView />
+      </RequireSection>,
+    );
+    expect(await screen.findByRole("button", { name: "Editar Margherita" })).toBeEnabled();
+    expect(screen.queryByText(/Modo lectura/)).not.toBeInTheDocument();
   });
 });
 

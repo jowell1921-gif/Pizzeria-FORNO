@@ -29,6 +29,8 @@ import {
   toDateInput,
   toInt,
   useAdminMutation,
+  EditButton,
+  EditForm,
   useAdminQuery,
 } from "./admin-ui";
 
@@ -71,9 +73,9 @@ export function PromotionsView() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <PageTitle>Promociones</PageTitle>
-        <Button type="button" size="lg" onClick={() => setEditing("new")}>
+        <EditButton type="button" size="lg" onClick={() => setEditing("new")}>
           Nueva promoción
-        </Button>
+        </EditButton>
       </div>
       <QueryState query={query}>
         {query.data && query.data.length === 0 ? (
@@ -111,7 +113,7 @@ export function PromotionsView() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button
+                    <EditButton
                       type="button"
                       variant="outline"
                       size="sm"
@@ -119,8 +121,8 @@ export function PromotionsView() {
                       onClick={() => setEditing(promotion)}
                     >
                       Editar
-                    </Button>
-                    <Button
+                    </EditButton>
+                    <EditButton
                       type="button"
                       variant="outline"
                       size="sm"
@@ -128,7 +130,7 @@ export function PromotionsView() {
                       onClick={() => remove.mutate(promotion)}
                     >
                       Borrar
-                    </Button>
+                    </EditButton>
                   </div>
                 </div>
               </li>
@@ -489,7 +491,7 @@ function CouponsSection({ promotion }: { promotion: AdminPromotion }) {
 
   return (
     <Section title="Cupones">
-      <form
+      <EditForm
         noValidate
         aria-label="Nuevo cupón"
         onSubmit={(event) => {
@@ -556,7 +558,7 @@ function CouponsSection({ promotion }: { promotion: AdminPromotion }) {
             label="Crear cupón"
           />
         </div>
-      </form>
+      </EditForm>
       {promotion.coupons.length === 0 ? (
         <p className="text-muted-foreground text-sm">Esta promoción no tiene cupones.</p>
       ) : (
@@ -575,7 +577,7 @@ function CouponsSection({ promotion }: { promotion: AdminPromotion }) {
                 </span>
               </span>
               <span className="flex gap-2">
-                <Button
+                <EditButton
                   type="button"
                   variant="outline"
                   size="sm"
@@ -583,8 +585,8 @@ function CouponsSection({ promotion }: { promotion: AdminPromotion }) {
                   onClick={() => toggle.mutate({ id: coupon.id, active: !coupon.active })}
                 >
                   {coupon.active ? "Desactivar" : "Activar"}
-                </Button>
-                <Button
+                </EditButton>
+                <EditButton
                   type="button"
                   variant="outline"
                   size="sm"
@@ -592,7 +594,7 @@ function CouponsSection({ promotion }: { promotion: AdminPromotion }) {
                   onClick={() => remove.mutate(coupon.id)}
                 >
                   Borrar
-                </Button>
+                </EditButton>
               </span>
             </li>
           ))}

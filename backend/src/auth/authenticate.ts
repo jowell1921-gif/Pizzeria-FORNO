@@ -3,7 +3,7 @@ import type { RequestHandler } from "express";
 import type { PrismaClient } from "../db/client.js";
 import type { RoleName } from "../generated/prisma/enums.js";
 import { forbidden, unauthorized } from "../errors.js";
-import { permissionsFor, type Permission } from "./permissions.js";
+import { canEditContent, permissionsFor, type Permission } from "./permissions.js";
 import { ensureProfile } from "./profile-service.js";
 import { TokenError, type TokenVerifier } from "./token-verifier.js";
 
@@ -31,6 +31,8 @@ export function readBearerToken(header: string | undefined): string {
 interface AuthDependencies {
   verifyToken: TokenVerifier;
   prisma: PrismaClient;
+  /** Único correo que puede modificar carta, promociones, FORNEA CLUB y local (ver permissions.ts). */
+  ownerEmail?: string | undefined;
 }
 
 /**
@@ -38,7 +40,11 @@ interface AuthDependencies {
  * los roles desde la base de datos. Ignora cualquier identidad, rol o permiso que envíe el cliente
  * por otra vía (cabeceras, cuerpo o parámetros).
  */
-export function createAuthenticate({ verifyToken, prisma }: AuthDependencies): RequestHandler {
+export function createAuthenticate({
+  verifyToken,
+  prisma,
+  ownerEmail,
+}: AuthDependencies): RequestHandler {
   return async (req, res, next) => {
     try {
       const token = readBearerToken(req.headers.authorization);
@@ -57,7 +63,9 @@ export function createAuthenticate({ verifyToken, prisma }: AuthDependencies): R
         userId: profile.id,
         email: profile.email,
         roles: profile.roles,
-        permissions: permissionsFor(profile.roles),
+        permissions: permissionsFor(profile.roles, {
+          readOnlyContent: !canEditContent(profile.email, ownerEmail),
+        }),
       };
       next();
     } catch (error) {
@@ -97,5 +105,18 @@ export function requirePermission(permission: Permission): RequestHandler {
       return;
     }
     next();
+  };
+}
+
+/**
+ * Exige `read` para consultar (GET/HEAD) y `manage` para cualquier otra operación. Así un usuario con
+ * solo lectura puede ver una sección del panel sin poder modificarla.
+ */
+export function requireAccess(read: Permission, manage: Permission): RequestHandler {
+  const canRead = requirePermission(read);
+  const canManage = requirePermission(manage);
+  return (req, res, next) => {
+    if (req.method === "GET" || req.method === "HEAD") canRead(req, res, next);
+    else canManage(req, res, next);
   };
 }

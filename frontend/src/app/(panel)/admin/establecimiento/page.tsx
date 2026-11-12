@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 import { StoreView } from "@/features/admin/store-view";
-import { RequirePermission } from "@/features/panel/panel-shell";
+import { RequireSection } from "@/features/panel/panel-shell";
 
 export const metadata: Metadata = { title: "Establecimiento" };
 
 export default function AdminStoreViewPage() {
   return (
-    <RequirePermission permission="settings:manage">
+    <RequireSection read="settings:read" manage="settings:manage">
       <StoreView />
-    </RequirePermission>
+    </RequireSection>
   );
 }

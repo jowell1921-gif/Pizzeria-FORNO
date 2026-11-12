@@ -115,7 +115,7 @@ export function createAdminRouter(
   );
 
   // Correos de pedido enviados o registrados.
-  router.get("/notifications", requirePermission("settings:manage"), async (req, res) => {
+  router.get("/notifications", requirePermission("settings:read"), async (req, res) => {
     res.json(await listNotifications(prisma, req.query, paginationArgs(req.query)));
   });
 

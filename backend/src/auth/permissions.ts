@@ -21,9 +21,13 @@ export const PERMISSIONS = [
   "kitchen:orders:update-status",
   // Administración.
   "dashboard:read",
+  "catalog:read",
   "catalog:manage",
+  "promotions:read",
   "promotions:manage",
+  "loyalty:read",
   "loyalty:manage",
+  "settings:read",
   "settings:manage",
   "customers:read",
   "payments:read",
@@ -60,11 +64,35 @@ export const ROLE_PERMISSIONS: Record<RoleName, readonly Permission[]> = {
   KITCHEN: ["kitchen:orders:read", "kitchen:orders:update-status"],
 };
 
+/** Permisos que modifican la carta, las promociones, FORNEA CLUB y los ajustes del local. */
+export const CONTENT_EDIT_PERMISSIONS: readonly Permission[] = [
+  "catalog:manage",
+  "promotions:manage",
+  "loyalty:manage",
+  "settings:manage",
+];
+
+/**
+ * Quién puede modificar esos contenidos. Con OWNER_EMAIL configurado, solo ese correo: el resto de
+ * administradores los ve en modo lectura (web de demostración abierta a cualquiera). Sin configurar,
+ * no hay restricción.
+ */
+export function canEditContent(email: string, ownerEmail: string | undefined): boolean {
+  if (!ownerEmail) return true;
+  return email.trim().toLowerCase() === ownerEmail.trim().toLowerCase();
+}
+
 /** Permisos efectivos de un usuario: los de cliente más los de sus roles, sin duplicados. */
-export function permissionsFor(roles: readonly RoleName[]): Permission[] {
+export function permissionsFor(
+  roles: readonly RoleName[],
+  options: { readOnlyContent?: boolean } = {},
+): Permission[] {
   const all = new Set<Permission>(CUSTOMER_PERMISSIONS);
   for (const role of roles) {
     for (const permission of ROLE_PERMISSIONS[role]) all.add(permission);
+  }
+  if (options.readOnlyContent) {
+    for (const permission of CONTENT_EDIT_PERMISSIONS) all.delete(permission);
   }
   return [...all].sort();
 }

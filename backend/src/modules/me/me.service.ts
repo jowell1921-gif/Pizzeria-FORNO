@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { PrismaClient } from "../../db/client.js";
-import { permissionsFor } from "../../auth/permissions.js";
+import { canEditContent, permissionsFor } from "../../auth/permissions.js";
 import { notFound } from "../../errors.js";
 import { recordAudit } from "../../utils/audit.js";
 
@@ -45,7 +45,12 @@ export function isProfileComplete(profile: { username: string | null; phone: str
   return Boolean(profile.username && profile.phone);
 }
 
-export async function getProfile(prisma: PrismaClient, userId: string, selfAdminAvailable = false) {
+export async function getProfile(
+  prisma: PrismaClient,
+  userId: string,
+  selfAdminAvailable = false,
+  ownerEmail?: string,
+) {
   const profile = await prisma.profile.findUnique({
     where: { id: userId },
     include: { roles: true },
@@ -62,7 +67,9 @@ export async function getProfile(prisma: PrismaClient, userId: string, selfAdmin
     profileComplete: isProfileComplete(profile),
     marketingConsent: profile.marketingConsent,
     roles,
-    permissions: permissionsFor(roles),
+    permissions: permissionsFor(roles, {
+      readOnlyContent: !canEditContent(profile.email, ownerEmail),
+    }),
     selfAdminAvailable,
     createdAt: profile.createdAt.toISOString(),
   };
@@ -73,6 +80,7 @@ export async function updateProfile(
   userId: string,
   input: UpdateProfileInput,
   selfAdminAvailable = false,
+  ownerEmail?: string,
 ) {
   const current = await prisma.profile.findUniqueOrThrow({ where: { id: userId } });
 
@@ -94,14 +102,19 @@ export async function updateProfile(
         : {}),
     },
   });
-  return getProfile(prisma, userId, selfAdminAvailable);
+  return getProfile(prisma, userId, selfAdminAvailable, ownerEmail);
 }
 
 /**
  * Función de demostración: el propio usuario se concede o se quita el rol ADMIN. Solo existe si el
  * servidor la activa (`SELF_ADMIN_ENABLED`); en producción responde 403. Queda en la auditoría.
  */
-export async function setOwnAdminRole(prisma: PrismaClient, userId: string, admin: boolean) {
+export async function setOwnAdminRole(
+  prisma: PrismaClient,
+  userId: string,
+  admin: boolean,
+  ownerEmail?: string,
+) {
   await prisma.$transaction(async (tx) => {
     const existing = await tx.userRole.findUnique({
       where: { userId_role: { userId, role: "ADMIN" } },
@@ -121,5 +134,5 @@ export async function setOwnAdminRole(prisma: PrismaClient, userId: string, admi
       after: { admin },
     });
   });
-  return getProfile(prisma, userId, true);
+  return getProfile(prisma, userId, true, ownerEmail);
 }

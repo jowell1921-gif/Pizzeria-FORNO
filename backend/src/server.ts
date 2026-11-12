@@ -53,6 +53,7 @@ const app = createApp(
     ...env,
     LOG_PRETTY: env.NODE_ENV === "development",
     SELF_ADMIN_ENABLED: selfAdminEnabled(env),
+    OWNER_EMAIL: env.OWNER_EMAIL,
     FRONTEND_URL: frontendUrl(env),
   },
   {

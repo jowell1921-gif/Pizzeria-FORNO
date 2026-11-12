@@ -32,6 +32,8 @@ import {
   minutesToTime,
   timeToMinutes,
   useAdminMutation,
+  EditButton,
+  EditForm,
   useAdminQuery,
 } from "./admin-ui";
 
@@ -76,7 +78,7 @@ function PauseCard({ initial }: { initial: StoreSettings }) {
   );
   return (
     <Section title="Pedidos online">
-      <form
+      <EditForm
         noValidate
         onSubmit={(event: FormEvent) => {
           event.preventDefault();
@@ -107,7 +109,7 @@ function PauseCard({ initial }: { initial: StoreSettings }) {
           saved={mutation.isSuccess}
           label="Aplicar"
         />
-      </form>
+      </EditForm>
     </Section>
   );
 }
@@ -196,7 +198,7 @@ function SettingsForm({ initial }: { initial: StoreSettings }) {
 
   return (
     <Section title="Datos y condiciones">
-      <form noValidate onSubmit={submit} className="space-y-6">
+      <EditForm noValidate onSubmit={submit} className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
           {text("name", "Nombre comercial")}
           {text("phone", "Teléfono")}
@@ -245,7 +247,7 @@ function SettingsForm({ initial }: { initial: StoreSettings }) {
           ))}
         </fieldset>
         <SaveBar pending={mutation.isPending} error={mutation.error} saved={mutation.isSuccess} />
-      </form>
+      </EditForm>
     </Section>
   );
 }
@@ -271,7 +273,7 @@ function HoursEditor({ initial }: { initial: OpeningSlot[] }) {
     setSlots((current) => current.map((slot, i) => (i === index ? { ...slot, ...patch } : slot)));
 
   return (
-    <form
+    <EditForm
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
@@ -354,7 +356,7 @@ function HoursEditor({ initial }: { initial: OpeningSlot[] }) {
         saved={mutation.isSuccess}
         label="Guardar horario"
       />
-    </form>
+    </EditForm>
   );
 }
 
@@ -380,7 +382,7 @@ function SpecialDaysSection() {
 
   return (
     <Section title="Festivos y horarios especiales">
-      <form
+      <EditForm
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
@@ -454,7 +456,7 @@ function SpecialDaysSection() {
             label="Añadir día"
           />
         </div>
-      </form>
+      </EditForm>
       <QueryState query={query}>
         {query.data && query.data.length > 0 ? (
           <ul className="space-y-2" aria-label="Días especiales">
@@ -470,7 +472,7 @@ function SpecialDaysSection() {
                     : `${minutesToTime(day.openMinute ?? 0)}–${minutesToTime(day.closeMinute ?? 0)}`}
                   {day.note ? ` · ${day.note}` : ""}
                 </span>
-                <Button
+                <EditButton
                   type="button"
                   variant="outline"
                   size="sm"
@@ -478,7 +480,7 @@ function SpecialDaysSection() {
                   onClick={() => remove.mutate(day.id)}
                 >
                   Quitar
-                </Button>
+                </EditButton>
               </li>
             ))}
           </ul>
@@ -509,9 +511,9 @@ function ZonesSection() {
     <Section
       title="Zonas de reparto"
       actions={
-        <Button type="button" onClick={() => setEditing("new")}>
+        <EditButton type="button" onClick={() => setEditing("new")}>
           Nueva zona
-        </Button>
+        </EditButton>
       }
     >
       {editing ? (
@@ -540,7 +542,7 @@ function ZonesSection() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button
+                  <EditButton
                     type="button"
                     variant="outline"
                     size="sm"
@@ -548,8 +550,8 @@ function ZonesSection() {
                     onClick={() => setEditing(zone)}
                   >
                     Editar
-                  </Button>
-                  <Button
+                  </EditButton>
+                  <EditButton
                     type="button"
                     variant="outline"
                     size="sm"
@@ -557,7 +559,7 @@ function ZonesSection() {
                     onClick={() => remove.mutate(zone.id)}
                   >
                     Borrar
-                  </Button>
+                  </EditButton>
                 </div>
               </li>
             ))}

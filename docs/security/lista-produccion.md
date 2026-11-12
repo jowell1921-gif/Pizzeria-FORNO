@@ -27,6 +27,7 @@ protege ya el proyecto, qué debe decidir el propietario y qué queda pendiente 
 
 | Decisión                        | Recomendación                                                                                                                                          |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `OWNER_EMAIL`                   | Pon el correo del propietario: solo él modifica carta, promociones, FORNEA CLUB y local; los demás administradores lo ven en solo lectura              |
 | `SELF_ADMIN_ENABLED`            | `false` en un negocio real. Con `true`, **cualquier cliente puede hacerse administrador y ver los datos de todos**. Solo para una demostración pública |
 | Claves de Stripe                | `sk_live_` para cobrar de verdad; con `sk_test_` los pagos no son reales (el arranque lo avisa)                                                        |
 | Correo                          | Dominio verificado en Resend para enviar a los clientes; sin él, los avisos solo se registran                                                          |

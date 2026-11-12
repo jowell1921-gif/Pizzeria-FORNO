@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Correos" };
 
 export default function AdminNotificationsPage() {
   return (
-    <RequirePermission permission="settings:manage">
+    <RequirePermission permission="settings:read">
       <NotificationsView />
     </RequirePermission>
   );

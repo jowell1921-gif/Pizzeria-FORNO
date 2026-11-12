@@ -19,7 +19,6 @@ test.describe("route protection", () => {
     "/admin/promociones",
     "/admin/club",
     "/admin/establecimiento",
-    "/admin/auditoria",
     "/admin/correos",
     "/kitchen",
   ]) {

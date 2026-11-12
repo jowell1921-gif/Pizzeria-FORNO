@@ -15,30 +15,36 @@ const selfAdminDisabled = () =>
  * Rutas del usuario autenticado. Deben montarse detrás del middleware `authenticate`.
  * `selfAdminAvailable` activa la función de demostración «hazte administrador».
  */
-export function createMeRouter(prisma: PrismaClient, selfAdminAvailable = false): Router {
+export function createMeRouter(
+  prisma: PrismaClient,
+  selfAdminAvailable = false,
+  ownerEmail?: string,
+): Router {
   const router = Router();
 
   router.get("/", requirePermission("profile:read:own"), async (req, res) => {
     if (!req.auth) throw unauthorized();
-    res.json({ data: await getProfile(prisma, req.auth.userId, selfAdminAvailable) });
+    res.json({ data: await getProfile(prisma, req.auth.userId, selfAdminAvailable, ownerEmail) });
   });
 
   router.patch("/", requirePermission("profile:update:own"), async (req, res) => {
     if (!req.auth) throw unauthorized();
     const input = updateProfileSchema.parse(req.body);
-    res.json({ data: await updateProfile(prisma, req.auth.userId, input, selfAdminAvailable) });
+    res.json({
+      data: await updateProfile(prisma, req.auth.userId, input, selfAdminAvailable, ownerEmail),
+    });
   });
 
   router.put("/admin-role", requirePermission("profile:update:own"), async (req, res) => {
     if (!req.auth) throw unauthorized();
     if (!selfAdminAvailable) throw selfAdminDisabled();
-    res.json({ data: await setOwnAdminRole(prisma, req.auth.userId, true) });
+    res.json({ data: await setOwnAdminRole(prisma, req.auth.userId, true, ownerEmail) });
   });
 
   router.delete("/admin-role", requirePermission("profile:update:own"), async (req, res) => {
     if (!req.auth) throw unauthorized();
     if (!selfAdminAvailable) throw selfAdminDisabled();
-    res.json({ data: await setOwnAdminRole(prisma, req.auth.userId, false) });
+    res.json({ data: await setOwnAdminRole(prisma, req.auth.userId, false, ownerEmail) });
   });
 
   return router;
