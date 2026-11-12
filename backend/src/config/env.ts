@@ -53,6 +53,13 @@ const envSchema = z.object({
    * coste: ASSISTANT_DAILY_LIMIT acota el gasto. La clave solo debe estar en el servidor.
    */
   ANTHROPIC_API_KEY: z.string().min(20).optional(),
+  /**
+   * Alternativa gratuita (Gemini, de Google) para demostraciones. Si están las dos claves, se usa
+   * Gemini. En el nivel gratuito Google puede usar las conversaciones para mejorar sus productos:
+   * PizzAI solo envía datos públicos de la carta y lo que escribe el visitante.
+   */
+  GEMINI_API_KEY: z.string().min(20).optional(),
+  GEMINI_MODEL: z.string().min(3).default("gemini-flash-lite-latest"),
   ASSISTANT_MODEL: z.string().min(3).default("claude-opus-5-5"),
   /** Máximo de mensajes al modelo por día, entre todos los visitantes. */
   ASSISTANT_DAILY_LIMIT: z.coerce.number().int().min(1).max(100_000).default(200),

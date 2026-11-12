@@ -54,3 +54,25 @@ activarla (preguntar por la carta y por algo que no figure en ella, e intentar s
 - Probar con la clave real y revisar la calidad de las respuestas con preguntas reales.
 - Citar al proveedor de IA en la política de privacidad (ver `docs/security/lista-produccion.md`).
 - Si se despliega en varias réplicas, el tope diario (en memoria) debería pasar a la base de datos o a Redis.
+
+## Proveedores y coste mensual
+
+PizzAI admite dos proveedores detrás de la misma interfaz (`AssistantModel`). Si están las dos claves, se usa Gemini.
+
+| Proveedor | Variables                                             | Uso recomendado                                                                                                                                                               |
+| --------- | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gemini    | `GEMINI_API_KEY`, `GEMINI_MODEL` (`gemini-flash-lite-latest`) | Demostraciones y pruebas: tiene nivel gratuito con límites bajos que Google puede cambiar. Google puede usar las conversaciones del nivel gratuito para mejorar sus productos |
+| Claude    | `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`                | Producción de un cliente: de pago, con `claude-haiku-5-5` basta para una carta                                                                                                |
+
+Estimación del coste con Claude Haiku 5.5 (0,10 $ por millón de tokens de entrada y 0,50 $ de salida; unos
+2.400 tokens de entrada y 500 de salida por mensaje, ≈ 0,0005 $ por mensaje; la caché lo reduce):
+
+| Mensajes al mes | Coste aproximado |
+| --------------- | ---------------- |
+| 1.000           | 0,50 $           |
+| 5.000           | 2,50 $           |
+| 10.000          | 5 $              |
+| 50.000          | 25 $             |
+
+Es una estimación, no una factura: los precios los fija el proveedor y deben comprobarse antes de
+ofrecerlos a un cliente. `ASSISTANT_DAILY_LIMIT` acota el gasto máximo.

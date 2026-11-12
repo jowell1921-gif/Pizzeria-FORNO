@@ -8,6 +8,7 @@ import { startNotificationWorker } from "./modules/notifications/notification.se
 import { registerOrderEffects } from "./modules/orders/order-effects.js";
 import { createKnowledgeProvider } from "./modules/assistant/knowledge.js";
 import { createAnthropicModel } from "./modules/assistant/model.js";
+import { createGeminiModel } from "./modules/assistant/gemini-model.js";
 import { createAssistantService } from "./modules/assistant/assistant.service.js";
 import { createStripeGateway } from "./modules/payments/gateway.js";
 
@@ -21,10 +22,16 @@ const payments =
     ? createStripeGateway(env.STRIPE_SECRET_KEY, env.STRIPE_WEBHOOK_SECRET)
     : undefined;
 
-// PizzAI con IA: solo si hay clave de Anthropic. Los datos que ve el modelo son los públicos de la web.
-const assistant = env.ANTHROPIC_API_KEY
+// PizzAI con IA: solo si hay clave de Gemini (gratuito) o de Anthropic. Los datos que ve el modelo son
+// los públicos de la web.
+const assistantModel = env.GEMINI_API_KEY
+  ? createGeminiModel({ apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL })
+  : env.ANTHROPIC_API_KEY
+    ? createAnthropicModel({ apiKey: env.ANTHROPIC_API_KEY, model: env.ASSISTANT_MODEL })
+    : undefined;
+const assistant = assistantModel
   ? createAssistantService({
-      model: createAnthropicModel({ apiKey: env.ANTHROPIC_API_KEY, model: env.ASSISTANT_MODEL }),
+      model: assistantModel,
       knowledge: createKnowledgeProvider(prisma, { onlineAvailable: Boolean(payments) }),
       dailyLimit: env.ASSISTANT_DAILY_LIMIT,
       onUsage: (usage) => console.log(`[assistant] ${JSON.stringify(usage)}`),

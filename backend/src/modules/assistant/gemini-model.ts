@@ -1,0 +1,92 @@
+import type { AssistantModel } from "./model.js";
+
+/** Subconjunto de `fetch` que usamos (permite inyectar uno falso en las pruebas). */
+export type FetchLike = (
+  url: string,
+  init: { method: "POST"; headers: Record<string, string>; body: string; signal?: AbortSignal },
+) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>;
+
+interface GeminiResponse {
+  candidates?: {
+    finishReason?: string;
+    content?: { parts?: { text?: string; thought?: boolean }[] };
+  }[];
+  promptFeedback?: { blockReason?: string };
+  usageMetadata?: {
+    promptTokenCount?: number;
+    candidatesTokenCount?: number;
+    cachedContentTokenCount?: number;
+  };
+}
+
+const ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models";
+const MAX_OUTPUT_TOKENS = 2000;
+const TIMEOUT_MS = 30_000;
+const RETRY_DELAY_MS = 800;
+const RETRYABLE_STATUS = new Set([429, 500, 503]);
+const BLOCKED_FINISH_REASONS = new Set(["SAFETY", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII"]);
+
+/**
+ * PizzAI con Gemini (Google). Tiene nivel gratuito, por lo que sirve para la demostración. Se usa la
+ * API REST directamente: es una sola llamada y así no se añade ninguna dependencia.
+ */
+export function createGeminiModel(options: {
+  apiKey: string;
+  model: string;
+  fetch?: FetchLike;
+}): AssistantModel {
+  const doFetch: FetchLike = options.fetch ?? ((url, init) => fetch(url, init));
+
+  return {
+    name: options.model,
+    async complete(request) {
+      const timeout = AbortSignal.timeout(TIMEOUT_MS);
+      const signal = request.signal ? AbortSignal.any([request.signal, timeout]) : timeout;
+
+      const init = {
+        method: "POST" as const,
+        // La clave va en una cabecera, no en la URL, para que no acabe en registros.
+        headers: { "content-type": "application/json", "x-goog-api-key": options.apiKey },
+        signal,
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [{ text: request.system.instructions }, { text: request.system.knowledge }],
+          },
+          contents: request.messages.map((turn) => ({
+            role: turn.role === "assistant" ? "model" : "user",
+            parts: [{ text: turn.content }],
+          })),
+          generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS, temperature: 0.4 },
+        }),
+      };
+      const url = `${ENDPOINT}/${encodeURIComponent(options.model)}:generateContent`;
+
+      let response = await doFetch(url, init);
+      // Los picos de demanda de Google (503) y los límites momentáneos (429) suelen ser pasajeros.
+      if (RETRYABLE_STATUS.has(response.status)) {
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+        response = await doFetch(url, init);
+      }
+      if (!response.ok) throw new Error(`Gemini responded with HTTP ${response.status}`);
+
+      const body = (await response.json()) as GeminiResponse;
+      const candidate = body.candidates?.[0];
+      const text = (candidate?.content?.parts ?? [])
+        .filter((part) => !part.thought && typeof part.text === "string")
+        .map((part) => part.text)
+        .join("")
+        .trim();
+      return {
+        text,
+        refused:
+          Boolean(body.promptFeedback?.blockReason) ||
+          BLOCKED_FINISH_REASONS.has(candidate?.finishReason ?? ""),
+        usage: {
+          inputTokens: body.usageMetadata?.promptTokenCount ?? 0,
+          outputTokens: body.usageMetadata?.candidatesTokenCount ?? 0,
+          cachedTokens: body.usageMetadata?.cachedContentTokenCount ?? 0,
+        },
+      };
+    },
+  };
+}
