@@ -59,6 +59,8 @@ export function createAuthenticate({
       });
 
       const profile = await ensureProfile(prisma, identity);
+      // Datos de una persona concreta: ninguna caché (compartida o del navegador) debe guardarlos.
+      res.setHeader("Cache-Control", "private, no-store");
       req.auth = {
         userId: profile.id,
         email: profile.email,
@@ -71,7 +73,7 @@ export function createAuthenticate({
     } catch (error) {
       if (error instanceof Error && error.name === "HttpError") {
         const status = (error as { status?: number }).status;
-        if (status === 401) res.setHeader("WWW-Authenticate", 'Bearer realm="forno"');
+        if (status === 401) res.setHeader("WWW-Authenticate", 'Bearer realm="fornea"');
       }
       next(error);
     }

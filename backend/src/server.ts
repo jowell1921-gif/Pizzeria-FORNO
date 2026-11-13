@@ -5,6 +5,7 @@ import { createPrismaClient } from "./db/client.js";
 import { createSupabaseStorage } from "./modules/admin/storage.js";
 import { createLogMailer, createResendMailer } from "./modules/notifications/mailer.js";
 import { startNotificationWorker } from "./modules/notifications/notification.service.js";
+import { startMaintenanceWorker } from "./modules/orders/maintenance.service.js";
 import { registerOrderEffects } from "./modules/orders/order-effects.js";
 import { createKnowledgeProvider } from "./modules/assistant/knowledge.js";
 import { createAnthropicModel } from "./modules/assistant/model.js";
@@ -13,7 +14,7 @@ import { createAssistantService } from "./modules/assistant/assistant.service.js
 import { createStripeGateway } from "./modules/payments/gateway.js";
 
 const env = loadEnv();
-const prisma = createPrismaClient(env.DATABASE_URL);
+const prisma = createPrismaClient(env.DATABASE_URL, { maxConnections: env.DATABASE_POOL_MAX });
 for (const warning of configurationWarnings(env)) console.warn(`[config] ${warning}`);
 
 // Pago online: solo si están las dos claves de Stripe. Sin ellas, ese método no se ofrece.
@@ -75,10 +76,11 @@ const app = createApp(
 
 // Avisos por correo y devoluciones tras cada cambio de pedido, sin bloquearlo.
 registerOrderEffects(prisma, { mailer, gateway: payments });
-const stopWorker = startNotificationWorker(prisma, mailer);
+const stopNotifications = startNotificationWorker(prisma, mailer);
+const stopMaintenance = startMaintenanceWorker(prisma);
 
 const server = app.listen(env.PORT, () => {
-  console.log(`FORNO API listening on port ${env.PORT} (${env.NODE_ENV})`);
+  console.log(`FORNEA API listening on port ${env.PORT} (${env.NODE_ENV})`);
   console.log(
     `Online payments: ${payments ? "enabled (Stripe)" : "disabled"} · Email: ${mailer.driver} · Assistant: ${assistant ? `AI (${assistant.model}, ${env.ASSISTANT_DAILY_LIMIT}/day)` : "demo"}`,
   );
@@ -87,7 +89,8 @@ const server = app.listen(env.PORT, () => {
 // Cierre ordenado: deja de aceptar peticiones y libera las conexiones a la base de datos.
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => {
-    stopWorker();
+    stopNotifications();
+    stopMaintenance();
     server.close(() => {
       void prisma.$disconnect().finally(() => process.exit(0));
     });

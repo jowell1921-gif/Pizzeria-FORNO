@@ -73,12 +73,12 @@ describe("configurationWarnings", () => {
     const warnings = configurationWarnings(
       env({
         NODE_ENV: "production",
-        CORS_ORIGINS: "https://forno.example",
+        CORS_ORIGINS: "https://fornea.example",
         TRUST_PROXY: "1",
         SELF_ADMIN_ENABLED: "false",
         STRIPE_SECRET_KEY: "sk_live_" + "x".repeat(30),
         STRIPE_WEBHOOK_SECRET: "whsec_" + "x".repeat(30),
-        FRONTEND_URL: "https://forno.example",
+        FRONTEND_URL: "https://fornea.example",
       }),
     );
     expect(warnings).toEqual([]);
@@ -91,7 +91,7 @@ describe("configurationWarnings", () => {
         CORS_ORIGINS: "http://localhost:3000",
         STRIPE_SECRET_KEY: "sk_test_" + "x".repeat(30),
         API_DOCS_ENABLED: "true",
-        FRONTEND_URL: "http://forno.example",
+        FRONTEND_URL: "http://fornea.example",
       }),
     );
     const text = warnings.join("\n");
@@ -102,6 +102,18 @@ describe("configurationWarnings", () => {
     expect(text).toMatch(/documentación/);
     expect(text).toMatch(/HTTPS/);
     expect(text).toMatch(/STRIPE_WEBHOOK_SECRET/);
+  });
+
+  it("warns when self-service admin is on without an owner, and stays quiet once OWNER_EMAIL is set", () => {
+    const production = {
+      NODE_ENV: "production",
+      CORS_ORIGINS: "https://fornea.example",
+      TRUST_PROXY: "1",
+    };
+    expect(configurationWarnings(env(production)).join("\n")).toMatch(/OWNER_EMAIL/);
+    expect(
+      configurationWarnings(env({ ...production, OWNER_EMAIL: "dueno@fornea.example" })).join("\n"),
+    ).not.toMatch(/OWNER_EMAIL/);
   });
 
   it("flags a live Stripe key outside production and says nothing else in development", () => {

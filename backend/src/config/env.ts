@@ -40,8 +40,8 @@ const envSchema = z.object({
    */
   EMAIL_DRIVER: z.enum(["log", "resend"]).default("log"),
   RESEND_API_KEY: z.string().min(10).optional(),
-  /** Remitente. Sin dominio verificado en Resend solo vale «FORNO <onboarding@resend.dev>». */
-  EMAIL_FROM: z.string().min(3).default("FORNO <onboarding@resend.dev>"),
+  /** Remitente. Sin dominio verificado en Resend solo vale «FORNEA <onboarding@resend.dev>». */
+  EMAIL_FROM: z.string().min(3).default("FORNEA <onboarding@resend.dev>"),
   /**
    * Si se indica, solo se envían correos a esa dirección (la de tu cuenta de Resend, mientras no haya
    * dominio verificado). El resto se registra sin enviar.
@@ -64,6 +64,8 @@ const envSchema = z.object({
   ASSISTANT_MODEL: z.string().min(3).default("claude-opus-5-5"),
   /** Máximo de mensajes al modelo por día, entre todos los visitantes. */
   ASSISTANT_DAILY_LIMIT: z.coerce.number().int().min(1).max(100_000).default(200),
+  /** Conexiones máximas del pool a PostgreSQL por proceso. */
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
   /** Nivel de los registros (logs). */
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   /**
@@ -138,6 +140,11 @@ export function configurationWarnings(env: Env): string[] {
     if (selfAdminEnabled(env)) {
       warnings.push(
         "SELF_ADMIN_ENABLED está activo: cualquier cliente puede hacerse administrador.",
+      );
+    }
+    if (selfAdminEnabled(env) && !env.OWNER_EMAIL) {
+      warnings.push(
+        "Sin OWNER_EMAIL: cualquier administrador puede modificar carta, promociones, FORNEA CLUB y local.",
       );
     }
     if (env.API_DOCS_ENABLED) {

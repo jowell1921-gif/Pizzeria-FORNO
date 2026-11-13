@@ -223,6 +223,11 @@ async function settlePayment(
     session.amount_total === toCents(payment.amount) &&
     session.currency?.toUpperCase() === payment.currency.toUpperCase();
   if (!matches) {
+    // No debería ocurrir (el importe lo fija el servidor al crear la sesión). Si ocurre, hay que
+    // revisarlo a mano en la pasarela: el pedido NO se da por pagado.
+    console.warn(
+      `[payments] amount mismatch for payment ${payment.id}: expected ${toCents(payment.amount)}, received ${session.amount_total}`,
+    );
     await prisma.payment.update({
       where: { id: payment.id },
       data: { status: "FAILED", failureReason: "AMOUNT_MISMATCH" },

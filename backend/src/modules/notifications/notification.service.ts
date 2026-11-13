@@ -141,7 +141,11 @@ export function startNotificationWorker(
   intervalMs = 30_000,
 ): () => void {
   const timer = setInterval(() => {
-    processPendingNotifications(prisma, mailer).catch(() => undefined);
+    // Un fallo puntual (por ejemplo, la base de datos reiniciándose) no debe parar el proceso, pero sí
+    // quedar en el registro. Solo el mensaje: nunca el contenido de los correos.
+    processPendingNotifications(prisma, mailer).catch((error: unknown) =>
+      console.error(`[notifications] ${error instanceof Error ? error.message : "unknown error"}`),
+    );
   }, intervalMs);
   timer.unref();
   return () => clearInterval(timer);

@@ -7,3 +7,8 @@ playwright-report
 test-results
 playwright/.cache
 .next-*
+
+# Archivos generados desde el código: no se reformatean a mano (ver backend: npm run docs:openapi)
+../docs/api/openapi.json
+../docs/flutter/ejemplos.md
+../docs/database/diagrama.md

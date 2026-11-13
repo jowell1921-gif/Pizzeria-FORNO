@@ -16,11 +16,16 @@ interface SupabaseStorageOptions {
   bucket: string;
 }
 
+const UPLOAD_TIMEOUT_MS = 15_000;
+
 export function createSupabaseStorage(options: SupabaseStorageOptions): ImageStorage {
   return {
     async upload({ bytes, contentType, extension }) {
       const path = `products/${randomUUID()}.${extension}`;
+      // Sin plazo, una caída de Supabase dejaría la petición colgada. Un fallo o un plazo agotado
+      // responden igual al cliente: 502 STORAGE_ERROR.
       const response = await fetch(`${options.url}/storage/v1/object/${options.bucket}/${path}`, {
+        signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
         method: "POST",
         headers: {
           Authorization: `Bearer ${options.secretKey}`,
@@ -31,7 +36,7 @@ export function createSupabaseStorage(options: SupabaseStorageOptions): ImageSto
         },
         body: new Uint8Array(bytes),
       });
-      if (!response.ok) {
+      if (!response?.ok) {
         throw new HttpError(502, "STORAGE_ERROR", "The image could not be stored");
       }
       return `${options.url}/storage/v1/object/public/${options.bucket}/${path}`;

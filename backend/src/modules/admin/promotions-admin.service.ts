@@ -113,28 +113,54 @@ type PromotionRow = Prisma.PromotionGetPayload<{ include: typeof include }>;
 
 const ACTIVE_ORDER = { notIn: ["CANCELLED", "REJECTED"] as ("CANCELLED" | "REJECTED")[] };
 
-async function view(
+/** Usos de cada promoción y de cada cupón, contados con dos consultas para todas las filas. */
+interface Usage {
+  promotions: Map<string, number>;
+  coupons: Map<string, number>;
+}
+
+async function loadUsage(
   prisma: Pick<PrismaClient, "orderDiscount" | "couponRedemption">,
-  row: PromotionRow,
-) {
-  const usage = await prisma.orderDiscount.count({
-    where: { promotionId: row.id, order: { status: ACTIVE_ORDER } },
-  });
-  const coupons = await Promise.all(
-    row.coupons.map(async (coupon) => ({
-      id: coupon.id,
-      code: coupon.code,
-      userId: coupon.userId,
-      maxRedemptions: coupon.maxRedemptions,
-      perUserLimit: coupon.perUserLimit,
-      startsAt: coupon.startsAt?.toISOString() ?? null,
-      endsAt: coupon.endsAt?.toISOString() ?? null,
-      active: coupon.active,
-      usage: await prisma.couponRedemption.count({
-        where: { couponId: coupon.id, order: { status: ACTIVE_ORDER } },
-      }),
-    })),
-  );
+  rows: PromotionRow[],
+): Promise<Usage> {
+  const promotionIds = rows.map((row) => row.id);
+  const couponIds = rows.flatMap((row) => row.coupons.map((coupon) => coupon.id));
+  const [promotionCounts, couponCounts] = await Promise.all([
+    prisma.orderDiscount.groupBy({
+      by: ["promotionId"],
+      where: { promotionId: { in: promotionIds }, order: { status: ACTIVE_ORDER } },
+      _count: { _all: true },
+    }),
+    prisma.couponRedemption.groupBy({
+      by: ["couponId"],
+      where: { couponId: { in: couponIds }, order: { status: ACTIVE_ORDER } },
+      _count: { _all: true },
+    }),
+  ]);
+  return {
+    promotions: new Map(
+      promotionCounts.flatMap((item) =>
+        item.promotionId ? [[item.promotionId, item._count._all] as const] : [],
+      ),
+    ),
+    coupons: new Map(couponCounts.map((item) => [item.couponId, item._count._all] as const)),
+  };
+}
+
+/** Vista de una promoción para el panel. Los usos vienen ya contados (ver `loadUsage`). */
+function view(row: PromotionRow, usageOf: Usage) {
+  const usage = usageOf.promotions.get(row.id) ?? 0;
+  const coupons = row.coupons.map((coupon) => ({
+    id: coupon.id,
+    code: coupon.code,
+    userId: coupon.userId,
+    maxRedemptions: coupon.maxRedemptions,
+    perUserLimit: coupon.perUserLimit,
+    startsAt: coupon.startsAt?.toISOString() ?? null,
+    endsAt: coupon.endsAt?.toISOString() ?? null,
+    active: coupon.active,
+    usage: usageOf.coupons.get(coupon.id) ?? 0,
+  }));
   return {
     id: row.id,
     name: row.name,
@@ -163,20 +189,23 @@ async function view(
   };
 }
 
+/** Todas las promociones con sus cupones, productos y número de usos, para el panel. */
 export async function listAdminPromotions(prisma: PrismaClient) {
   const rows = await prisma.promotion.findMany({
     where: { deletedAt: null },
     orderBy: { createdAt: "asc" },
     include,
   });
-  return Promise.all(rows.map((row) => view(prisma, row)));
+  const usage = await loadUsage(prisma, rows);
+  return rows.map((row) => view(row, usage));
 }
 
+/** Una promoción con sus cupones, productos y número de usos. */
 export async function getAdminPromotion(prisma: PrismaClient, id: string) {
   if (!uuid.safeParse(id).success) throw notFound("Promotion not found");
   const row = await prisma.promotion.findFirst({ where: { id, deletedAt: null }, include });
   if (!row) throw notFound("Promotion not found");
-  return view(prisma, row);
+  return view(row, await loadUsage(prisma, [row]));
 }
 
 const data = (input: PromotionInput) => ({
@@ -223,6 +252,7 @@ const summary = (row: { name: string; kind: string; active: boolean; automatic: 
   automatic: row.automatic,
 });
 
+/** Crea una promoción (descuento, combo, con o sin cupón). El servidor valida fechas y condiciones. */
 export async function createPromotion(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = promotionSchema.parse(body);
   const id = await prisma.$transaction(async (tx) => {
@@ -240,6 +270,10 @@ export async function createPromotion(prisma: PrismaClient, actorId: string, bod
   return getAdminPromotion(prisma, id);
 }
 
+/**
+ * Modifica una promoción; solo cambian los campos enviados. Los pedidos ya hechos conservan su
+ * descuento.
+ */
 export async function updatePromotion(
   prisma: PrismaClient,
   actorId: string,
@@ -349,6 +383,7 @@ export async function createCoupon(
   return getAdminPromotion(prisma, promotionId);
 }
 
+/** Activa, desactiva o cambia los límites de un cupón. El código no se modifica: se crea otro. */
 export async function updateCoupon(
   prisma: PrismaClient,
   actorId: string,
