@@ -17,6 +17,7 @@ import { CartTotals } from "@/features/cart/cart-totals";
 import { fetchDeliveryZones, fetchSlots, fetchStoreSettings } from "@/features/catalog/api";
 import { FormError } from "@/features/auth/form-parts";
 import { formatEuro } from "@/lib/format";
+import { zoneCoversPostalCode } from "@/lib/postal-codes";
 import { fromCents, toCents } from "@/lib/money";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +109,9 @@ export function CheckoutFlow() {
   const zones = useQuery({ queryKey: ["delivery-zones"], queryFn: fetchDeliveryZones });
   /** Mientras no se conozcan las zonas se asume que hay reparto (el servidor lo comprueba igualmente). */
   const hasDelivery = (postalCode: string) =>
-    zones.data ? zones.data.some((zone) => zone.postalCodes.includes(postalCode)) : true;
+    zones.data
+      ? zones.data.some((zone) => zoneCoversPostalCode(zone.postalCodes, postalCode))
+      : true;
   // Dirección elegida; si no hay, la predeterminada (o la primera) con reparto.
   const selectedAddress =
     type === "DELIVERY"

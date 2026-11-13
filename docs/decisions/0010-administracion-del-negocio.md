@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-08
 
-Completa la fase 8: el personal autorizado gestiona la carta, el local, las promociones y FORNO CLUB desde el panel.
+Completa la fase 8: el personal autorizado gestiona la carta, el local, las promociones y FORNEA CLUB desde el panel.
 
 | Tema                    | Decisión                                                                                                                                                                                                                                                                                                                 |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -29,7 +29,7 @@ Completa la fase 8: el personal autorizado gestiona la carta, el local, las prom
 | Solo el propietario edita (demo) | Con `OWNER_EMAIL`, solo ese correo modifica carta, promociones, FORNEA CLUB y ajustes del local. Los demás administradores ven esas secciones en **modo lectura**: el servidor exige `catalog:read`, `promotions:read`, `loyalty:read` y `settings:read` para consultar y los permisos `…:manage` para modificar (los GET no cambian nada; el resto responde `403`), y la web desactiva los botones y formularios. Siguen pudiendo gestionar pedidos y usar la cocina. Sin `OWNER_EMAIL`, no hay restricción |
 | Auditoría | Se quitó la pantalla «Auditoría» del panel; el servidor sigue registrando las operaciones (`GET /admin/audit` existe) |
 
-**Si algún día FORNO se usa como negocio real:** pon `SELF_ADMIN_ENABLED=false`; si no, cualquier cliente podría ver los datos de los demás.
+**Si algún día FORNEA se usa como negocio real:** pon `SELF_ADMIN_ENABLED=false`; si no, cualquier cliente podría ver los datos de los demás.
 
 ## Para activar la subida de fotos (manual)
 

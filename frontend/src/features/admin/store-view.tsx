@@ -631,7 +631,11 @@ function ZoneForm({ zone, onClose }: { zone: AdminZone | null; onClose: () => vo
       className="border-border bg-cream-soft grid gap-3 rounded-xl border p-4 sm:grid-cols-2"
     >
       {input("name", "Nombre de la zona")}
-      {input("postalCodes", "Códigos postales", "Separados por comas. Cada uno, en una sola zona.")}
+      {input(
+        "postalCodes",
+        "Códigos postales",
+        "Separados por comas. Usa 28* para todos los códigos que empiezan por 28.",
+      )}
       {input("deliveryFee", "Gastos de envío (€)")}
       {input("minimumOrder", "Pedido mínimo (€)")}
       {input("estimatedMinutes", "Tiempo estimado (min)")}

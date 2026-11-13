@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
 
+/** Página 404. */
 export default function NotFound() {
   return (
     <div className="container-page flex flex-1 flex-col items-center justify-center gap-4 py-24 text-center">

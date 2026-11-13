@@ -66,6 +66,7 @@ function view(address: {
 
 const active = (userId: string) => ({ userId, deletedAt: null });
 
+/** Direcciones guardadas del usuario (la predeterminada primero). Nunca devuelve las de otros. */
 export async function listAddresses(prisma: PrismaClient, userId: string) {
   const rows = await prisma.address.findMany({
     where: active(userId),
@@ -82,6 +83,10 @@ async function findOwn(prisma: PrismaClient, userId: string, id: string) {
   return address;
 }
 
+/**
+ * Guarda una dirección nueva del usuario (hay un máximo por cuenta). La primera, o la que se
+ * marque, pasa a ser la predeterminada.
+ */
 export async function createAddress(
   prisma: PrismaClient,
   userId: string,
@@ -108,6 +113,7 @@ export async function createAddress(
   });
 }
 
+/** Modifica una dirección del propio usuario; si pasa a predeterminada, quita la marca a las demás. */
 export async function updateAddress(
   prisma: PrismaClient,
   userId: string,

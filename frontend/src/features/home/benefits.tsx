@@ -25,6 +25,7 @@ const BENEFITS = [
   },
 ] as const;
 
+/** Ventajas de pedir directamente en la web. */
 export function Benefits() {
   return (
     <section aria-labelledby="benefits-title" className="section-y">

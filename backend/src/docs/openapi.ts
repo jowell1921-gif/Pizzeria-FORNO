@@ -549,13 +549,13 @@ function adminPaths(): Record<string, Json> {
       },
     },
     "/admin/loyalty/settings": settingsOperation(
-      "Regla de puntos de FORNO CLUB",
+      "Regla de puntos de FORNEA CLUB",
       "LoyaltySettings",
       "loyalty:manage",
       "LoyaltySettingsRequest",
     ),
     ...crud({
-      tag: "FORNO CLUB (admin)",
+      tag: "FORNEA CLUB (admin)",
       path: "/admin/rewards",
       noun: "recompensas",
       schema: "AdminReward",
@@ -565,7 +565,7 @@ function adminPaths(): Record<string, Json> {
       deletes: true,
     }),
     "/admin/loyalty/transactions": pagedGet(
-      "FORNO CLUB (admin)",
+      "FORNEA CLUB (admin)",
       "Movimientos de puntos de todos los clientes",
       "loyalty:manage",
       "AdminTransaction",
@@ -583,7 +583,7 @@ function adminPaths(): Record<string, Json> {
       ],
     ),
     "/admin/loyalty/redemptions": pagedGet(
-      "FORNO CLUB (admin)",
+      "FORNEA CLUB (admin)",
       "Recompensas canjeadas por los clientes",
       "loyalty:manage",
       "AdminRedemption",
@@ -597,7 +597,7 @@ function adminPaths(): Record<string, Json> {
     ),
     "/admin/loyalty/adjustments": {
       post: {
-        tags: ["FORNO CLUB (admin)"],
+        tags: ["FORNEA CLUB (admin)"],
         summary: "Ajustar los puntos de un cliente",
         description:
           "Permiso `loyalty:manage`. Exige un motivo; queda en el libro de movimientos y en la auditoría. Nunca se edita el saldo directamente ni puede quedar negativo (`409 INSUFFICIENT_POINTS`).",
@@ -607,7 +607,7 @@ function adminPaths(): Record<string, Json> {
       },
     },
     "/admin/customers": pagedGet(
-      "FORNO CLUB (admin)",
+      "FORNEA CLUB (admin)",
       "Clientes con su saldo de puntos",
       "customers:read",
       "Customer",
@@ -773,10 +773,10 @@ function buildBaseDocument(): Json {
   return {
     openapi: "3.1.0",
     info: {
-      title: "FORNO API",
+      title: "FORNEA API",
       version: "1.0.0",
       description: [
-        "API REST de FORNO, compartida por la web y la futura app móvil.",
+        "API REST de FORNEA, compartida por la web y la futura app móvil.",
         "",
         '**Formato.** Las respuestas correctas son `{ "data": … }` (y `{ "data": […], "meta": … }` en listas paginadas). Los errores son `{ "error": { "code", "message", "details?", "requestId" } }`. Los importes son cadenas decimales (`"9.50"`, IVA incluido) y las fechas, ISO 8601 en UTC.',
         "",
@@ -793,7 +793,7 @@ function buildBaseDocument(): Json {
       { name: "Catálogo" },
       { name: "Local" },
       { name: "Cuenta" },
-      { name: "FORNO CLUB" },
+      { name: "FORNEA CLUB" },
       { name: "Pedidos" },
       { name: "Personal" },
       { name: "Cocina" },
@@ -802,7 +802,7 @@ function buildBaseDocument(): Json {
       { name: "Carta (admin)" },
       { name: "Configuración" },
       { name: "Promociones (admin)" },
-      { name: "FORNO CLUB (admin)" },
+      { name: "FORNEA CLUB (admin)" },
     ],
     paths: {
       "/health": {
@@ -829,7 +829,7 @@ function buildBaseDocument(): Json {
           tags: ["Asistente"],
           summary: "Conversar con PizzAI",
           description:
-            "Público. Se envía la conversación (hasta 12 mensajes de 500 caracteres; el último, del usuario) y se recibe la respuesta de la IA. El asistente solo conoce los datos públicos de la carta, las promociones, el reparto y FORNO CLUB; no accede a clientes ni pedidos y no puede hacer operaciones. Límites: 20 mensajes por IP cada 10 minutos y un tope diario global.",
+            "Público. Se envía la conversación (hasta 12 mensajes de 500 caracteres; el último, del usuario) y se recibe la respuesta de la IA. El asistente solo conoce los datos públicos de la carta, las promociones, el reparto y FORNEA CLUB; no accede a clientes ni pedidos y no puede hacer operaciones. Límites: 20 mensajes por IP cada 10 minutos y un tope diario global.",
           requestBody: { required: true, content: json(ref("AssistantChatRequest")) },
           responses: {
             "200": ok("Respuesta (texto plano) y enlaces útiles.", dataOf("AssistantAnswer")),
@@ -1162,7 +1162,7 @@ function buildBaseDocument(): Json {
       },
       "/loyalty/account": {
         get: {
-          tags: ["FORNO CLUB"],
+          tags: ["FORNEA CLUB"],
           summary: "Mi saldo de puntos",
           ...secured,
           responses: {
@@ -1174,7 +1174,7 @@ function buildBaseDocument(): Json {
       },
       "/loyalty/transactions": {
         get: {
-          tags: ["FORNO CLUB"],
+          tags: ["FORNEA CLUB"],
           summary: "Mis movimientos de puntos",
           ...secured,
           parameters: pagingParams,
@@ -1190,7 +1190,7 @@ function buildBaseDocument(): Json {
       },
       "/loyalty/rewards": {
         get: {
-          tags: ["FORNO CLUB"],
+          tags: ["FORNEA CLUB"],
           summary: "Recompensas disponibles",
           ...secured,
           responses: {
@@ -1367,8 +1367,8 @@ function buildBaseDocument(): Json {
       ...paymentPaths(),
       "/loyalty/program": {
         get: {
-          tags: ["FORNO CLUB"],
-          summary: "Programa FORNO CLUB (público)",
+          tags: ["FORNEA CLUB"],
+          summary: "Programa FORNEA CLUB (público)",
           description:
             "Regla de conversión de puntos, caducidad y recompensas disponibles. No requiere sesión.",
           responses: { "200": ok("Programa.", dataOf("LoyaltyProgram")), ...COMMON_ERRORS },
@@ -1376,7 +1376,7 @@ function buildBaseDocument(): Json {
       },
       "/loyalty/redemptions": {
         get: {
-          tags: ["FORNO CLUB"],
+          tags: ["FORNEA CLUB"],
           summary: "Mis recompensas canjeadas",
           description: "La «cartera» del cliente: recompensas disponibles, usadas o canceladas.",
           ...secured,
@@ -1395,7 +1395,7 @@ function buildBaseDocument(): Json {
           },
         },
         post: {
-          tags: ["FORNO CLUB"],
+          tags: ["FORNEA CLUB"],
           summary: "Canjear una recompensa",
           description:
             "Descuenta los puntos y añade la recompensa a «Mis recompensas» (estado AVAILABLE), lista para usarla en un pedido con `redemptionId`. Exige `Idempotency-Key`: un reintento no descuenta los puntos otra vez. Dos peticiones simultáneas nunca consumen los mismos puntos.",

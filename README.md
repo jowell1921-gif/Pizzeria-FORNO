@@ -1,6 +1,6 @@
-# FORNO
+# FORNEA
 
-Plataforma web de pedidos, gestión de restaurante y fidelización para la pizzería ficticia FORNO. Proyecto de demostración: los datos comerciales son de ejemplo.
+Plataforma web de pedidos, gestión de restaurante y fidelización para la pizzería ficticia FORNEA. Proyecto de demostración: los datos comerciales son de ejemplo.
 
 ## Estructura
 
@@ -95,7 +95,7 @@ Solo en `backend/`:
 | App Flutter: guía de integración, ejemplos reales, errores y reglas de negocio | `docs/flutter/`                 |
 | Autenticación y seguridad                                                      | `docs/security/`                |
 | Despliegue y operación                                                         | `docs/deployment/`              |
-| Calidad, casos críticos y criterios de aceptación                              | `docs/quality/`                 |
+| Calidad, auditoría técnica, casos críticos y criterios de aceptación           | `docs/quality/`                 |
 | Decisiones técnicas                                                            | `docs/decisions/`               |
 | Registro de cambios                                                            | `CHANGELOG.md`                  |
 
@@ -126,6 +126,6 @@ Cada proyecto incluye un `.env.example` con todas las variables y su explicació
 
 ## Estado
 
-**Las 12 fases están completadas.** Plataforma de pedidos con carta dinámica, carrito y checkout, recogida y domicilio, pago en efectivo y con tarjeta (Stripe), FORNO CLUB, promociones, panel del personal, pantalla de cocina en directo, correos de pedido, tickets y facturas, y PizzAI (asistente, con IA real opcional). API documentada y lista para la futura app Flutter. Criterios de aceptación y limitaciones conocidas: `docs/quality/criterios-aceptacion.md`.
+**Las 12 fases están completadas.** Plataforma de pedidos con carta dinámica, carrito y checkout, recogida y domicilio, pago en efectivo y con tarjeta (Stripe), FORNEA CLUB, promociones, panel del personal, pantalla de cocina en directo, correos de pedido, tickets y facturas, y PizzAI (asistente, con IA real opcional). API documentada y lista para la futura app Flutter. Criterios de aceptación y limitaciones conocidas: `docs/quality/criterios-aceptacion.md`.
 
 Es una demostración: los datos comerciales son de ejemplo y **no se ha publicado nada**. Para publicarla, sigue `docs/deployment/`; para activar lo que depende de cuentas externas (pagos reales, correo con dominio, IA), consulta cada decisión en `docs/decisions/`.

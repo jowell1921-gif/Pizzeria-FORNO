@@ -1,6 +1,6 @@
 # Autenticación con Supabase Auth
 
-Supabase Auth es el **proveedor de identidad compartido** entre la web y la futura app Flutter. Gestiona el registro, el inicio de sesión (correo y Google), la confirmación de correo y la recuperación de contraseña. **No guarda roles ni permisos de FORNO:** esos viven en nuestra base de datos y los decide el backend.
+Supabase Auth es el **proveedor de identidad compartido** entre la web y la futura app Flutter. Gestiona el registro, el inicio de sesión (correo y Google), la confirmación de correo y la recuperación de contraseña. **No guarda roles ni permisos de FORNEA:** esos viven en nuestra base de datos y los decide el backend.
 
 ## Cómo funciona
 
@@ -111,7 +111,7 @@ Sin cambiarlo también funciona (flujo por código), pero solo en el mismo naveg
 
 ### 4. Google
 
-1. En <https://console.cloud.google.com> crea un proyecto y, en **APIs y servicios → Pantalla de consentimiento de OAuth**, configura la pantalla (nombre «FORNO», tu correo).
+1. En <https://console.cloud.google.com> crea un proyecto y, en **APIs y servicios → Pantalla de consentimiento de OAuth**, configura la pantalla (nombre «FORNEA», tu correo).
 2. En **Credenciales → Crear credenciales → ID de cliente de OAuth → Aplicación web**:
    - **Orígenes de JavaScript autorizados:** `http://localhost:3000`.
    - **URI de redireccionamiento autorizado:** `https://<ref>.supabase.co/auth/v1/callback`.

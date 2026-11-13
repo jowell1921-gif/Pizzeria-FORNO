@@ -2,7 +2,7 @@
 
 Fecha: 2026-11-08
 
-La fase 8 se divide en dos entregas. Esta es la **8A**: pedidos del personal, pantalla de cocina y panel de control. La **8B** (productos, promociones, FORNO CLUB y configuración del local) llega después.
+La fase 8 se divide en dos entregas. Esta es la **8A**: pedidos del personal, pantalla de cocina y panel de control. La **8B** (productos, promociones, FORNEA CLUB y configuración del local) llega después.
 
 | Tema                  | Decisión                                                                                                                                                                                                                                                                                                              |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

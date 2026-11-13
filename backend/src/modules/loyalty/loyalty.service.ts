@@ -51,6 +51,7 @@ function benefitOf(reward: {
       };
 }
 
+/** Recompensas activas que se pueden canjear (público). */
 export async function listRewards(prisma: PrismaClient) {
   const rewards = await prisma.reward.findMany({
     where: activeRewardsFilter(new Date()),
@@ -68,7 +69,7 @@ export async function listRewards(prisma: PrismaClient) {
   }));
 }
 
-/** Datos públicos de FORNO CLUB: regla de puntos, caducidad y recompensas. */
+/** Datos públicos de FORNEA CLUB: regla de puntos, caducidad y recompensas. */
 export async function getLoyaltyProgram(prisma: PrismaClient) {
   const [settings, rewards] = await Promise.all([
     prisma.storeSettings.findUnique({ where: { id: 1 } }),
@@ -110,6 +111,7 @@ export async function listRedemptions(
   };
 }
 
+/** Representación de un canje para la API: recompensa, puntos gastados, estado y fechas. */
 export function redemptionView(row: {
   id: string;
   rewardId: string;
@@ -139,6 +141,7 @@ export function redemptionView(row: {
   };
 }
 
+/** Saldo, puntos ganados en total y progreso hacia la siguiente recompensa del usuario. */
 export async function getLoyaltyAccount(prisma: PrismaClient, userId: string) {
   const account = await ensureAccount(prisma, userId);
   const [settings, rewards] = await Promise.all([
@@ -173,6 +176,10 @@ export async function getLoyaltyAccount(prisma: PrismaClient, userId: string) {
   };
 }
 
+/**
+ * Historial de movimientos de puntos del usuario (libro inmutable), del más reciente al más
+ * antiguo.
+ */
 export async function listTransactions(
   prisma: PrismaClient,
   userId: string,

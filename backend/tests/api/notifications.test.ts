@@ -62,7 +62,7 @@ describe("email templates", () => {
     estimatedReadyAt: new Date("2026-11-10T12:30:00Z"),
     cancellationReason: "Sin existencias & más",
     timezone: "Europe/Madrid",
-    storeName: "FORNO",
+    storeName: "FORNEA",
     storePhone: "+34 900 000 000",
     storeAddress: "Calle Demo 1, 28001 Madrid",
   };
@@ -169,7 +169,7 @@ describe("Resend driver", () => {
     const fetchImpl = vi.fn().mockResolvedValue(new Response("{}", { status: 200 }));
     const mailer = createResendMailer({
       apiKey: "re_test_key_123456",
-      from: "FORNO <onboarding@resend.dev>",
+      from: "FORNEA <onboarding@resend.dev>",
       onlyTo: "Owner@Example.com",
       fetchImpl,
     });

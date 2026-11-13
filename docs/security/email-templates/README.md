@@ -1,11 +1,11 @@
 # Plantillas de correo de Supabase Auth
 
-Plantillas con la marca FORNO para los correos que envía Supabase.
+Plantillas con la marca FORNEA para los correos que envía Supabase.
 
 | Archivo | Plantilla en Supabase | Asunto sugerido |
 | --- | --- | --- |
-| `confirmar-registro.html` | Confirm sign up | `Confirma tu cuenta en FORNO` |
-| `restablecer-contrasena.html` | Reset password | `Restablece tu contraseña de FORNO` |
+| `confirmar-registro.html` | Confirm sign up | `Confirma tu cuenta en FORNEA` |
+| `restablecer-contrasena.html` | Reset password | `Restablece tu contraseña de FORNEA` |
 
 ## Cómo aplicarlas
 

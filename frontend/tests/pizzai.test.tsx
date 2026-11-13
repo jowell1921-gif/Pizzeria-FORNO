@@ -157,7 +157,7 @@ describe("demo replies", () => {
       ["¿Qué me recomiendas?", "/carta"],
       ["¿Tenéis promociones?", "/promociones"],
       ["¿Cómo funciona el reparto?", "/carta"],
-      ["¿Cómo gano puntos?", "/forno-club"],
+      ["¿Cómo gano puntos?", "/fornea-club"],
     ];
     for (const [question, href] of cases) {
       const reply = demoReply(question);

@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { AmbientParticles } from "@/components/brand/ambient-particles";
-import { FornoWatermark } from "@/components/brand/forno-watermark";
+import { ForneaWatermark } from "@/components/brand/fornea-watermark";
 
 describe("AmbientParticles", () => {
   it("is purely decorative and hidden from assistive technology", () => {
@@ -37,16 +37,16 @@ describe("AmbientParticles", () => {
   });
 });
 
-describe("FornoWatermark", () => {
+describe("ForneaWatermark", () => {
   it("renders the FORNEA letters as a decorative element", () => {
-    const { container } = render(<FornoWatermark />);
+    const { container } = render(<ForneaWatermark />);
     expect(container.firstElementChild).toHaveAttribute("aria-hidden", "true");
     expect(container.firstElementChild).toHaveTextContent("FORNEA");
   });
 
   it("uses a stroke that contrasts with the background tone", () => {
-    const dark = render(<FornoWatermark tone="dark" />).container.firstElementChild;
-    const light = render(<FornoWatermark tone="light" />).container.firstElementChild;
+    const dark = render(<ForneaWatermark tone="dark" />).container.firstElementChild;
+    const light = render(<ForneaWatermark tone="light" />).container.firstElementChild;
     expect(dark?.className).toContain("245,230,200");
     expect(light?.className).toContain("23,23,23");
   });

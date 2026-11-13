@@ -1,5 +1,6 @@
 "use client";
 
+import { DeliveryNotice } from "@/components/layout/delivery-notice";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -39,6 +40,7 @@ export function DeliverySection({
 
   return (
     <div className="space-y-4">
+      <DeliveryNotice />
       {list.length > 0 && !adding ? (
         <div role="radiogroup" aria-label="Dirección de entrega" className="grid gap-2">
           {list.map((address) => (

@@ -43,7 +43,7 @@ export async function ensureProfile(
           id: identity.userId,
           email: identity.email,
           fullName: identity.displayName ?? fallbackName(identity.email),
-          // Todo cliente nace con su cuenta de puntos de FORNO CLUB, a cero.
+          // Todo cliente nace con su cuenta de puntos de FORNEA CLUB, a cero.
           loyaltyAccount: { create: {} },
         },
       });

@@ -37,7 +37,7 @@ Una prueba automática comprueba que **todos** los códigos que lanza el servido
 | `TOKEN_EXPIRED`       | 401  | El access token ha caducado                                    | `refreshSession()` de Supabase y reintentar una vez |
 | `INVALID_TOKEN`       | 401  | Token falso, de otro proyecto o mal firmado                    | Cerrar sesión                                       |
 | `ACCOUNT_DISABLED`    | 403  | La cuenta está desactivada                                     | Mostrar «cuenta desactivada»                        |
-| `ACCOUNT_CONFLICT`    | 409  | El correo ya pertenece a otra cuenta de FORNO                  | Pedir que use el método de acceso original          |
+| `ACCOUNT_CONFLICT`    | 409  | El correo ya pertenece a otra cuenta de FORNEA                 | Pedir que use el método de acceso original          |
 | `FORBIDDEN`           | 403  | Sin permiso para esa operación                                 | No mostrar la opción                                |
 | `PROFILE_INCOMPLETE`  | 422  | Falta nombre de usuario o teléfono para pedir                  | Llevar a «Completar mis datos»                      |
 | `ADDRESS_LIMIT`       | 409  | Máximo de direcciones guardadas                                | Pedir que borre una                                 |

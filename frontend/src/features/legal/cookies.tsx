@@ -4,6 +4,10 @@ import { COMPANY } from "@/lib/legal";
 
 import { LegalDocument, LegalSection, LegalTable, List, P } from "./legal-parts";
 
+/**
+ * Política de cookies. Debe coincidir con lo que la web guarda de verdad (hoy solo elementos
+ * técnicos).
+ */
 export function Cookies() {
   return (
     <LegalDocument>
@@ -32,19 +36,19 @@ export function Cookies() {
               "Mientras dure la sesión, con renovación automática",
             ],
             [
-              "forno-cart-v1 (almacenamiento local)",
+              "fornea-cart-v1 (almacenamiento local)",
               "Técnica, propia",
               "Recordar los productos de tu carrito al volver",
               "Hasta que vacíes el carrito o borres los datos del navegador",
             ],
             [
-              "forno-promo-code (almacenamiento local)",
+              "fornea-promo-code (almacenamiento local)",
               "Técnica, propia",
               "Recordar el código promocional que has guardado",
               "Hasta que lo quites o borres los datos del navegador",
             ],
             [
-              "forno-admin-offer-v1 (almacenamiento local)",
+              "fornea-admin-offer-v1 (almacenamiento local)",
               "Técnica, propia",
               "Recordar si ya has respondido a la oferta de acceso al panel de personal",
               "Hasta que borres los datos del navegador",
@@ -89,7 +93,7 @@ export function Cookies() {
           <Link href="/legal/privacidad" className="underline underline-offset-4">
             Política de privacidad
           </Link>
-          . Para cualquier duda, escribe a {COMPANY.name} ({COMPANY.email}).
+          . Para cualquier duda, contacta con {COMPANY.name} en el {COMPANY.phone}.
         </P>
       </LegalSection>
     </LegalDocument>

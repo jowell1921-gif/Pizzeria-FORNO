@@ -1,3 +1,4 @@
+import { describePostalCodes } from "../delivery/postal-codes.js";
 import type { PrismaClient } from "../../db/client.js";
 import { listCategories, listProducts } from "../catalog/catalog.service.js";
 import { listDeliveryZones } from "../delivery/delivery.service.js";
@@ -16,8 +17,8 @@ const clock = (minute: number) =>
   `${String(Math.floor(minute / 60) % 24).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 
 /**
- * Datos de FORNO que PizzAI puede usar. Se construyen SOLO con los mismos servicios públicos que
- * alimentan la web (carta, promociones, zonas, ajustes del local y FORNO CLUB): nunca con clientes,
+ * Datos de FORNEA que PizzAI puede usar. Se construyen SOLO con los mismos servicios públicos que
+ * alimentan la web (carta, promociones, zonas, ajustes del local y FORNEA CLUB): nunca con clientes,
  * pedidos, pagos ni datos internos. El texto resultante va a un proveedor externo de IA, así que
  * esta es la frontera de lo que se comparte.
  */
@@ -31,7 +32,7 @@ export async function buildKnowledge(prisma: PrismaClient, onlineAvailable: bool
     getLoyaltyProgram(prisma),
   ]);
 
-  const lines: string[] = ["DATOS DE FORNO", ""];
+  const lines: string[] = ["DATOS DE FORNEA", ""];
 
   lines.push(
     `Local: ${store.name}. ${store.address.line}, ${store.address.postalCode} ${store.address.city}. Teléfono: ${store.phone}.`,
@@ -67,7 +68,7 @@ export async function buildKnowledge(prisma: PrismaClient, onlineAvailable: bool
   if (zones.length === 0) lines.push("- No hay zonas de reparto configuradas.");
   for (const zone of zones) {
     lines.push(
-      `- ${zone.name}: códigos postales ${zone.postalCodes.join(", ")}; envío ${zone.deliveryFee} €; pedido mínimo ${zone.minimumOrder} €; unos ${zone.estimatedMinutes} min.`,
+      `- ${zone.name}: códigos postales ${describePostalCodes(zone.postalCodes)}; envío ${zone.deliveryFee} €; pedido mínimo ${zone.minimumOrder} €; unos ${zone.estimatedMinutes} min.`,
     );
   }
 
@@ -117,7 +118,7 @@ export async function buildKnowledge(prisma: PrismaClient, onlineAvailable: bool
     );
   }
 
-  lines.push("", "FORNO CLUB (programa de puntos):");
+  lines.push("", "FORNEA CLUB (programa de puntos):");
   lines.push(
     `- ${club.pointsPerEuro ?? "?"} punto(s) por euro de productos, al completar el pedido.${club.expiryDays ? ` Los puntos caducan a los ${club.expiryDays} días.` : " Los puntos no caducan."}`,
   );

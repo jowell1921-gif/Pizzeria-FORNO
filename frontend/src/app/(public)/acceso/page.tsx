@@ -54,6 +54,7 @@ async function LoginContent({ searchParams }: Pick<PageProps<"/acceso">, "search
   );
 }
 
+/** Inicio de sesión con correo o Google. Recibe `next` para volver a donde se estaba. */
 export default function LoginPage({ searchParams }: PageProps<"/acceso">) {
   return (
     <Suspense fallback={null}>

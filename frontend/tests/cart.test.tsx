@@ -91,13 +91,13 @@ describe("cart store", () => {
 
   it("persists in the browser and is restored on return", async () => {
     useCartStore.getState().add({ ...base, quantity: 2 });
-    const raw = window.localStorage.getItem("forno-cart-v1") ?? "{}";
+    const raw = window.localStorage.getItem("fornea-cart-v1") ?? "{}";
     const saved = JSON.parse(raw);
     expect(saved.state.lines[0]).toMatchObject({ productId: "p1", quantity: 2 });
 
     // Simula volver a la web: la memoria está vacía pero el navegador conserva el carrito.
     useCartStore.setState({ lines: [] });
-    window.localStorage.setItem("forno-cart-v1", raw);
+    window.localStorage.setItem("fornea-cart-v1", raw);
     await useCartStore.persist.rehydrate();
     expect(useCartStore.getState().lines[0]).toMatchObject({ productId: "p1", quantity: 2 });
   });

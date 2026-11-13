@@ -176,6 +176,10 @@ export async function listAdminCategories(prisma: PrismaClient) {
   }));
 }
 
+/**
+ * Crea una categoría. El identificador legible (slug) se deriva del nombre y es único; si no se
+ * indica orden, va la última. Queda en la auditoría.
+ */
 export async function createCategory(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = categoryInputSchema.parse(body);
   const id = await prisma.$transaction(async (tx) => {
@@ -204,6 +208,7 @@ export async function createCategory(prisma: PrismaClient, actorId: string, body
   return (await listAdminCategories(prisma)).find((category) => category.id === id)!;
 }
 
+/** Modifica una categoría; solo cambian los campos enviados. Queda en la auditoría. */
 export async function updateCategory(
   prisma: PrismaClient,
   actorId: string,
@@ -257,6 +262,7 @@ export async function deleteCategory(prisma: PrismaClient, actorId: string, id: 
   });
 }
 
+/** Los 14 alérgenos de declaración obligatoria (UE), para marcar los de cada producto. */
 export async function listAllergens(prisma: PrismaClient) {
   const rows = await prisma.allergen.findMany({ orderBy: { name: "asc" } });
   return rows.map((allergen) => ({ code: allergen.code, name: allergen.name }));
@@ -270,6 +276,10 @@ export const productsQuerySchema = z.object({
   status: z.enum(["all", "available", "unavailable", "deleted"]).default("all"),
 });
 
+/**
+ * Productos para el panel, filtrables por estado (disponibles, agotados, borrados o todos),
+ * categoría y nombre. No pagina: la carta es pequeña.
+ */
 export async function listAdminProducts(prisma: PrismaClient, query: unknown) {
   const filters = productsQuerySchema.parse(query);
   const rows = await prisma.product.findMany({
@@ -289,6 +299,10 @@ export async function listAdminProducts(prisma: PrismaClient, query: unknown) {
   return rows.map(productView);
 }
 
+/**
+ * Ficha completa de un producto para editarlo: ingredientes, alérgenos, imagen y grupos de
+ * opciones.
+ */
 export async function getAdminProduct(prisma: PrismaClient, id: string) {
   if (!uuid.safeParse(id).success) throw notFound("Product not found");
   const row = await prisma.product.findUnique({ where: { id }, include: productInclude });
@@ -437,6 +451,10 @@ const summary = (product: {
   categoryId: product.categoryId,
 });
 
+/**
+ * Crea un producto con su imagen, ingredientes, alérgenos y opciones en una sola transacción: o se
+ * guarda todo o nada.
+ */
 export async function createProduct(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = productInputSchema.parse(body);
   const id = await prisma.$transaction(async (tx) => {
@@ -475,6 +493,10 @@ export async function createProduct(prisma: PrismaClient, actorId: string, body:
   return getAdminProduct(prisma, id);
 }
 
+/**
+ * Modifica un producto; solo cambian los campos enviados. Los pedidos ya hechos no cambian porque
+ * guardan una copia.
+ */
 export async function updateProduct(
   prisma: PrismaClient,
   actorId: string,
@@ -534,6 +556,10 @@ export async function deleteProduct(prisma: PrismaClient, actorId: string, id: s
   });
 }
 
+/**
+ * Recupera un producto borrado. El borrado es lógico: se conserva para el historial de pedidos.
+ * Falla si su categoría ya no existe.
+ */
 export async function restoreProduct(prisma: PrismaClient, actorId: string, id: string) {
   if (!uuid.safeParse(id).success) throw notFound("Product not found");
   await prisma.$transaction(async (tx) => {

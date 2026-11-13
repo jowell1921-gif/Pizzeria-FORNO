@@ -26,7 +26,7 @@ async function ClubTeaserContent() {
           description={description}
         />
         <Link
-          href="/forno-club"
+          href="/fornea-club"
           transitionTypes={["nav-forward"]}
           className={cn(
             buttonVariants({ size: "lg" }),
@@ -55,6 +55,7 @@ async function ClubTeaserContent() {
   );
 }
 
+/** Presentación breve de FORNEA CLUB en la home, con acceso a la página del programa. */
 export function ClubTeaser() {
   return (
     <section aria-labelledby="club-title" className="section-y bg-charcoal text-cream">

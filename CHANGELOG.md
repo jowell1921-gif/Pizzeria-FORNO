@@ -2,6 +2,24 @@
 
 ## [Sin publicar]
 
+### Auditoría técnica integral
+
+Informe completo en `docs/quality/auditoria.md`. No hubo problemas críticos. Cambios:
+
+- **Pedidos abandonados**: los pedidos online sin pago iniciado se cancelan a los 45 minutos y liberan cupón, recompensa y puntos (`modules/orders/maintenance.service.ts`). También se purgan las claves de idempotencia caducadas.
+- **N+1** en el listado de promociones: los usos se cuentan con dos consultas agrupadas.
+- Las respuestas autenticadas llevan `Cache-Control: private, no-store`.
+- Los procesos en segundo plano registran sus errores; la subida de fotos y el pool de conexiones tienen plazo (`DATABASE_POOL_MAX`).
+- Aviso de configuración si falta `OWNER_EMAIL`; aviso en el registro si un cobro no coincide con el pedido.
+- Comentarios y JSDoc en español en 45 funciones de servicios y 41 páginas y componentes; `robots.txt` excluye las zonas con sesión.
+- `prettier` ya no reformatea los archivos generados (`openapi.json`, ejemplos y diagrama).
+
+### Marca FORNEA, textos legales y aviso de reparto
+
+- La marca pasa de FORNO a **FORNEA** en todo el código: interfaz, API, documentación, pruebas, rutas (`/fornea-club`) y paquetes. Se mantienen los nombres de infraestructura local (base de datos `forno_dev`/`forno_test`, usuario y contenedor de Docker) y el logo del correo ya subido a Supabase.
+- Los textos legales se redactan como proyecto de demostración de Lowbit Kode, sin NIF, domicilio social ni correo del titular (la actividad aún no está constituida). Se completan en `frontend/src/lib/legal.ts`.
+- Reparto a toda la **Comunidad de Madrid**: las zonas admiten prefijos de provincia con asterisco (`28*`) además de códigos exactos; el código con zona propia conserva sus condiciones. Nueva migración `postal_code_prefixes` (solo relaja una restricción) y nueva zona de ejemplo «Comunidad de Madrid (demostración)». Aviso en la home, el checkout y las condiciones de compra (`DELIVERY_NOTICE`).
+
 ### Fase 12 — Cierre y preparación para Flutter
 
 - **Contrato OpenAPI como archivo** (`docs/api/openapi.json`, `npm run docs:openapi`), siempre sincronizado con el código, con `operationId` estable en cada operación.
@@ -22,7 +40,7 @@
 
 ### Fase 9B — PizzAI con inteligencia artificial
 
-- Chat con IA real (Claude, SDK oficial) en `POST /assistant/chat`: la IA solo ve los datos públicos de la carta, promociones, reparto, horarios y FORNO CLUB; responde con esos datos, sin acceso a clientes ni pedidos y sin poder hacer operaciones.
+- Chat con IA real (Claude, SDK oficial) en `POST /assistant/chat`: la IA solo ve los datos públicos de la carta, promociones, reparto, horarios y FORNEA CLUB; responde con esos datos, sin acceso a clientes ni pedidos y sin poder hacer operaciones.
 - Límites: 20 mensajes por IP cada 10 minutos, tope diario global configurable, conversación acotada y cancelación al cerrar la pestaña. Sin clave de API, PizzAI sigue en modo de demostración.
 - Transparencia en la web: «Asistente con inteligencia artificial» y «Generado por IA: puede contener errores».
 - Dependencia nueva: `@anthropic-ai/sdk` (backend). Variables: `ANTHROPIC_API_KEY`, `ASSISTANT_MODEL`, `ASSISTANT_DAILY_LIMIT`.
@@ -58,10 +76,10 @@
 
 ### Fase 8B — Administración del negocio
 
-- Backend: carta (productos, categorías, opciones, alérgenos, disponibilidad, precios), establecimiento (datos, horarios, festivos, tiempos, zonas, mínimo, pausa de pedidos, métodos de pago), promociones y cupones (con promociones **automáticas**), FORNO CLUB (puntos por euro, recompensas, movimientos, canjes, clientes y ajustes justificados), registro de auditoría y subida de fotos a Supabase Storage. Cada escritura exige un permiso explícito, se valida en el servidor y deja constancia antes/después.
+- Backend: carta (productos, categorías, opciones, alérgenos, disponibilidad, precios), establecimiento (datos, horarios, festivos, tiempos, zonas, mínimo, pausa de pedidos, métodos de pago), promociones y cupones (con promociones **automáticas**), FORNEA CLUB (puntos por euro, recompensas, movimientos, canjes, clientes y ajustes justificados), registro de auditoría y subida de fotos a Supabase Storage. Cada escritura exige un permiso explícito, se valida en el servidor y deja constancia antes/después.
 - Base de datos: `Promotion.automatic` (migración `promotion_automatic`).
 - Pedidos: la promoción automática se evalúa en el presupuesto y se vuelve a comprobar con bloqueo al crear el pedido (`409 PROMOTION_CHANGED` si deja de cumplirse).
-- Web: nuevas pantallas del panel — Carta, Promociones, FORNO CLUB, Establecimiento y Auditoría — visibles solo según el rol.
+- Web: nuevas pantallas del panel — Carta, Promociones, FORNEA CLUB, Establecimiento y Auditoría — visibles solo según el rol.
 - Pruebas: 48 unitarias y 319 de base de datos y API en el backend; 375 unitarias y 331 E2E en el frontend.
 - Documentación: decisión `0010`, `docs/api/README.md` y OpenAPI.
 - Cocina: los pedidos a domicilio listos ya no quedan colgados; la cocina los entrega al repartidor y dejan de aparecer.
@@ -74,14 +92,14 @@
 - Pruebas: 48 unitarias y 267 de base de datos y API en el backend; 350 unitarias y 315 E2E en el frontend.
 - Documentación: decisión `0009`, `docs/api/README.md` y OpenAPI.
 
-### Fase 7 — FORNO CLUB y promociones
+### Fase 7 — FORNEA CLUB y promociones
 
 - Puntos: se conceden solo al completar el pedido (una vez, aunque se complete dos veces o a la vez), sobre productos menos descuentos y sin gasto de envío; se revierten al cancelar o devolver sin dejar saldo negativo, y se devuelven completos los puntos gastados en una recompensa.
 - Canje de recompensas (`POST /loyalty/redemptions`, con `Idempotency-Key`): atómico y seguro ante peticiones simultáneas; la recompensa pasa a «Mis recompensas» y se usa en un pedido con `redemptionId`.
 - Cupones validados en el servidor (fechas, estado, mínimo, primer pedido, límites de uso, cupón personal, productos, combos), incluso ante pedidos simultáneos; el IVA se calcula sobre lo realmente pagado.
 - Máquina de estados del pedido (`changeOrderStatus`): historial, cobro o anulación del efectivo y fidelización en una transacción. El cliente puede cancelar su pedido mientras no esté aceptado.
 - Ajustes administrativos de puntos con motivo y auditoría (servicio; las pantallas, en la fase 8).
-- Web: canjear recompensas y «Mis recompensas» en la cuenta, paso «Descuentos» en el checkout (el código guardado en «Mi cuenta» se aplica solo), cancelar pedido, y FORNO CLUB (inicio y página del club) desde la API.
+- Web: canjear recompensas y «Mis recompensas» en la cuenta, paso «Descuentos» en el checkout (el código guardado en «Mi cuenta» se aplica solo), cancelar pedido, y FORNEA CLUB (inicio y página del club) desde la API.
 - Pruebas: 48 unitarias y 250 de base de datos y API en el backend; 318 unitarias y 311 E2E en el frontend.
 - Documentación: decisión `0008` y `docs/api/README.md`.
 
@@ -132,14 +150,14 @@
 
 ### Fase 2 — Diseño e interfaz
 
-- Sistema de diseño FORNO: paleta con variantes accesibles, Barlow Condensed e Inter, componentes shadcn/ui y Lucide.
-- Páginas públicas con datos de demostración: inicio, carta, promociones, FORNO CLUB, páginas legales (marcadores) y 404.
+- Sistema de diseño FORNEA: paleta con variantes accesibles, Barlow Condensed e Inter, componentes shadcn/ui y Lucide.
+- Páginas públicas con datos de demostración: inicio, carta, promociones, FORNEA CLUB, páginas legales (marcadores) y 404.
 - Cabecera con menú móvil, pie de página, enlace «Saltar al contenido» y aviso de sitio de demostración.
 - SEO básico: metadatos por página, `sitemap.xml`, `robots.txt` y datos estructurados `Restaurant`.
 - Pruebas: Vitest (83) y Playwright con axe en 4 resoluciones.
 - Imágenes provisionales: logotipo, hero, carta y fichas de producto (WebP optimizado, mapa único en `src/lib/images.ts`).
 - Animaciones: pizza del hero con entrada y flotación suave, imágenes que se «dibujan» al hacer scroll y tarjetas con aparición progresiva (CSS puro, respetan «reducir movimiento»).
-- Contadores por tiempo (4 s) que arrancan al entrar en pantalla; foto de la carta que crece y «respira»; marca de agua «FORNO» en Promociones; fondo animado (hojas y brasas) en FORNO CLUB; enlace «Principal» en la navegación.
+- Contadores por tiempo (4 s) que arrancan al entrar en pantalla; foto de la carta que crece y «respira»; marca de agua «FORNEA» en Promociones; fondo animado (hojas y brasas) en FORNEA CLUB; enlace «Principal» en la navegación.
 - Fondo animado del hero (hojas de albahaca que caen y chispas de brasa que suben); la pizza ya no se agranda al hacer scroll; las fotos de producto son estáticas.
 - Hero con profundidad al hacer scroll (marca de agua, halo, pizza y texto a distinta velocidad), franja de cifras con contadores animados y tarjetas interactivas.
 - Transiciones entre páginas con `<ViewTransition>`: deslizamiento direccional con desenfoque y cabecera anclada.

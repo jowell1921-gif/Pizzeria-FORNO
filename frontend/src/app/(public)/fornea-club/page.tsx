@@ -18,7 +18,7 @@ import { pointsRuleText } from "@/features/club/format";
 export const metadata: Metadata = {
   title: "FORNEA CLUB",
   description: "Acumula puntos en cada pedido y canjéalos por recompensas en FORNEA.",
-  alternates: { canonical: "/forno-club" },
+  alternates: { canonical: "/fornea-club" },
 };
 
 const STEPS = [
@@ -98,6 +98,7 @@ async function ClubRewards() {
   );
 }
 
+/** Página pública del programa de fidelización: cómo funciona, recompensas y condiciones. */
 export default function ClubPage() {
   return (
     <PageTransition>

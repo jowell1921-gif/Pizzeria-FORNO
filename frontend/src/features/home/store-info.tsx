@@ -1,9 +1,11 @@
+import { DeliveryNotice } from "@/components/layout/delivery-notice";
 import { Clock, MapPin, Phone } from "lucide-react";
 
 import { SectionHeading } from "@/components/layout/section-heading";
 import { DEMO_OPENING_HOURS, DEMO_STORE } from "@/lib/demo-data";
 import { formatEuro } from "@/lib/format";
 
+/** Información del local en la home: dirección, horario, tiempos y condiciones de reparto. */
 export function StoreInfo() {
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(DEMO_STORE.mapsQuery)}`;
 
@@ -58,6 +60,7 @@ export function StoreInfo() {
               <li>Gastos de envío: {formatEuro(DEMO_STORE.deliveryFee)}</li>
               <li>Envío gratis desde {formatEuro(DEMO_STORE.freeDeliveryFrom)}</li>
             </ul>
+            <DeliveryNotice />
           </div>
         </div>
       </div>

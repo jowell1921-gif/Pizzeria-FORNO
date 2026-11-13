@@ -65,7 +65,7 @@ describe("store settings", () => {
       .patch("/api/v1/admin/store/settings")
       .set(headers)
       .send({
-        name: "FORNO Centro",
+        name: "FORNEA Centro",
         phone: "+34 911 222 333",
         prepTimeMinutes: 25,
         deliveryTimeMinutes: 50,
@@ -75,7 +75,7 @@ describe("store settings", () => {
       });
     expect(response.status).toBe(200);
     expect(response.body.data).toMatchObject({
-      name: "FORNO Centro",
+      name: "FORNEA Centro",
       prepTimeMinutes: 25,
       slotMinutes: 30,
       enabledPaymentMethods: ["CASH_PICKUP", "CASH_DELIVERY"],
@@ -83,15 +83,15 @@ describe("store settings", () => {
 
     const publicView = (await api().get("/api/v1/store/settings")).body.data;
     expect(publicView).toMatchObject({
-      name: "FORNO Centro",
+      name: "FORNEA Centro",
       prepTimeMinutes: 25,
       deliveryTimeMinutes: 50,
       maxAdvanceDays: 5,
     });
     const audit = await prisma.auditLog.findFirstOrThrow({ where: { action: "store.update" } });
     expect(audit).toMatchObject({ actorId: user.id, entityType: "StoreSettings" });
-    expect(audit.before).toMatchObject({ name: "FORNO", prepTimeMinutes: 20 });
-    expect(audit.after).toMatchObject({ name: "FORNO Centro", prepTimeMinutes: 25 });
+    expect(audit.before).toMatchObject({ name: "FORNEA", prepTimeMinutes: 20 });
+    expect(audit.after).toMatchObject({ name: "FORNEA Centro", prepTimeMinutes: 25 });
   });
 
   it("pauses and resumes orders; a paused store rejects new orders with its message", async () => {
@@ -293,6 +293,34 @@ describe("special days", () => {
 });
 
 describe("delivery zones", () => {
+  it("accepts province prefixes (28*) but not malformed ones, and keeps entries unique", async () => {
+    const { headers } = await withRole("ADMIN");
+    const zone = { deliveryFee: "4.00", minimumOrder: "18.00", estimatedMinutes: 55 };
+    for (const bad of ["2*", "280*", "*", "28**"]) {
+      const response = await api()
+        .post("/api/v1/admin/delivery-zones")
+        .set(headers)
+        .send({ ...zone, name: "Mala", postalCodes: [bad] });
+      expect(response.status, bad).toBe(400);
+    }
+    // «28*» ya pertenece a la zona de toda la Comunidad: no puede repetirse en otra zona activa.
+    const clash = await api()
+      .post("/api/v1/admin/delivery-zones")
+      .set(headers)
+      .send({ ...zone, name: "Otra", postalCodes: ["28*"] });
+    expect(clash.status).toBe(422);
+    expect(clash.body.error.code).toBe("POSTAL_CODE_IN_USE");
+    // Un prefijo distinto sí puede crearse (por ejemplo, Toledo).
+    const toledo = await api()
+      .post("/api/v1/admin/delivery-zones")
+      .set(headers)
+      .send({ ...zone, name: "Toledo", postalCodes: ["45*"] });
+    expect(toledo.status).toBe(201);
+    expect(
+      (await api().get("/api/v1/delivery-zones/check?postalCode=45001")).body.data.covered,
+    ).toBe(true);
+  });
+
   it("creates, edits, disables and deletes zones, and the public check follows", async () => {
     const { headers } = await withRole("ADMIN");
     const created = await api()
@@ -322,24 +350,25 @@ describe("delivery zones", () => {
       deliveryFee: "3.00",
       postalCodes: ["28040", "28042"],
     });
+    // 28041 ya no es de «Sur»: lo cubre la zona de toda la Comunidad (28*).
     expect(
-      (await api().get("/api/v1/delivery-zones/check?postalCode=28041")).body.data.covered,
-    ).toBe(false);
+      (await api().get("/api/v1/delivery-zones/check?postalCode=28041")).body.data.zone.name,
+    ).toMatch(/Comunidad de Madrid/);
 
     await api()
       .patch(`/api/v1/admin/delivery-zones/${created.body.data.id}`)
       .set(headers)
       .send({ active: false });
     expect(
-      (await api().get("/api/v1/delivery-zones/check?postalCode=28040")).body.data.covered,
-    ).toBe(false);
+      (await api().get("/api/v1/delivery-zones/check?postalCode=28040")).body.data.zone.name,
+    ).toMatch(/Comunidad de Madrid/);
 
     expect(
       (await api().delete(`/api/v1/admin/delivery-zones/${created.body.data.id}`).set(headers))
         .status,
     ).toBe(204);
     expect((await api().get("/api/v1/admin/delivery-zones").set(headers)).body.data).toHaveLength(
-      2,
+      3,
     );
     const actions = (
       await prisma.auditLog.findMany({

@@ -2,15 +2,19 @@ import { COMPANY } from "@/lib/legal";
 
 import { LegalDocument, LegalSection, LegalTable, List, P } from "./legal-parts";
 
+/**
+ * Política de privacidad (RGPD/LOPDGDD): responsable, finalidades, bases jurídicas, plazos,
+ * proveedores y derechos.
+ */
 export function Privacidad() {
   return (
     <LegalDocument>
       <LegalSection title="1. Responsable del tratamiento">
         <P>
-          El responsable del tratamiento de tus datos personales es {COMPANY.name} (marca{" "}
-          {COMPANY.brand}), con NIF/CIF {COMPANY.taxId} y domicilio social en{" "}
-          {COMPANY.registeredAddress}. Puedes contactar con nosotros en {COMPANY.email} o en el
-          teléfono {COMPANY.phone}.
+          El responsable del tratamiento de tus datos personales es {COMPANY.name}, titular de este
+          proyecto de demostración (marca {COMPANY.brand}), que todavía no está constituido como
+          actividad económica; cuando lo esté, sus datos de identificación se incluirán en el aviso
+          legal. Puedes contactar con nosotros en el teléfono {COMPANY.phone}.
         </P>
         <P>
           Esta política cumple el Reglamento (UE) 2016/679 (RGPD) y la Ley Orgánica 3/2018
@@ -123,8 +127,8 @@ export function Privacidad() {
       <LegalSection title="6. Tus derechos">
         <P>
           Puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación del
-          tratamiento y portabilidad, y retirar tu consentimiento en cualquier momento, escribiendo
-          a {COMPANY.email} e indicando el derecho que ejerces. Podemos pedirte que acredites tu
+          tratamiento y portabilidad, y retirar tu consentimiento en cualquier momento, llamando al{" "}
+          {COMPANY.phone} e indicando el derecho que ejerces. Podemos pedirte que acredites tu
           identidad. Muchos datos puedes corregirlos tú mismo desde «Mi cuenta».
         </P>
         <P>

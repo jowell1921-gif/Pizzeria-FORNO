@@ -2,6 +2,10 @@ import { z } from "zod";
 
 import { apiRequestPage } from "@/lib/api";
 
+/**
+ * Resumen de pedido tal como lo devuelve la API, con las etiquetas en español de sus estados y
+ * modalidades.
+ */
 export const orderSummarySchema = z.object({
   id: z.string(),
   orderNumber: z.number(),

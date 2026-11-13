@@ -44,6 +44,10 @@ export function dayRange(day: string, timeZone: string) {
   return { start, end: zonedTimeToUtc(next, 0, timeZone) };
 }
 
+/**
+ * Zona horaria del local (por defecto Europe/Madrid): los días y las horas del panel se calculan
+ * con ella.
+ */
 export async function storeTimeZone(prisma: Pick<PrismaClient, "storeSettings">) {
   const settings = await prisma.storeSettings.findUnique({
     where: { id: 1 },

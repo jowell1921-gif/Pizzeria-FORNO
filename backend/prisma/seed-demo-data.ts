@@ -309,6 +309,14 @@ const DELIVERY_ZONES = [
     minimumOrder: "15.00",
     estimatedMinutes: 45,
   },
+  {
+    // «28*» = todos los códigos postales que empiezan por 28, es decir, toda la Comunidad de Madrid.
+    name: "Comunidad de Madrid (demostración)",
+    postalCodes: ["28*"],
+    deliveryFee: "4.50",
+    minimumOrder: "15.00",
+    estimatedMinutes: 60,
+  },
 ];
 
 export interface SeedSummary {
@@ -414,12 +422,12 @@ export async function seedDemoData(prisma: PrismaClient): Promise<SeedSummary> {
 
   // Ajustes de la tienda (fila única).
   const settings = {
-    name: "FORNO",
+    name: "FORNEA",
     addressLine: "Avenida de Asturias",
     postalCode: "28029",
     city: "Madrid",
     phone: "+34 631 00 85 76",
-    email: "hola@forno.example",
+    email: "hola@fornea.example",
     prepTimeMinutes: 20,
     deliveryTimeMinutes: 40,
     enabledPaymentMethods: ["ONLINE", "CASH_PICKUP", "CASH_DELIVERY"] as (
@@ -463,7 +471,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<SeedSummary> {
       ],
     },
     {
-      name: "Menú FORNO",
+      name: "Menú FORNEA",
       description: "Una pizza clásica, una bebida y un postre por un precio cerrado.",
       badge: "Combo",
       kind: "COMBO" as const,
@@ -503,7 +511,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<SeedSummary> {
     },
   });
 
-  // Recompensas de FORNO CLUB.
+  // Recompensas de FORNEA CLUB.
   const rewards = [
     {
       name: "Bebida gratis",

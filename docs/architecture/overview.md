@@ -27,6 +27,7 @@ Flutter (futuro) ─────┘          │                     │
 - Importes en JSON como cadenas decimales (`"12.50"`); fechas en ISO 8601 UTC.
 - El navegador no accede a tablas de negocio de Supabase. RLS activo (sin políticas) como defensa en profundidad.
 - Tiempo real de cocina mediante SSE desde Express (decisión 0009).
+- Procesos periódicos en el propio proceso de la API (una réplica): reintento de correos y mantenimiento (cancelar pedidos online abandonados a los 45 minutos y purgar claves de idempotencia caducadas). Ver `modules/orders/maintenance.service.ts` y la auditoría (`docs/quality/auditoria.md`).
 - Un solo contrato (OpenAPI) para la web y la app: `docs/api/openapi.json`.
 
 ## Capas del backend
@@ -37,7 +38,7 @@ Flutter (futuro) ─────┘          │                     │
 | -------------------------------------------- | ---------------------------------------------------------------------------- |
 | `catalog`, `promotions`, `store`, `delivery` | Datos públicos de la carta, promociones, local y zonas                       |
 | `checkout`, `cart`, `orders`                 | Presupuesto, carrito, creación de pedidos y máquina de estados               |
-| `loyalty`                                    | FORNO CLUB: libro de movimientos, canjes y reglas de puntos                  |
+| `loyalty`                                    | FORNEA CLUB: libro de movimientos, canjes y reglas de puntos                 |
 | `payments`                                   | Stripe Checkout, webhooks, reembolsos                                        |
 | `notifications`, `documents`                 | Correos de pedido (cola con reintentos), tickets y facturas en PDF           |
 | `kitchen`, `admin`                           | Pantalla de cocina y panel del personal, con permisos explícitos y auditoría |

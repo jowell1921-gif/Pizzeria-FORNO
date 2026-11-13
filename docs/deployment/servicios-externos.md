@@ -24,7 +24,7 @@ oficial si algo no coincide.
 2. **Root Directory:** `backend`. El archivo [`backend/railway.json`](../../backend/railway.json) define: compilación (`npm run build`), **migración antes de cada despliegue** (`npx prisma migrate deploy`), arranque (`npm run start`) y comprobación de vivacidad (`/api/v1/health`).
 3. Poner las variables de [`variables.md`](./variables.md) (`NODE_ENV=production`, `TRUST_PROXY=1`, etc.).
 4. Generar el dominio público de Railway (o conectar uno propio: [Dominio y HTTPS](#dominio-y-https)).
-5. Comprobar el primer despliegue: el registro debe decir `FORNO API listening… (production)`, y `GET /api/v1/health/ready` debe responder `ready`.
+5. Comprobar el primer despliegue: el registro debe decir `FORNEA API listening… (production)`, y `GET /api/v1/health/ready` debe responder `ready`.
 6. Mantener **una sola réplica** del servicio: el bus de eventos (cocina en directo y efectos de pedido) vive en memoria (decisiones 0009 y 0012). Con varias réplicas habría que moverlo a Redis o a `LISTEN/NOTIFY` de PostgreSQL.
 
 ## Vercel (web)
@@ -39,10 +39,10 @@ oficial si algo no coincide.
 
 Lo normal es un dominio para la web y un subdominio para la API:
 
-| Nombre                                | Apunta a                                                                     | Para |
-| ------------------------------------- | ---------------------------------------------------------------------------- | ---- |
-| `forno.ejemplo` y `www.forno.ejemplo` | Vercel (los registros que indique Vercel en «Domains»)                       | Web  |
-| `api.forno.ejemplo`                   | Railway (registro CNAME que indique Railway en «Networking → Custom Domain») | API  |
+| Nombre                                  | Apunta a                                                                     | Para |
+| --------------------------------------- | ---------------------------------------------------------------------------- | ---- |
+| `fornea.ejemplo` y `www.fornea.ejemplo` | Vercel (los registros que indique Vercel en «Domains»)                       | Web  |
+| `api.fornea.ejemplo`                    | Railway (registro CNAME que indique Railway en «Networking → Custom Domain») | API  |
 
 Vercel y Railway emiten y renuevan los certificados HTTPS solos. Después, actualiza `CORS_ORIGINS`,
 `FRONTEND_URL`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL` y las URL de Supabase Auth con los
@@ -51,7 +51,7 @@ dominios definitivos, y redespliega.
 ## Stripe
 
 1. **Cuenta activada** para cobrar (Stripe pide datos del negocio para pasar de modo prueba a real). Mientras sea una demostración, se puede seguir con claves de prueba (`sk_test_…`); los pagos no serán reales.
-2. **Webhook:** Developers → Webhooks → añadir endpoint `https://api.forno.ejemplo/api/v1/webhooks/stripe` con los seis eventos de [`variables.md`](./variables.md#stripe). Copia el «Signing secret» (`whsec_…`) a `STRIPE_WEBHOOK_SECRET` en Railway.
+2. **Webhook:** Developers → Webhooks → añadir endpoint `https://api.fornea.ejemplo/api/v1/webhooks/stripe` con los seis eventos de [`variables.md`](./variables.md#stripe). Copia el «Signing secret» (`whsec_…`) a `STRIPE_WEBHOOK_SECRET` en Railway.
 3. Poner `STRIPE_SECRET_KEY` en Railway. La clave publicable **no** se usa (el pago se hace en la página de Stripe).
 4. Probar con un pedido real de poco importe y reembolsarlo desde el panel.
 5. Al arrancar, el registro avisará si producción usa una clave `sk_test_` (`[config] …`).
@@ -62,7 +62,7 @@ Opcional. Sin configurarlo, los correos de pedido se registran y se leen en el p
 no se envían. Para enviarlos a los clientes:
 
 1. Resend → Domains: añadir y **verificar el dominio** (registros SPF y DKIM en tu proveedor de dominio).
-2. Crear una API key y ponerla en Railway: `EMAIL_DRIVER=resend`, `RESEND_API_KEY`, `EMAIL_FROM=FORNO <pedidos@forno.ejemplo>`. **No** pongas `EMAIL_ONLY_TO`.
+2. Crear una API key y ponerla en Railway: `EMAIL_DRIVER=resend`, `RESEND_API_KEY`, `EMAIL_FROM=FORNEA <pedidos@fornea.ejemplo>`. **No** pongas `EMAIL_ONLY_TO`.
 3. Para los correos de acceso de Supabase (confirmar registro y recuperar contraseña), configura el SMTP propio en Supabase con el mismo dominio (`smtp.resend.com`, puerto 465, usuario `resend`, contraseña = API key).
 
 No se envían comunicaciones comerciales: solo avisos del propio pedido.

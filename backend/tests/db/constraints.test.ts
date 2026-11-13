@@ -190,12 +190,12 @@ describe("cart", () => {
 
 describe("store settings and opening hours", () => {
   const settings = {
-    name: "FORNO",
+    name: "FORNEA",
     addressLine: "Calle Ejemplo 12",
     postalCode: "28000",
     city: "Madrid",
     phone: "+34 900 000 000",
-    email: "hola@forno.example",
+    email: "hola@fornea.example",
     prepTimeMinutes: 20,
     deliveryTimeMinutes: 40,
     loyaltyPointsPerEuro: new Prisma.Decimal("1.0000"),
@@ -301,6 +301,18 @@ describe("delivery zones", () => {
       }),
       /ck_delivery_zone_amounts/,
     );
+    // Un prefijo de provincia con asterisco es válido; uno mal formado, no.
+    for (const bad of ["*", "2*", "280*", "28**"]) {
+      await expectDbRejection(
+        prisma.deliveryZone.create({ data: { ...zone, postalCodes: ["28001", bad] } }),
+        /ck_delivery_zone_postal_codes/,
+      );
+    }
+    const wide = await prisma.deliveryZone.create({
+      data: { ...zone, name: "Toda la Comunidad", postalCodes: ["28*"] },
+    });
+    expect(wide.postalCodes).toEqual(["28*"]);
+    await prisma.deliveryZone.delete({ where: { id: wide.id } });
     const created = await prisma.deliveryZone.create({
       data: { ...zone, postalCodes: ["28001", "28002"] },
     });

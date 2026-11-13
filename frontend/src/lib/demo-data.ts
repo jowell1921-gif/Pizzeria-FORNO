@@ -13,13 +13,20 @@ export const DEMO_STORE = {
   address: "Avenida de Asturias, 28029 Madrid",
   phone: "+34 631 00 85 76",
   phoneHref: "tel:+34631008576",
-  email: "hola@forno.example",
+  email: "hola@fornea.example",
   mapsQuery: "Avenida de Asturias, 28029 Madrid",
   prepTimeMinutes: 20,
   deliveryTimeMinutes: 40,
   minimumOrder: "12.00",
   deliveryFee: "2.50",
   freeDeliveryFrom: "25.00",
+} as const;
+
+/** Aviso de dónde se reparte. Debe coincidir con las zonas de reparto configuradas en el panel. */
+export const DELIVERY_NOTICE = {
+  short: "repartimos en toda la Comunidad de Madrid (códigos postales que empiezan por 28).",
+  title: "Reparto a domicilio",
+  text: "Repartimos en toda la Comunidad de Madrid (códigos postales que empiezan por 28).",
 } as const;
 
 export const DEMO_OPENING_HOURS: OpeningPeriod[] = [

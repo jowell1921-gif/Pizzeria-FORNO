@@ -157,6 +157,21 @@ describe("POST /checkout/quote", () => {
     expect(outside.body.data.totals.deliveryFee).toBe("0.00");
   });
 
+  it("delivers to any postal code of the Comunidad de Madrid with the wide zone's conditions", async () => {
+    for (const postalCode of ["28029", "28999"]) {
+      const { body } = await api()
+        .post("/api/v1/checkout/quote")
+        .send({ type: "DELIVERY", postalCode, items: [await line("margherita")] });
+      expect(body.data.delivery).toMatchObject({ covered: true, minimumOrder: "15.00" });
+      expect(body.data.totals.deliveryFee).toBe("4.50");
+    }
+    // Un código con zona propia conserva las condiciones de esa zona.
+    const own = await api()
+      .post("/api/v1/checkout/quote")
+      .send({ type: "DELIVERY", postalCode: "28001", items: [await line("margherita")] });
+    expect(own.body.data.totals.deliveryFee).toBe("2.50");
+  });
+
   it("does not charge delivery on pickup orders", async () => {
     const { body } = await api()
       .post("/api/v1/checkout/quote")

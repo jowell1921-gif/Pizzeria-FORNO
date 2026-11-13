@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/** Marco del panel del personal: cabecera, navegación según permisos y sesión. */
 export default function PanelLayout({ children }: LayoutProps<"/">) {
   return <PanelShell>{children}</PanelShell>;
 }

@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+/**
+ * Checkout: modalidad, dirección, hora, descuentos y pago. El servidor recalcula todos los
+ * importes.
+ */
 export default function CheckoutPage() {
   return (
     <PageTransition className="container-page section-y">

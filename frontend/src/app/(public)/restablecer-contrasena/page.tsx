@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+/** Elección de la nueva contraseña tras pulsar el enlace del correo de recuperación. */
 export default function ResetPasswordPage() {
   return (
     <AuthShell

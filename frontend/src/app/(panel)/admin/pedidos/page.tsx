@@ -5,6 +5,7 @@ import { RequirePermission } from "@/features/panel/panel-shell";
 
 export const metadata: Metadata = { title: "Pedidos" };
 
+/** Listado de pedidos para el personal, con filtros y paginación. */
 export default function AdminOrdersPage() {
   return (
     <RequirePermission permission="orders:read:all">

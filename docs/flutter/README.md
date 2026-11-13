@@ -1,6 +1,6 @@
 # Guía de integración para la app Flutter
 
-Esta guía es para quien desarrolle la app móvil de FORNO. **La app no reimplementa ninguna regla de
+Esta guía es para quien desarrolle la app móvil de FORNEA. **La app no reimplementa ninguna regla de
 negocio**: consume la misma API REST que la web, con la misma identidad (Supabase Auth), los mismos
 clientes, pedidos, puntos, promociones y recompensas.
 
@@ -53,19 +53,19 @@ await Supabase.initialize(url: SUPABASE_URL, anonKey: SUPABASE_PUBLISHABLE_KEY);
 
 // Correo y contraseña
 await supabase.auth.signUp(email: email, password: password,
-    data: {'full_name': name}, emailRedirectTo: 'io.forno.app://login-callback/');
+    data: {'full_name': name}, emailRedirectTo: 'io.fornea.app://login-callback/');
 await supabase.auth.signInWithPassword(email: email, password: password);
 
 // Google (abre el navegador y vuelve por un enlace profundo)
-await supabase.auth.signInWithOAuth(OAuthProvider.google, redirectTo: 'io.forno.app://login-callback/');
+await supabase.auth.signInWithOAuth(OAuthProvider.google, redirectTo: 'io.fornea.app://login-callback/');
 
 // Recuperar contraseña
-await supabase.auth.resetPasswordForEmail(email, redirectTo: 'io.forno.app://reset-callback/');
+await supabase.auth.resetPasswordForEmail(email, redirectTo: 'io.fornea.app://reset-callback/');
 ```
 
 - **Claves.** En la app solo va la clave **publicable** de Supabase. La clave secreta (`sb_secret_…`), la
   de Stripe y la de IA **nunca** deben estar en la app.
-- **Enlaces profundos.** Hay que dar de alta las URL de retorno (`io.forno.app://…`) en Supabase →
+- **Enlaces profundos.** Hay que dar de alta las URL de retorno (`io.fornea.app://…`) en Supabase →
   Authentication → URL Configuration, y registrar el esquema en Android (`intent-filter`) e iOS
   (`CFBundleURLTypes`).
 - **Primera llamada.** `GET /me` crea el perfil del usuario en el servidor si aún no existe. Hasta que
@@ -125,7 +125,7 @@ onError: (error, handler) async {
    - Al volver (enlace profundo o botón), la app **consulta** `getOrdersById` cada pocos segundos hasta que el estado deje de ser `PENDING_PAYMENT`. Volver del navegador **no prueba el pago**: solo lo confirma el servidor al recibir el aviso firmado de Stripe. Si no se paga, el pedido se cancela solo a los 30 minutos.
 6. **Seguimiento.** `getOrdersMe` y `getOrdersById` (consulta cada ~20 s mientras esté en curso). El cliente puede cancelar con `postOrdersByIdCancel` mientras esté `NEW` o `PENDING_PAYMENT`.
 7. **Documentos.** `getOrdersByIdDocuments` dice si el pedido está cobrado (`settled`). `getOrdersByIdDocumentsByType` (`ticket` o `invoice`) devuelve un **PDF**: hay que enviar el `Authorization` y guardar los bytes (no vale abrir la URL en un navegador sin sesión). La factura se pide antes con `postOrdersByIdInvoice` (datos fiscales).
-8. **FORNO CLUB.** `getLoyaltyAccount`, `getLoyaltyTransactions`, `getLoyaltyRewards`, `postLoyaltyRedemptions`, `getLoyaltyRedemptions` («Mis recompensas»). Una recompensa canjeada se aplica a un pedido con `redemptionId`.
+8. **FORNEA CLUB.** `getLoyaltyAccount`, `getLoyaltyTransactions`, `getLoyaltyRewards`, `postLoyaltyRedemptions`, `getLoyaltyRedemptions` («Mis recompensas»). Una recompensa canjeada se aplica a un pedido con `redemptionId`.
 9. **PizzAI.** Llamar a `getAssistantStatus` primero: con `available: false` se usa un modo de demostración **rotulado como tal**; con `true`, `postAssistantChat` (público; hasta 12 mensajes de 500 caracteres; el último, del usuario). Las respuestas son texto plano y deben mostrarse como «generadas por IA, pueden contener errores».
 10. **Tiempo real.** La cocina usa SSE, pero es solo del personal. La app de clientes **consulta periódicamente**.
 

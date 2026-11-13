@@ -79,7 +79,7 @@ export function createStripeGateway(secretKey: string, webhookSecret: string): P
               price_data: {
                 currency: input.currency.toLowerCase(),
                 unit_amount: input.amountCents,
-                product_data: { name: `Pedido FORNO #${input.orderNumber}` },
+                product_data: { name: `Pedido FORNEA #${input.orderNumber}` },
               },
             },
           ],

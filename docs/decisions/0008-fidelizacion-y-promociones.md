@@ -1,4 +1,4 @@
-# 0008 — FORNO CLUB y promociones (Fase 7)
+# 0008 — FORNEA CLUB y promociones (Fase 7)
 
 Fecha: 2026-11-08
 
@@ -34,7 +34,7 @@ Fecha: 2026-11-08
 | Errores            | Códigos concretos (`COUPON_EXPIRED`, `COUPON_NOT_FIRST_ORDER`, `COUPON_MIN_SUBTOTAL`…) para que la web lo explique. Un cupón personal de otra persona responde como inexistente                                                                   |
 | IVA con descuentos | El descuento se reparte entre las líneas antes de extraer el IVA contenido en el total. Las líneas guardan su IVA sin descuento (restricción de la base de datos); `Order.taxTotal` refleja lo realmente pagado                                   |
 | Presupuesto        | `POST /checkout/quote` sigue siendo público; con cupón o recompensa exige sesión (autenticación opcional: sin cabecera, anónimo; con cabecera inválida, 401)                                                                                      |
-| No incluido        | Promociones **automáticas** (sin código) y descuentos sobre el gasto de envío. «Menú FORNO» y «Envío gratis» de los datos de ejemplo siguen siendo informativas hasta que el administrador las configure (fase 8)                                 |
+| No incluido        | Promociones **automáticas** (sin código) y descuentos sobre el gasto de envío. «Menú FORNEA» y «Envío gratis» de los datos de ejemplo siguen siendo informativas hasta que el administrador las configure (fase 8)                                 |
 
 ## Estados del pedido
 

@@ -26,7 +26,7 @@ describe("demo data seed", () => {
       products: 15,
       optionGroups: 18,
       openingHours: 12,
-      deliveryZones: 2,
+      deliveryZones: 3,
       promotions: 3,
       coupons: 1,
       rewards: 3,

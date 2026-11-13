@@ -1,17 +1,20 @@
 import Link from "next/link";
 
+import { DELIVERY_NOTICE } from "@/lib/demo-data";
 import { COMPANY } from "@/lib/legal";
 
 import { LegalDocument, LegalSection, List, P } from "./legal-parts";
 
+/** Condiciones de compra: pedidos, precios, pagos, cancelaciones, alérgenos y FORNEA CLUB. */
 export function CondicionesDeCompra() {
   return (
     <LegalDocument>
       <LegalSection title="1. Quién vende">
         <P>
-          Los pedidos realizados en este sitio son atendidos por {COMPANY.name} (marca{" "}
-          {COMPANY.brand}), NIF/CIF {COMPANY.taxId}, con establecimiento en {COMPANY.establishment}{" "}
-          y teléfono {COMPANY.phone}. Datos completos en el{" "}
+          Este sitio es una demostración de {COMPANY.name} (marca {COMPANY.brand}). {COMPANY.brand}{" "}
+          es un establecimiento de ejemplo, situado en {COMPANY.establishment}, con teléfono{" "}
+          {COMPANY.phone}. Mientras el proyecto esté en fase de demostración, los pedidos no se
+          preparan ni se entregan y los pagos no son reales. Más información en el{" "}
           <Link href="/legal/aviso-legal" className="underline underline-offset-4">
             Aviso legal
           </Link>
@@ -44,7 +47,7 @@ export function CondicionesDeCompra() {
         <List
           items={[
             `Recogida: en el establecimiento (${COMPANY.establishment}), a la hora elegida o lo antes posible según el horario.`,
-            "Domicilio: solo en las zonas de reparto indicadas en la web, a la dirección que facilites. Debes estar disponible para recibir el pedido en el momento de la entrega.",
+            `Domicilio: ${DELIVERY_NOTICE.short} Debes estar disponible para recibir el pedido en el momento de la entrega.`,
             "Los tiempos de preparación y entrega son estimaciones y pueden variar por la carga de trabajo, el tráfico o las condiciones meteorológicas.",
           ]}
         />
@@ -120,9 +123,9 @@ export function CondicionesDeCompra() {
 
       <LegalSection title="12. Reclamaciones">
         <P>
-          Dispones de hojas de reclamaciones en el establecimiento. También puedes escribirnos a{" "}
-          {COMPANY.email} o llamar al {COMPANY.phone}, y acudir a los servicios de consumo de tu
-          comunidad autónoma. Para el tratamiento de tus datos, consulta la{" "}
+          Dispones de hojas de reclamaciones en el establecimiento. También puedes llamar al{" "}
+          {COMPANY.phone} y acudir a los servicios de consumo de tu comunidad autónoma. Para el
+          tratamiento de tus datos, consulta la{" "}
           <Link href="/legal/privacidad" className="underline underline-offset-4">
             Política de privacidad
           </Link>

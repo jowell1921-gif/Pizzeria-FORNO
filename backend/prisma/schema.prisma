@@ -1,4 +1,4 @@
-// Esquema de datos de FORNO.
+// Esquema de datos de FORNEA.
 //
 // Convenciones
 //  - Identificadores UUID. Profile.id es el id del usuario en Supabase Auth.

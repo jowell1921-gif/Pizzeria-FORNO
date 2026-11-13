@@ -11,7 +11,7 @@ No uses `/health/ready` como comprobación de reinicio: un corte breve de la bas
 reiniciaría el servicio sin arreglar nada.
 
 **Monitor de disponibilidad.** Crea uno (por ejemplo, UptimeRobot, Better Stack o el de tu
-proveedor; los hay gratuitos) que consulte `https://api.forno.ejemplo/api/v1/health/ready` cada
+proveedor; los hay gratuitos) que consulte `https://api.fornea.ejemplo/api/v1/health/ready` cada
 1-5 minutos y avise por correo o móvil, y otro sobre la portada de la web.
 
 ## Registros (logs)

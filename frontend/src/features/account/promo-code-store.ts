@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-const KEY = "forno-promo-code";
+const KEY = "fornea-promo-code";
 const listeners = new Set<() => void>();
 
 /** Formato admitido de un código promocional (el servidor decide después si es válido). */

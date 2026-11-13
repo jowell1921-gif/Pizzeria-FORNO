@@ -25,7 +25,7 @@ Necesitas las herramientas de PostgreSQL 17 (`pg_dump`, `pg_restore`) y la caden
 ```bash
 # Copia (formato comprimido y restaurable por partes)
 pg_dump "$DATABASE_URL" --format=custom --no-owner --no-acl \
-  --file "forno-$(date +%Y%m%d-%H%M).dump"
+  --file "fornea-$(date +%Y%m%d-%H%M).dump"
 ```
 
 Guarda el archivo `.dump` fuera del repositorio y del ordenador de trabajo (por ejemplo, en un

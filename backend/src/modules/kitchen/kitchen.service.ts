@@ -89,6 +89,10 @@ export async function listKitchenOrders(prisma: PrismaClient, now = new Date()) 
   return rows.map(kitchenView);
 }
 
+/**
+ * Cambio de estado desde la pantalla de cocina. Solo admite las transiciones propias de la cocina
+ * (en recogida entrega al cliente; en domicilio, al repartidor); el resto exige personal.
+ */
 export async function changeKitchenStatus(
   prisma: PrismaClient,
   actorId: string,

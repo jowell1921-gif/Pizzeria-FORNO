@@ -11,7 +11,7 @@ const INSUFFICIENT = /Insufficient loyalty points/i;
 const isInsufficientPoints = (error: unknown) =>
   error instanceof Error && INSUFFICIENT.test(error.message);
 
-/** Cuenta de puntos del usuario; se crea si aún no existe (perfiles anteriores a FORNO CLUB). */
+/** Cuenta de puntos del usuario; se crea si aún no existe (perfiles anteriores a FORNEA CLUB). */
 export async function ensureAccount(db: Db, userId: string) {
   const existing = await db.loyaltyAccount.findUnique({ where: { userId } });
   return existing ?? db.loyaltyAccount.create({ data: { userId } });

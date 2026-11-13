@@ -1,6 +1,6 @@
-# Despliegue de FORNO
+# Despliegue de FORNEA
 
-Guía para publicar FORNO en producción con la infraestructura prevista: **Vercel** (web),
+Guía para publicar FORNEA en producción con la infraestructura prevista: **Vercel** (web),
 **Railway** (API) y **Supabase** (PostgreSQL, autenticación y almacenamiento de imágenes), con
 **Stripe** para los pagos y **Resend** (opcional) para el correo.
 

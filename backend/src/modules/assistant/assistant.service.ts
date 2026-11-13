@@ -68,9 +68,9 @@ export interface AssistantServiceDeps {
 }
 
 const REFUSAL_TEXT =
-  "Con eso no puedo ayudarte. Puedo contarte qué hay en la carta, las promociones, el reparto o FORNO CLUB.";
+  "Con eso no puedo ayudarte. Puedo contarte qué hay en la carta, las promociones, el reparto o FORNEA CLUB.";
 const EMPTY_TEXT =
-  "No he sabido responder a eso. Prueba a preguntarme por la carta, las promociones, el reparto o FORNO CLUB.";
+  "No he sabido responder a eso. Prueba a preguntarme por la carta, las promociones, el reparto o FORNEA CLUB.";
 
 /** Enlaces útiles según de qué trata la respuesta (los decide el servidor, no el modelo). */
 export function linksFor(question: string, answer: string): AssistantLink[] {
@@ -79,8 +79,8 @@ export function linksFor(question: string, answer: string): AssistantLink[] {
   if (/promoci|oferta|cup[oó]n|descuento|combo/.test(text)) {
     links.push({ label: "Ver promociones", href: "/promociones" });
   }
-  if (/forno club|puntos|recompensa/.test(text)) {
-    links.push({ label: "Conocer FORNO CLUB", href: "/forno-club" });
+  if (/fornea club|puntos|recompensa/.test(text)) {
+    links.push({ label: "Conocer FORNEA CLUB", href: "/fornea-club" });
   }
   if (links.length < 2 && /carta|pizza|entrante|bebida|postre|pedir|reparto|domicilio/.test(text)) {
     links.push({ label: "Ver la carta", href: "/carta" });
@@ -88,6 +88,10 @@ export function linksFor(question: string, answer: string): AssistantLink[] {
   return links.slice(0, 2);
 }
 
+/**
+ * Servicio de PizzAI: valida la conversación, aplica el tope diario, construye los datos públicos
+ * del negocio y llama al modelo. Nunca recibe datos de clientes.
+ */
 export function createAssistantService(deps: AssistantServiceDeps) {
   const now = deps.now ?? (() => new Date());
   let day = "";

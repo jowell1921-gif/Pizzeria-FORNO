@@ -56,7 +56,7 @@ test("the order survives a reload and shows the count in the header", async ({ p
   await expect(page.getByRole("dialog", { name: "Tu pedido" })).toBeVisible();
 
   await expect
-    .poll(() => page.evaluate(() => window.localStorage.getItem("forno-cart-v1")))
+    .poll(() => page.evaluate(() => window.localStorage.getItem("fornea-cart-v1")))
     .toContain("Margherita");
 
   await page.reload();
@@ -132,7 +132,7 @@ test("the order panel and dialogs fit the screen without horizontal overflow", a
 });
 
 test("FORNEA CLUB shows the points rule and the rewards from the API", async ({ page }) => {
-  await page.goto("/forno-club");
+  await page.goto("/fornea-club");
   await expect(page.getByRole("heading", { level: 1, name: "FORNEA CLUB" })).toBeVisible();
   await expect(page.getByText(/sumas 1 punto/i)).toBeVisible();
   await expect(page.getByText("Bebida gratis")).toBeVisible();

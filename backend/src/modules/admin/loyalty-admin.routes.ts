@@ -19,7 +19,7 @@ import {
   updateReward,
 } from "./loyalty-admin.service.js";
 
-/** Administración de FORNO CLUB. Permiso `loyalty:manage` (y `customers:read` para ver clientes). */
+/** Administración de FORNEA CLUB. Permiso `loyalty:manage` (y `customers:read` para ver clientes). */
 export function createLoyaltyAdminRouter(prisma: PrismaClient): Router {
   const router = Router();
   const guard = requireAccess("loyalty:read", "loyalty:manage");

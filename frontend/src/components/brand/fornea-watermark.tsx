@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-interface FornoWatermarkProps {
+interface ForneaWatermarkProps {
   /** `dark`: trazo crema para fondos oscuros. `light`: trazo carbón para fondos claros. */
   tone?: "dark" | "light";
   className?: string;
@@ -11,7 +11,7 @@ interface FornoWatermarkProps {
  * Debe colocarse en un contenedor `relative isolate overflow-hidden`; la posición vertical se
  * indica con `className` (por ejemplo `top-1/2 -translate-y-1/2`).
  */
-export function FornoWatermark({ tone = "dark", className }: FornoWatermarkProps) {
+export function ForneaWatermark({ tone = "dark", className }: ForneaWatermarkProps) {
   return (
     <div
       aria-hidden

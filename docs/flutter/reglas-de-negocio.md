@@ -14,16 +14,16 @@ web y la app Flutter las consumen y no las duplican. Cuando una regla cambia, ca
 
 ## Pedido
 
-| Regla                   | Detalle                                                                                                                                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Solo con cuenta         | No existe compra como invitado. Hace falta perfil completo (nombre de usuario y teléfono)                                                                                      |
-| Modalidades             | Recogida y/o domicilio, activables desde el panel. El local puede **pausar** los pedidos                                                                                       |
-| Horario                 | Franjas calculadas en el servidor (horario semanal, festivos y horarios especiales, zona horaria del local, antelación máxima). Con el local cerrado no hay «lo antes posible» |
-| Reparto                 | Solo por código postal de una zona activa. Cada zona tiene su gasto de envío, su pedido mínimo y su tiempo                                                                     |
-| Mínimo                  | Si el pedido (tras descuentos) no alcanza el mínimo de la zona, se rechaza (`BELOW_MINIMUM_ORDER`)                                                                             |
-| Instantánea             | El pedido copia nombre, precio, opciones, dirección y datos del cliente: cambiar la carta después no altera pedidos anteriores                                                 |
-| Idempotencia            | La misma `Idempotency-Key` devuelve el mismo pedido; nunca se crea dos veces                                                                                                   |
-| Cancelación del cliente | Solo mientras esté `NEW` o `PENDING_PAYMENT`. Libera cupón, recompensa y puntos                                                                                                |
+| Regla                   | Detalle                                                                                                                                                                                                                                                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Solo con cuenta         | No existe compra como invitado. Hace falta perfil completo (nombre de usuario y teléfono)                                                                                                                                                                                                          |
+| Modalidades             | Recogida y/o domicilio, activables desde el panel. El local puede **pausar** los pedidos                                                                                                                                                                                                           |
+| Horario                 | Franjas calculadas en el servidor (horario semanal, festivos y horarios especiales, zona horaria del local, antelación máxima). Con el local cerrado no hay «lo antes posible»                                                                                                                     |
+| Reparto                 | Solo por código postal de una zona activa. Una zona puede nombrar códigos exactos (`28029`) o un prefijo con asterisco (`28*` = toda la Comunidad de Madrid); si varias zonas cubren un código, gana la que lo nombra exactamente. Cada zona tiene su gasto de envío, su pedido mínimo y su tiempo |
+| Mínimo                  | Si el pedido (tras descuentos) no alcanza el mínimo de la zona, se rechaza (`BELOW_MINIMUM_ORDER`)                                                                                                                                                                                                 |
+| Instantánea             | El pedido copia nombre, precio, opciones, dirección y datos del cliente: cambiar la carta después no altera pedidos anteriores                                                                                                                                                                     |
+| Idempotencia            | La misma `Idempotency-Key` devuelve el mismo pedido; nunca se crea dos veces                                                                                                                                                                                                                       |
+| Cancelación del cliente | Solo mientras esté `NEW` o `PENDING_PAYMENT`. Libera cupón, recompensa y puntos                                                                                                                                                                                                                    |
 
 ## Estados y quién puede cambiarlos
 
@@ -35,7 +35,7 @@ web y la app Flutter las consumen y no las duplican. Cuando una regla cambia, ca
 | Cliente                 | Cancelar su pedido mientras no esté aceptado                                                          |
 | Cocina (`KITCHEN`)      | Aceptar, preparar, marcar listo, entregar en el local (recogida) y entregar al repartidor (domicilio) |
 | Personal (`STAFF`)      | Todos los cambios de estado, con motivo en rechazos y devoluciones                                    |
-| Administrador (`ADMIN`) | Todo lo anterior, reembolsos, carta, promociones, FORNO CLUB, ajustes del local, auditoría y correos  |
+| Administrador (`ADMIN`) | Todo lo anterior, reembolsos, carta, promociones, FORNEA CLUB, ajustes del local, auditoría y correos |
 | Sistema                 | Confirmar un pago (webhook firmado de Stripe) y cancelar el pedido si el pago caduca                  |
 
 Cada cambio queda en el historial de estados; los del personal, también en la auditoría. Las transiciones
@@ -47,7 +47,7 @@ no permitidas responden `409 INVALID_TRANSITION`.
 - Tarjeta: solo el **evento firmado de Stripe** pasa un pedido a pagado. Se comprueban importe y moneda; un pago fallido o caducado nunca genera un pedido pagado; un cobro tardío de un pedido cancelado se devuelve solo.
 - Reembolsos (total o parcial): solo `ADMIN`, con motivo y auditoría; automáticos si se cancela o rechaza un pedido ya pagado.
 
-## FORNO CLUB (puntos)
+## FORNEA CLUB (puntos)
 
 - Regla configurable en el panel: **puntos por euro** de productos (sin envío ni descuentos) y caducidad opcional.
 - Los puntos se conceden **solo al completar** el pedido y **una sola vez**; si se cancela, se revierten hasta el saldo disponible.
@@ -75,5 +75,5 @@ no permitidas responden `409 INVALID_TRANSITION`.
 
 ## PizzAI
 
-La IA solo conoce los **datos públicos** de la carta, promociones, reparto, horarios y FORNO CLUB; no accede a
+La IA solo conoce los **datos públicos** de la carta, promociones, reparto, horarios y FORNEA CLUB; no accede a
 clientes ni pedidos y no puede ejecutar operaciones. Hay límites por IP y un tope diario global.

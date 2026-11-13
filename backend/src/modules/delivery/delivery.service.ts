@@ -1,3 +1,4 @@
+import { findZoneForPostalCode } from "./postal-codes.js";
 import { z } from "zod";
 
 import type { Prisma, PrismaClient } from "../../db/client.js";
@@ -29,6 +30,7 @@ const zoneView = (zone: {
 
 const activeZone = { active: true, deletedAt: null } as const;
 
+/** Zonas de reparto activas con sus condiciones (público). */
 export async function listDeliveryZones(prisma: PrismaClient) {
   const zones = await prisma.deliveryZone.findMany({ where: activeZone, orderBy: { name: "asc" } });
   return zones.map(zoneView);
@@ -37,8 +39,9 @@ export async function listDeliveryZones(prisma: PrismaClient) {
 /** ¿Reparte el local en este código postal? Si sí, devuelve las condiciones de la zona. */
 export async function checkDelivery(prisma: PrismaClient, query: unknown) {
   const { postalCode } = postalCodeQuerySchema.parse(query);
-  const zone = await prisma.deliveryZone.findFirst({
-    where: { ...activeZone, postalCodes: { has: postalCode } },
-  });
+  const zone = findZoneForPostalCode(
+    await prisma.deliveryZone.findMany({ where: activeZone }),
+    postalCode,
+  );
   return { postalCode, covered: zone !== null, zone: zone ? zoneView(zone) : null };
 }

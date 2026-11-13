@@ -109,14 +109,14 @@ describe("what the model is told", () => {
 
     const sent = calls[0]!;
     expect(sent.system.instructions).toContain("Eres PizzAI");
-    expect(sent.system.knowledge).toContain("DATOS DE FORNO");
+    expect(sent.system.knowledge).toContain("DATOS DE FORNEA");
     // Productos reales de la carta, con precio, y las zonas y el programa de puntos.
     const margherita = await prisma.product.findFirstOrThrow({ where: { slug: "margherita" } });
     expect(sent.system.knowledge).toContain(
       `${margherita.name} — ${margherita.basePrice.toFixed(2)} €`,
     );
     expect(sent.system.knowledge).toMatch(/Reparto a domicilio/);
-    expect(sent.system.knowledge).toMatch(/FORNO CLUB/);
+    expect(sent.system.knowledge).toMatch(/FORNEA CLUB/);
     expect(sent.messages).toEqual([{ role: "user", content: "¿Qué pizzas tenéis?" }]);
   });
 
@@ -304,7 +304,7 @@ describe("answers and failures", () => {
     expect(res.body.data.text.endsWith("…")).toBe(true);
     expect(res.body.data.links[0]).toEqual({ label: "Ver promociones", href: "/promociones" });
     expect(linksFor("¿Cuántos puntos gano?", "Un punto por euro.")).toEqual([
-      { label: "Conocer FORNO CLUB", href: "/forno-club" },
+      { label: "Conocer FORNEA CLUB", href: "/fornea-club" },
     ]);
     expect(linksFor("hola", "Hola")).toEqual([]);
   });
@@ -321,7 +321,7 @@ describe("answers and failures", () => {
       const { app } = appWith(model);
       const res = await chat(app, say("hola"));
       expect(res.status).toBe(200);
-      expect(res.body.data.text).toMatch(/carta|FORNO CLUB/);
+      expect(res.body.data.text).toMatch(/carta|FORNEA CLUB/);
       expect(res.body.data.links).toEqual([]);
     }
   });

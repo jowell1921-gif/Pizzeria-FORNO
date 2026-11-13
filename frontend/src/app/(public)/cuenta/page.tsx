@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+/** «Mi cuenta»: datos, direcciones, pedidos, puntos y seguridad. Exige sesión (ver proxy.ts). */
 export default function AccountPage() {
   return (
     <PageTransition className="container-page section-y">

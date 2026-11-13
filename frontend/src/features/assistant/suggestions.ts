@@ -1,3 +1,4 @@
+/** Textos de bienvenida y sugerencias iniciales del chat de PizzAI. */
 export const WELCOME_MESSAGE = "¡Hola! Soy PizzAI, tu asistente de FORNEA. ¿Qué te apetece hoy?";
 
 export const SUGGESTIONS = [

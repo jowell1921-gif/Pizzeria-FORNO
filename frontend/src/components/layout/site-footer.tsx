@@ -7,6 +7,7 @@ import { Logo } from "@/components/brand/logo";
 import { DEMO_OPENING_HOURS, DEMO_STORE } from "@/lib/demo-data";
 import { LEGAL_PAGES, MAIN_NAV } from "@/lib/site";
 
+/** Pie de página: marca, contacto, horario y enlaces legales. */
 export async function SiteFooter() {
   return (
     <footer className="bg-charcoal text-cream">

@@ -45,6 +45,10 @@ export function isProfileComplete(profile: { username: string | null; phone: str
   return Boolean(profile.username && profile.phone);
 }
 
+/**
+ * Perfil del usuario con sus roles y permisos efectivos. Los permisos salen de la base de datos,
+ * nunca del cliente.
+ */
 export async function getProfile(
   prisma: PrismaClient,
   userId: string,
@@ -75,6 +79,10 @@ export async function getProfile(
   };
 }
 
+/**
+ * Actualiza los datos propios (nombre, usuario, teléfono y consentimiento de marketing, con su
+ * fecha).
+ */
 export async function updateProfile(
   prisma: PrismaClient,
   userId: string,

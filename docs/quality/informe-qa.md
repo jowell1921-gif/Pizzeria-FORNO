@@ -71,7 +71,7 @@ responde 403.
 | Inicio      | 82          | 100           | 100              | 100 | 4,2 s | 0    |
 | Carta       | 82          | 96 (*)        | 100              | 100 | 4,3 s | 0    |
 | Promociones | 90          | 98 (**)       | 100              | 100 | 0,9 s | 0    |
-| FORNO CLUB  | 85          | 96 (*)        | 100              | 100 | 3,9 s | 0,05 |
+| FORNEA CLUB | 85          | 96 (*)        | 100              | 100 | 3,9 s | 0,05 |
 
 (*) Ver hallazgo B2: contraste medido mientras el texto aparecía con la animación al desplazar.
 (**) El fallo era el orden de encabezados (M4), ya corregido; no se ha vuelto a medir con Lighthouse.
@@ -113,7 +113,7 @@ Ninguno.
 | #   | Hallazgo                                                                                                            | Nota                                                                                                                                                                                                                           |
 | --- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | B1  | `npm audit` completo (con herramientas de desarrollo): backend 10 y frontend 13 avisos moderados o bajos            | Solo en dependencias de desarrollo; producción tiene 0. Arreglarlos exige actualizaciones incompatibles (`--force`)                                                                                                            |
-| B2  | Lighthouse marca contraste insuficiente en `/carta` y `/forno-club`                                                 | Falso positivo: mide el texto mientras aparece con la animación al desplazar. Con «reducir movimiento» y con axe (WCAG 2.2 AA) pasan                                                                                           |
+| B2  | Lighthouse marca contraste insuficiente en `/carta` y `/fornea-club`                                                | Falso positivo: mide el texto mientras aparece con la animación al desplazar. Con «reducir movimiento» y con axe (WCAG 2.2 AA) pasan                                                                                           |
 | B3  | LCP de 4 s en móvil con red lenta simulada (medido sin simulación: servidor 46 ms + imagen 0,64 s + pintado 0,23 s) | La imagen principal ya es WebP de 84 KB con prioridad alta; la mejora posible es reducir JavaScript                                                                                                                            |
 | B4  | Consultas repetidas (N+1 leve) en el listado de promociones del panel y al evaluar promociones automáticas          | Pocas filas; no afecta al cliente                                                                                                                                                                                              |
 | B5  | Los conectores con Stripe y Supabase Storage tienen poca cobertura automática                                       | Stripe se verificó contra el servicio real en modo prueba (sesión, consulta, cierre y un pago con tarjeta completo con su webhook); Storage, con una subida real. El reembolso real solo está probado con la pasarela simulada |

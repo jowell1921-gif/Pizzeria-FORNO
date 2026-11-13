@@ -292,7 +292,7 @@ describe("a mobile app consuming the published contract", () => {
     expect(after.body.data.status).toBe("PENDING_PAYMENT");
   });
 
-  it("reads and spends FORNO CLUB points", async () => {
+  it("reads and spends FORNEA CLUB points", async () => {
     const token = await tokenFor();
     await api.call("getMe", { token });
     await adjustPoints(prisma, { userId: user.id, actorId: user.id, points: 150, reason: "Alta" });

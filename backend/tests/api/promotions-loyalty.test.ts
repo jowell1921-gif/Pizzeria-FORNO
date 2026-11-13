@@ -307,7 +307,7 @@ describe("orders with a coupon", () => {
   });
 });
 
-describe("FORNO CLUB rewards", () => {
+describe("FORNEA CLUB rewards", () => {
   async function withPoints(points: number) {
     const current = await customer();
     const staff = await staffOf();

@@ -14,6 +14,7 @@ import { authErrorMessage, NOT_CONFIGURED_ERROR } from "./messages";
 import { safeNextPath } from "./routes";
 import { loginSchema, type LoginValues } from "./schemas";
 
+/** Formulario de acceso con correo y contraseña (y botón de Google). Tras entrar vuelve a `next`. */
 export function LoginForm({ next }: { next: string }) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);

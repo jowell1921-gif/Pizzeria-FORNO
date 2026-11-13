@@ -15,6 +15,7 @@ async function OrderContent({ params }: Pick<PageProps<"/pedido/[id]">, "params"
   return <OrderView orderId={id} />;
 }
 
+/** Seguimiento de un pedido del propio usuario: estado, pago pendiente y documentos. */
 export default function OrderPage({ params }: PageProps<"/pedido/[id]">) {
   return (
     <PageTransition className="container-page section-y">

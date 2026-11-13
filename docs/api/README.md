@@ -1,4 +1,4 @@
-# API REST de FORNO (v1)
+# API REST de FORNEA (v1)
 
 Base: `/api/v1`. La documentación interactiva (Swagger UI) está en `/api/v1/docs` y el contrato
 OpenAPI 3.1 en `/api/v1/openapi.json`. Se publican en desarrollo y pruebas; en producción hay que
@@ -76,7 +76,7 @@ Idempotencia: repetir la misma petición con la misma clave devuelve el mismo pe
 IDEMPOTENCY_KEY_REUSED`; mientras la primera sigue en curso, `409 REQUEST_IN_PROGRESS`. Una petición
 fallida no gasta la clave. Las claves caducan a las 24 h.
 
-FORNO CLUB y promociones (fase 7):
+FORNEA CLUB y promociones (fase 7):
 
 | Método y ruta                      | Descripción                                                                                           |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------- |

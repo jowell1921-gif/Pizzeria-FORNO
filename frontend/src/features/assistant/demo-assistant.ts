@@ -39,7 +39,7 @@ const RULES: Rule[] = [
     keywords: ["punto", "club", "premio", "recompensa"],
     reply: {
       text: "Con FORNEA CLUB acumulas puntos con tus pedidos y los canjeas por recompensas.",
-      links: [{ label: "Conocer FORNEA CLUB", href: "/forno-club" }],
+      links: [{ label: "Conocer FORNEA CLUB", href: "/fornea-club" }],
     },
   },
   {

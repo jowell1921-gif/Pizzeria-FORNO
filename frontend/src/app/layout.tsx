@@ -33,6 +33,7 @@ export const metadata: Metadata = {
   },
 };
 
+/** Raíz de la aplicación: tipografías, metadatos globales (SEO y Open Graph) y estilos. */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${inter.variable} ${barlowCondensed.variable} h-full antialiased`}>

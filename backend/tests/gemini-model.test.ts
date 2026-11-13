@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createGeminiModel, type FetchLike } from "../src/modules/assistant/gemini-model.js";
 
 const request = {
-  system: { instructions: "Eres PizzAI.", knowledge: "DATOS DE FORNO\n- Margherita 9.50 €" },
+  system: { instructions: "Eres PizzAI.", knowledge: "DATOS DE FORNEA\n- Margherita 9.50 €" },
   messages: [
     { role: "user" as const, content: "¿Qué pizzas tenéis?" },
     { role: "assistant" as const, content: "Tenemos varias." },
@@ -46,7 +46,7 @@ describe("createGeminiModel", () => {
     const body = JSON.parse(init.body);
     expect(body.systemInstruction.parts.map((p: { text: string }) => p.text)).toEqual([
       "Eres PizzAI.",
-      "DATOS DE FORNO\n- Margherita 9.50 €",
+      "DATOS DE FORNEA\n- Margherita 9.50 €",
     ]);
     expect(body.contents.map((c: { role: string }) => c.role)).toEqual(["user", "model", "user"]);
   });

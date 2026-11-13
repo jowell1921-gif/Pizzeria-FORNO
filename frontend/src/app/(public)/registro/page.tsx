@@ -45,6 +45,7 @@ async function RegisterContent({ searchParams }: Pick<PageProps<"/registro">, "s
   );
 }
 
+/** Registro con correo y contraseña o con Google. */
 export default function RegisterPage({ searchParams }: PageProps<"/registro">) {
   return (
     <Suspense fallback={null}>

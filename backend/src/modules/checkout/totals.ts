@@ -1,3 +1,4 @@
+import { findZoneForPostalCode } from "../delivery/postal-codes.js";
 import { z } from "zod";
 
 import { Prisma, type PrismaClient } from "../../db/client.js";
@@ -54,7 +55,7 @@ export interface ComputedOrder {
   /** IVA contenido en el total (líneas y envío). */
   taxTotal: Prisma.Decimal;
   zone: Zone | null;
-  /** Estimación de los puntos de FORNO CLUB; la regla definitiva se aplica al completar el pedido. */
+  /** Estimación de los puntos de FORNEA CLUB; la regla definitiva se aplica al completar el pedido. */
   pointsToEarn: number;
 }
 
@@ -83,9 +84,10 @@ export async function computeOrder(
 
   const zone =
     input.type === "DELIVERY" && input.postalCode
-      ? await prisma.deliveryZone.findFirst({
-          where: { active: true, deletedAt: null, postalCodes: { has: input.postalCode } },
-        })
+      ? findZoneForPostalCode(
+          await prisma.deliveryZone.findMany({ where: { active: true, deletedAt: null } }),
+          input.postalCode,
+        )
       : null;
   const deliveryFee = input.type === "DELIVERY" && zone ? zone.deliveryFee : ZERO;
 

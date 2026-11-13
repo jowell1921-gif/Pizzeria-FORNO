@@ -43,6 +43,10 @@ export async function listMyOrders(
   };
 }
 
+/**
+ * Un pedido del propio usuario con líneas, historial, pagos y descuentos. Si es de otra persona
+ * responde como si no existiera.
+ */
 export async function getMyOrder(prisma: PrismaClient, userId: string, orderId: string) {
   if (!z.uuid().safeParse(orderId).success) throw notFound("Order not found");
 

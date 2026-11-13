@@ -2,7 +2,7 @@
 
 Generados automáticamente con las respuestas **reales** del servidor (`UPDATE_EXAMPLES=1 npm run test:db -- tests/consumer` en `backend/`).
 Los identificadores, fechas y números de pedido cambian en cada ejecución; la forma, no.
-Las listas largas se acortan con «… (N más)». `$API` es la URL base, por ejemplo `https://api.forno.ejemplo/api/v1`;
+Las listas largas se acortan con «… (N más)». `$API` es la URL base, por ejemplo `https://api.fornea.ejemplo/api/v1`;
 `$TOKEN` es el access token de Supabase de la persona que ha iniciado sesión.
 
 ## Carta (pública)
@@ -715,7 +715,7 @@ Respuesta `200`:
 }
 ```
 
-## Mi saldo de FORNO CLUB
+## Mi saldo de FORNEA CLUB
 
 `getLoyaltyAccount` → `GET /api/v1/loyalty/account`
 

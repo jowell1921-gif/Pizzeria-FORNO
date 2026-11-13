@@ -79,7 +79,7 @@ const promo = (changes: Record<string, unknown> = {}) => ({
 });
 
 describe("access control", () => {
-  it("promotions need promotions:manage, FORNO CLUB needs loyalty:manage, customers need customers:read", async () => {
+  it("promotions need promotions:manage, FORNEA CLUB needs loyalty:manage, customers need customers:read", async () => {
     const admin = await withRole("ADMIN");
     const staff = await withRole("STAFF");
     const kitchen = await withRole("KITCHEN");

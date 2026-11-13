@@ -28,7 +28,7 @@ function fakeClient(response: unknown) {
 }
 
 const request = {
-  system: { instructions: "Eres PizzAI.", knowledge: "DATOS DE FORNO\n- Margherita 9.50 €" },
+  system: { instructions: "Eres PizzAI.", knowledge: "DATOS DE FORNEA\n- Margherita 9.50 €" },
   messages: [
     { role: "user" as const, content: "¿Qué pizzas tenéis?" },
     { role: "assistant" as const, content: "Tenemos varias." },
@@ -54,7 +54,7 @@ describe("createAnthropicModel", () => {
       { type: "text", text: "Eres PizzAI." },
       {
         type: "text",
-        text: "DATOS DE FORNO\n- Margherita 9.50 €",
+        text: "DATOS DE FORNEA\n- Margherita 9.50 €",
         cache_control: { type: "ephemeral" },
       },
     ]);

@@ -260,7 +260,7 @@ export function PointsCard({ onRedeemed }: PointsCardProps = {}) {
               ? `Los puntos caducan a los ${account.data.expiryDays} días. `
               : "Tus puntos no caducan. "}
             <Link
-              href="/forno-club"
+              href="/fornea-club"
               className="text-tomato-strong font-semibold underline underline-offset-4"
             >
               Cómo funciona FORNEA CLUB

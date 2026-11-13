@@ -21,16 +21,29 @@ describe("legal documents", () => {
     expect(screen.getAllByRole("heading", { level: 2 }).length).toBeGreaterThan(3);
   });
 
-  it("does not invent the owner's tax and contact data: unknown values stay visibly pending", () => {
-    for (const value of [COMPANY.taxId, COMPANY.registeredAddress, COMPANY.email]) {
-      expect(value).toMatch(/^\[.*pendiente.*\]$/);
-    }
+  it.each([
+    ["Aviso legal", AvisoLegal],
+    ["Política de privacidad", Privacidad],
+    ["Condiciones de compra", CondicionesDeCompra],
+  ])(
+    "%s does not claim a legal entity, tax id or registered address that does not exist yet",
+    (_name, Document) => {
+      const { container } = render(<Document />);
+      expect(container.textContent).not.toMatch(/\[[^\]]*pendiente[^\]]*\]/i);
+      expect(container.textContent).not.toMatch(/NIF\/CIF [A-Z0-9]/);
+      expect(container.textContent).toMatch(/demostración/);
+    },
+  );
+
+  it("states where delivery is available", () => {
+    const { container } = render(<CondicionesDeCompra />);
+    expect(container.textContent).toContain("repartimos en toda la Comunidad de Madrid");
   });
 
   it("only declares the storage the site really uses (no analytics or advertising)", () => {
     render(<Cookies />);
     expect(screen.getByText(/No usamos cookies de análisis, de publicidad/)).toBeInTheDocument();
-    for (const key of ["forno-cart-v1", "forno-promo-code", "forno-admin-offer-v1"]) {
+    for (const key of ["fornea-cart-v1", "fornea-promo-code", "fornea-admin-offer-v1"]) {
       expect(screen.getByText(new RegExp(key))).toBeInTheDocument();
     }
   });

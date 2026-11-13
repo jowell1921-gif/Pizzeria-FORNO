@@ -30,7 +30,7 @@ test.describe("route protection", () => {
   }
 
   test("public pages are not redirected", async ({ page }) => {
-    for (const path of ["/", "/carta", "/promociones", "/forno-club"]) {
+    for (const path of ["/", "/carta", "/promociones", "/fornea-club"]) {
       const response = await page.goto(path);
       expect(response?.status(), path).toBe(200);
       await expect(page).toHaveURL(new RegExp(`${path === "/" ? "/$" : path + "$"}`));

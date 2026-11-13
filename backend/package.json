@@ -1,7 +1,7 @@
 {
-  "name": "forno-backend",
+  "name": "fornea-backend",
   "version": "0.1.0",
-  "description": "FORNO API (Express + TypeScript)",
+  "description": "FORNEA API (Express + TypeScript)",
   "private": true,
   "type": "module",
   "engines": {

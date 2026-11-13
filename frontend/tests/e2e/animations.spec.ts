@@ -267,7 +267,7 @@ test.describe("page backgrounds", () => {
       .locator("#hero-title")
       .evaluate((element) => getComputedStyle(element.closest("section")!).backgroundColor);
 
-    await page.goto("/forno-club");
+    await page.goto("/fornea-club");
     const header = page.locator(".ambient-particles").locator("xpath=..");
     await expect(header).toHaveCSS("background-color", heroBackground);
     expect(await page.locator(".ambient-leaf").count()).toBeGreaterThanOrEqual(8);

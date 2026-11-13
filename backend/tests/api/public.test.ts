@@ -177,7 +177,7 @@ describe("GET /store/settings", () => {
 describe("delivery zones", () => {
   it("lists the active zones", async () => {
     const { body } = await get("/delivery-zones");
-    expect(body.data).toHaveLength(2);
+    expect(body.data).toHaveLength(3);
     for (const zone of body.data) DeliveryZone.parse(zone);
   });
 
@@ -193,9 +193,30 @@ describe("delivery zones", () => {
     expect(outside).toMatchObject({ covered: false, zone: null });
   });
 
+  it("covers any postal code of the Comunidad de Madrid, and the exact zone wins", async () => {
+    const wide = DeliveryCheck.parse(
+      (await get("/delivery-zones/check?postalCode=28029")).body.data,
+    );
+    expect(wide.covered).toBe(true);
+    expect(wide.zone?.name).toMatch(/Comunidad de Madrid/);
+    expect((await get("/delivery-zones/check?postalCode=28999")).body.data.covered).toBe(true);
+    // Un código con zona propia usa las condiciones de esa zona, no las de toda la Comunidad.
+    const own = DeliveryCheck.parse(
+      (await get("/delivery-zones/check?postalCode=28001")).body.data,
+    );
+    expect(own.zone?.name).toMatch(/Centro/);
+    // Fuera de la Comunidad (Barcelona, Toledo) no se reparte.
+    for (const outside of ["08001", "45001"]) {
+      expect((await get(`/delivery-zones/check?postalCode=${outside}`)).body.data.covered).toBe(
+        false,
+      );
+    }
+  });
+
   it("does not cover a postal code of an inactive zone", async () => {
     await prisma.deliveryZone.updateMany({ data: { active: false } });
     expect((await get("/delivery-zones/check?postalCode=28001")).body.data.covered).toBe(false);
+    expect((await get("/delivery-zones/check?postalCode=28029")).body.data.covered).toBe(false);
   });
 
   it("rejects a missing or malformed postal code", async () => {

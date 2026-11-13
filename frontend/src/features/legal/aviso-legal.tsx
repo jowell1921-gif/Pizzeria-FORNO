@@ -4,42 +4,39 @@ import { COMPANY } from "@/lib/legal";
 
 import { LegalDocument, LegalSection, List, P } from "./legal-parts";
 
+/** Aviso legal (LSSI-CE). Los datos del titular se editan en lib/legal.ts. */
 export function AvisoLegal() {
   return (
     <LegalDocument>
       <LegalSection title="1. Titular del sitio web">
         <P>
-          En cumplimiento de la Ley 34/2002, de servicios de la sociedad de la información y de
-          comercio electrónico (LSSI-CE), se informa de que este sitio web es titularidad de:
+          Este sitio web es un <strong>proyecto de demostración</strong> desarrollado por{" "}
+          {COMPANY.name}, una iniciativa en fase de desarrollo que todavía no está constituida como
+          actividad económica. Por eso no se indican NIF/CIF, domicilio social ni inscripción
+          registral. Cuando se constituya, estos datos se incluirán aquí, conforme al artículo 10 de
+          la Ley 34/2002, de servicios de la sociedad de la información y de comercio electrónico
+          (LSSI-CE).
         </P>
         <List
           items={[
             <>
-              <strong>Denominación:</strong> {COMPANY.name}
+              <strong>Nombre:</strong> {COMPANY.name}
             </>,
             <>
-              <strong>Marca comercial:</strong> {COMPANY.brand}
+              <strong>Marca del ejemplo:</strong> {COMPANY.brand}, un establecimiento ficticio
             </>,
             <>
-              <strong>NIF/CIF:</strong> {COMPANY.taxId}
+              <strong>Teléfono de contacto:</strong> {COMPANY.phone}
             </>,
             <>
-              <strong>Domicilio social:</strong> {COMPANY.registeredAddress}
-            </>,
-            <>
-              <strong>Correo electrónico:</strong> {COMPANY.email}
-            </>,
-            <>
-              <strong>Teléfono:</strong> {COMPANY.phone}
-            </>,
-            <>
-              <strong>Establecimiento:</strong> {COMPANY.establishment}
-            </>,
-            <>
-              <strong>Inscripción registral:</strong> {COMPANY.registry}
+              <strong>Dirección del establecimiento de ejemplo:</strong> {COMPANY.establishment}
             </>,
           ]}
         />
+        <P>
+          Mientras esto sea una demostración, el servicio de restauración que se muestra no es real:
+          la carta, los precios, los horarios y los datos del local son de ejemplo.
+        </P>
       </LegalSection>
 
       <LegalSection title="2. Objeto">

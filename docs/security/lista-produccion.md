@@ -25,19 +25,23 @@ protege ya el proyecto, qué debe decidir el propietario y qué queda pendiente 
 
 ## Decisiones del propietario antes de publicar
 
-| Decisión                        | Recomendación                                                                                                                                          |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `OWNER_EMAIL`                   | Pon el correo del propietario: solo él modifica carta, promociones, FORNEA CLUB y local; los demás administradores lo ven en solo lectura              |
-| `SELF_ADMIN_ENABLED`            | `false` en un negocio real. Con `true`, **cualquier cliente puede hacerse administrador y ver los datos de todos**. Solo para una demostración pública |
-| Claves de Stripe                | `sk_live_` para cobrar de verdad; con `sk_test_` los pagos no son reales (el arranque lo avisa)                                                        |
-| Correo                          | Dominio verificado en Resend para enviar a los clientes; sin él, los avisos solo se registran                                                          |
-| Documentación de la API pública | Desactivada en producción (por defecto). La app Flutter y los desarrolladores la tienen en el repositorio                                              |
+| Decisión                        | Recomendación                                                                                                                                                                                                 |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Supabase → «Confirm email»      | **Debe estar activado** (Authentication → Providers → Email). `OWNER_EMAIL` identifica al propietario por su correo: sin confirmación, alguien podría registrarse con un correo ajeno que aún no tenga cuenta |
+| `OWNER_EMAIL`                   | Pon el correo del propietario: solo él modifica carta, promociones, FORNEA CLUB y local; los demás administradores lo ven en solo lectura                                                                     |
+| `SELF_ADMIN_ENABLED`            | `false` en un negocio real. Con `true`, **cualquier cliente puede hacerse administrador y ver los datos de todos**. Solo para una demostración pública                                                        |
+| Claves de Stripe                | `sk_live_` para cobrar de verdad; con `sk_test_` los pagos no son reales (el arranque lo avisa)                                                                                                               |
+| Correo                          | Dominio verificado en Resend para enviar a los clientes; sin él, los avisos solo se registran                                                                                                                 |
+| Documentación de la API pública | Desactivada en producción (por defecto). La app Flutter y los desarrolladores la tienen en el repositorio                                                                                                     |
 
 ## <a id="legal"></a>Datos legales que debe aportar el titular
 
-Las páginas legales (`/legal/...`) contienen **marcadores**, no textos definitivos: el proyecto no
-inventa datos del titular ni afirma cumplir la ley por sí solo. Antes de publicar hay que sustituir
-los marcadores por los datos reales y que un profesional revise los textos:
+Las páginas legales (`/legal/...`) están redactadas para un **proyecto de demostración** de Lowbit Kode
+que todavía no está constituido, por eso no muestran NIF, domicilio social ni correo del titular. El
+proyecto no inventa esos datos ni afirma cumplir la ley por sí solo. **Antes de aceptar pedidos reales**
+hay que añadirlos en `frontend/src/lib/legal.ts` (la LSSI-CE exige identificar a quien presta el
+servicio; basta con darse de alta como autónomo, y se puede constituir una sociedad después) y que un
+profesional revise los textos:
 
 - Razón social o nombre del titular, NIF/CIF, domicilio social, correo y teléfono, y datos del
   Registro Mercantil si procede (aviso legal, LSSI-CE).

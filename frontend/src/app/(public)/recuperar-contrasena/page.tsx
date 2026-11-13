@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
+/** Solicitud del correo de recuperación de contraseña (lo envía Supabase). */
 export default function ForgotPasswordPage() {
   return (
     <AuthShell

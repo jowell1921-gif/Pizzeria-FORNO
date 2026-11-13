@@ -78,6 +78,7 @@ async function MenuContent() {
   );
 }
 
+/** Carta digital: categorías y productos salen de la API (PostgreSQL), nunca de datos fijos. */
 export default function MenuPage() {
   return (
     <PageTransition>

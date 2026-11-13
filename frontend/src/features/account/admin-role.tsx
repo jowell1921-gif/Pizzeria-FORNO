@@ -10,7 +10,7 @@ import { ApiError, apiRequest } from "@/lib/api";
 import { profileSchema } from "./profile";
 import { useProfile } from "./profile-context";
 
-const OFFER_KEY = "forno-admin-offer-v1";
+const OFFER_KEY = "fornea-admin-offer-v1";
 
 /** Pide al servidor (que decide si está permitido) hacerse o dejar de ser administrador. */
 function changeAdminRole(token: string, admin: boolean) {

@@ -27,6 +27,7 @@ const restaurantJsonLd = {
   address: { "@type": "PostalAddress", streetAddress: DEMO_STORE.address, addressCountry: "ES" },
 };
 
+/** Página de inicio: hero, populares, promociones, FORNEA CLUB, ventajas e información del local. */
 export default function HomePage() {
   return (
     <PageTransition>

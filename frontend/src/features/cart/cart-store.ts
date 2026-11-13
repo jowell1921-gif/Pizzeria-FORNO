@@ -74,7 +74,7 @@ export const useCartStore = create<CartState>()(
       replace: (lines) => set({ lines: lines.slice(0, MAX_CART_LINES) }),
     }),
     {
-      name: "forno-cart-v1",
+      name: "fornea-cart-v1",
       version: 1,
       skipHydration: true,
       partialize: (state) => ({ lines: state.lines }),

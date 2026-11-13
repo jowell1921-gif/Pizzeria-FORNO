@@ -1,3 +1,4 @@
+import { POSTAL_CODE_ENTRY } from "../delivery/postal-codes.js";
 import { z } from "zod";
 
 import type { Prisma, PrismaClient } from "../../db/client.js";
@@ -51,7 +52,7 @@ const storeFields = {
   maxAdvanceDays: z.number().int().min(0).max(14),
 };
 
-/** Estricto y parcial: solo los campos enviados cambian. La conversión de puntos va en FORNO CLUB. */
+/** Estricto y parcial: solo los campos enviados cambian. La conversión de puntos va en FORNEA CLUB. */
 export const storeSettingsPatchSchema = z
   .object(storeFields)
   .partial()
@@ -80,6 +81,7 @@ const settingsView = (settings: Prisma.StoreSettingsGetPayload<object>) => ({
   maxAdvanceDays: settings.maxAdvanceDays,
 });
 
+/** Ajustes del local para el panel (datos, tiempos, pedido mínimo, pausa y métodos de pago). */
 export async function getAdminStoreSettings(prisma: PrismaClient) {
   const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
   if (!settings)
@@ -87,6 +89,10 @@ export async function getAdminStoreSettings(prisma: PrismaClient) {
   return settingsView(settings);
 }
 
+/**
+ * Cambia los ajustes del local. Debe quedar activa al menos la recogida o el reparto. Queda en la
+ * auditoría.
+ */
 export async function updateStoreSettings(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = storeSettingsPatchSchema.parse(body);
   await prisma.$transaction(async (tx) => {
@@ -167,6 +173,7 @@ const hoursView = (rows: Array<{ dayOfWeek: number; openMinute: number; closeMin
     }))
     .sort((a, b) => a.dayOfWeek - b.dayOfWeek || a.openMinute - b.openMinute);
 
+/** Horario semanal vigente (tramos de apertura de cada día). */
 export async function getOpeningHours(prisma: PrismaClient) {
   return hoursView(await prisma.openingHours.findMany({ where: { active: true } }));
 }
@@ -244,6 +251,7 @@ export async function listSpecialDays(prisma: PrismaClient, now = new Date()) {
   return rows.map(specialView);
 }
 
+/** Añade un día especial (festivo o cierre) que sustituye al horario semanal de esa fecha. */
 export async function createSpecialDay(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = specialDaySchema.parse(body);
   const date = new Date(`${input.date}T00:00:00.000Z`);
@@ -272,6 +280,7 @@ export async function createSpecialDay(prisma: PrismaClient, actorId: string, bo
   return specialView(created);
 }
 
+/** Elimina un día especial; la fecha vuelve a regirse por el horario semanal. */
 export async function deleteSpecialDay(prisma: PrismaClient, actorId: string, id: string) {
   if (!uuid.safeParse(id).success) throw notFound("Special day not found");
   await prisma.$transaction(async (tx) => {
@@ -293,7 +302,9 @@ export async function deleteSpecialDay(prisma: PrismaClient, actorId: string, id
 const zoneFields = {
   name: z.string().trim().min(2).max(80),
   postalCodes: z
-    .array(z.string().regex(/^[0-9]{5}$/, "Postal code must have 5 digits"))
+    .array(
+      z.string().regex(POSTAL_CODE_ENTRY, "Use a 5-digit postal code or a 2-digit prefix like 28*"),
+    )
     .min(1)
     .max(100),
   deliveryFee: amount,
@@ -321,6 +332,7 @@ const zoneView = (zone: Prisma.DeliveryZoneGetPayload<object>) => ({
   active: zone.active,
 });
 
+/** Zonas de reparto no borradas, con sus códigos postales y condiciones. */
 export async function listAdminZones(prisma: PrismaClient) {
   const zones = await prisma.deliveryZone.findMany({
     where: { deletedAt: null },
@@ -335,6 +347,8 @@ async function assertFreePostalCodes(
   codes: string[],
   exceptId: string | null,
 ) {
+  // Se compara cada entrada tal cual: «28*» puede convivir con «28029» (la zona con el código exacto
+  // gana), pero dos zonas no pueden nombrar la misma entrada.
   const clash = await tx.deliveryZone.findFirst({
     where: {
       active: true,
@@ -351,6 +365,10 @@ async function assertFreePostalCodes(
   }
 }
 
+/**
+ * Crea una zona de reparto. Una entrada es un código exacto o un prefijo con asterisco (28*); dos
+ * zonas no pueden nombrar la misma.
+ */
 export async function createZone(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = zoneInputSchema.parse(body);
   const codes = [...new Set(input.postalCodes)];
@@ -371,6 +389,10 @@ export async function createZone(prisma: PrismaClient, actorId: string, body: un
   return zoneView(zone);
 }
 
+/**
+ * Modifica una zona; solo cambian los campos enviados. Se vuelve a comprobar que no choque con
+ * otra zona activa.
+ */
 export async function updateZone(prisma: PrismaClient, actorId: string, id: string, body: unknown) {
   const input = zonePatchSchema.parse(body);
   if (!uuid.safeParse(id).success) throw notFound("Zone not found");
@@ -398,6 +420,7 @@ export async function updateZone(prisma: PrismaClient, actorId: string, id: stri
   return zoneView(zone);
 }
 
+/** Borra una zona de forma lógica (los pedidos antiguos conservan su nombre y condiciones). */
 export async function deleteZone(prisma: PrismaClient, actorId: string, id: string) {
   if (!uuid.safeParse(id).success) throw notFound("Zone not found");
   await prisma.$transaction(async (tx) => {

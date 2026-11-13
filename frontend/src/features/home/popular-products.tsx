@@ -21,6 +21,7 @@ async function PopularList() {
   );
 }
 
+/** Productos populares de la home (salen de la API). */
 export function PopularProducts() {
   return (
     <section aria-labelledby="popular-title" className="section-y">

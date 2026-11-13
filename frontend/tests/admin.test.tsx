@@ -73,7 +73,7 @@ const settings = {
   postalCode: "28001",
   city: "Madrid",
   phone: "+34 600 000 000",
-  email: "hola@forno.test",
+  email: "hola@fornea.test",
   timezone: "Europe/Madrid",
   currency: "EUR",
   prepTimeMinutes: 20,

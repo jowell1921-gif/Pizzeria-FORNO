@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { FornoWatermark } from "@/components/brand/forno-watermark";
+import { ForneaWatermark } from "@/components/brand/fornea-watermark";
 import { PageTransition } from "@/components/layout/page-transition";
 import { SectionHeading } from "@/components/layout/section-heading";
 import { getPromotions } from "@/features/catalog/api";
@@ -29,10 +29,11 @@ async function PromotionsList() {
   );
 }
 
+/** Promociones vigentes con sus condiciones; la elegibilidad la valida siempre el servidor. */
 export default function PromotionsPage() {
   return (
     <PageTransition className="relative isolate overflow-hidden">
-      <FornoWatermark tone="light" className="top-6" />
+      <ForneaWatermark tone="light" className="top-6" />
       <div className="container-page section-y space-y-8">
         <SectionHeading
           as="h1"

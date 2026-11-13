@@ -115,7 +115,7 @@ describe("administrator offer window", () => {
     // No hay una segunda ventana: la pantalla principal es lo primero que se ve.
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.queryByText("¡Ya eres administrador!")).not.toBeInTheDocument();
-    expect(localStorage.getItem(`forno-admin-offer-v1:${base.id}`)).toBe("yes");
+    expect(localStorage.getItem(`fornea-admin-offer-v1:${base.id}`)).toBe("yes");
   });
 
   it("remembers a refusal and does not ask again", async () => {
@@ -125,7 +125,7 @@ describe("administrator offer window", () => {
     await user.click(await screen.findByRole("button", { name: "Solo como cliente" }));
     expect(calls).toEqual([]);
     expect(mocks.router.push).toHaveBeenCalledWith("/");
-    expect(localStorage.getItem(`forno-admin-offer-v1:${base.id}`)).toBe("no");
+    expect(localStorage.getItem(`fornea-admin-offer-v1:${base.id}`)).toBe("no");
     first.unmount();
 
     renderWith(<AdminOfferDialog />);

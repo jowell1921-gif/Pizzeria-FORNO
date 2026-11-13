@@ -17,7 +17,7 @@ import {
 } from "./loyalty.service.js";
 import { z } from "zod";
 
-/** Consulta de FORNO CLUB del usuario autenticado. Montar detrás de `authenticate`. */
+/** Consulta de FORNEA CLUB del usuario autenticado. Montar detrás de `authenticate`. */
 export function createLoyaltyRouter(prisma: PrismaClient): Router {
   const router = Router();
 

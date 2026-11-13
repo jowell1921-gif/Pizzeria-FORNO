@@ -71,6 +71,7 @@ function productView(product: ProductRow) {
   };
 }
 
+/** Categorías activas, en su orden de presentación (público). */
 export async function listCategories(prisma: PrismaClient) {
   const rows = await prisma.category.findMany({
     where: { active: true, deletedAt: null },

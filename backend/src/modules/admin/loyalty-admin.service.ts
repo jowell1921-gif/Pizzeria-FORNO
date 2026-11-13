@@ -25,6 +25,7 @@ export const loyaltySettingsSchema = z
   .strict()
   .refine((value) => Object.keys(value).length > 0, "At least one field is required");
 
+/** Regla de conversión de FORNEA CLUB: puntos por euro y días de caducidad. */
 export async function getLoyaltySettings(prisma: PrismaClient) {
   const settings = await prisma.storeSettings.findUnique({ where: { id: 1 } });
   if (!settings)
@@ -35,6 +36,7 @@ export async function getLoyaltySettings(prisma: PrismaClient) {
   };
 }
 
+/** Cambia la regla de puntos. Solo afecta a los pedidos que se completen a partir de ahora. */
 export async function updateLoyaltySettings(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = loyaltySettingsSchema.parse(body);
   await prisma.$transaction(async (tx) => {
@@ -143,6 +145,7 @@ function rewardView(reward: Prisma.RewardGetPayload<{ include: typeof rewardIncl
   };
 }
 
+/** Todas las recompensas no borradas (también las inactivas), en su orden de presentación. */
 export async function listAdminRewards(prisma: PrismaClient) {
   const rows = await prisma.reward.findMany({
     where: { deletedAt: null },
@@ -179,6 +182,7 @@ const rewardData = (input: RewardInput) => ({
   active: input.active ?? true,
 });
 
+/** Crea una recompensa del programa de puntos y registra la operación en la auditoría. */
 export async function createReward(prisma: PrismaClient, actorId: string, body: unknown) {
   const input = rewardSchema.parse(body);
   const id = await prisma.$transaction(async (tx) => {
@@ -199,6 +203,7 @@ export async function createReward(prisma: PrismaClient, actorId: string, body: 
   return getReward(prisma, id);
 }
 
+/** Modifica una recompensa; solo cambian los campos enviados. Los canjes ya hechos no se alteran. */
 export async function updateReward(
   prisma: PrismaClient,
   actorId: string,
@@ -332,6 +337,10 @@ export const redemptionsQuerySchema = z.object({
   status: z.enum(["AVAILABLE", "USED", "CANCELLED", "EXPIRED"]).optional(),
 });
 
+/**
+ * Canjes de recompensas de todos los clientes, más recientes primero, con filtro por estado y
+ * paginación.
+ */
 export async function listAdminRedemptions(prisma: PrismaClient, query: unknown, paging: Paging) {
   const filters = redemptionsQuerySchema.parse(query);
   const where: Prisma.RewardRedemptionWhereInput = {
@@ -369,6 +378,10 @@ export async function listAdminRedemptions(prisma: PrismaClient, query: unknown,
 
 export const customersQuerySchema = z.object({ q: z.string().trim().min(1).max(80).optional() });
 
+/**
+ * Clientes con su saldo de puntos, buscables por nombre, usuario o correo. Son datos personales:
+ * solo para quien tenga el permiso customers:read.
+ */
 export async function listCustomers(prisma: PrismaClient, query: unknown, paging: Paging) {
   const { q } = customersQuerySchema.parse(query);
   const where: Prisma.ProfileWhereInput = {

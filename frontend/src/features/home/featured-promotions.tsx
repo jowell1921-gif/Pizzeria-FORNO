@@ -22,6 +22,7 @@ async function PromotionsList() {
   );
 }
 
+/** Promociones destacadas de la home (salen de la API). */
 export function FeaturedPromotions() {
   return (
     <section aria-labelledby="promos-title" className="section-y bg-cream-soft">

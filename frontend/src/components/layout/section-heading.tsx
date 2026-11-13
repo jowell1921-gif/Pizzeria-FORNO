@@ -10,6 +10,10 @@ interface SectionHeadingProps {
   className?: string;
 }
 
+/**
+ * Encabezado de sección (sobretítulo, título y descripción) con el nivel de título elegido para no
+ * romper la jerarquía de la página.
+ */
 export function SectionHeading({
   id,
   eyebrow,

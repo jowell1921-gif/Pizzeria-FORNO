@@ -43,7 +43,7 @@ beforeEach(async () => {
 
 /** Lo que responde el servidor coincide con el contrato que documenta OpenAPI. */
 describe("administration responses match the documented contract", () => {
-  it("covers the menu, the store, promotions, FORNO CLUB and the audit log", async () => {
+  it("covers the menu, the store, promotions, FORNEA CLUB and the audit log", async () => {
     const admin = await ctx.userWithToken({ username: "admin_1", phone: "+34 600 000 001" });
     await prisma.userRole.create({ data: { userId: admin.user.id, role: "ADMIN" } });
     const buyer = await ctx.userWithToken({ username: "cliente1", phone: "+34 600 000 002" });

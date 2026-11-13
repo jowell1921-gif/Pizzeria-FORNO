@@ -26,6 +26,10 @@ export async function generateMetadata({ params }: PageProps<"/legal/[slug]">): 
   return page ? { title: page.title } : {};
 }
 
+/**
+ * Textos legales (aviso, privacidad, cookies y condiciones). El contenido está en features/legal y
+ * los datos del titular, en lib/legal.ts.
+ */
 export default async function LegalPage({ params }: PageProps<"/legal/[slug]">) {
   const { slug } = await params;
   const page = LEGAL_PAGES.find((item) => item.slug === slug);

@@ -94,6 +94,7 @@ export async function replaceCart(prisma: PrismaClient, userId: string, body: un
   return getCart(prisma, userId);
 }
 
+/** Vacía el carrito guardado del usuario (se llama al crear un pedido). */
 export async function clearCart(prisma: Pick<PrismaClient, "cartItem">, userId: string) {
   await prisma.cartItem.deleteMany({ where: { cart: { userId } } });
 }
