@@ -386,7 +386,7 @@ describe("kitchen", () => {
       expect((await patch(delivery.id, status)).status, status).toBe(400);
     }
 
-    // Recogida: no sale con repartidor. Domicilio: la cocina lo entrega al repartidor y deja de verlo.
+    // Recogida: no sale con repartidor. Domicilio: la cocina lo entrega al repartidor y sigue viéndolo en reparto.
     const another = await newOrder(user.id);
     for (const status of ["ACCEPTED", "PREPARING", "READY"]) await patch(another.id, status);
     expect((await patch(another.id, "OUT_FOR_DELIVERY")).status).toBe(403);
@@ -394,12 +394,20 @@ describe("kitchen", () => {
     expect(handed.status).toBe(200);
     expect(handed.body.data.status).toBe("OUT_FOR_DELIVERY");
     const board = await api().get("/api/v1/kitchen/orders").set(kitchen.headers);
-    expect(board.body.data.map((order: { id: string }) => order.id)).not.toContain(delivery.id);
+    expect(board.body.data.map((order: { id: string }) => order.id)).toContain(delivery.id);
     expect(board.body.data.map((order: { id: string }) => order.id)).toContain(another.id);
-    // El personal lo cierra.
+    // Al llegar al cliente, la propia cocina lo cierra (un pedido en reparto no puede quedarse colgado).
+    const delivered = await patch(delivery.id, "COMPLETED");
+    expect(delivered.status).toBe(200);
+    expect(delivered.body.data.status).toBe("COMPLETED");
+    // Y el personal sigue pudiendo cerrar uno en reparto.
+    const second = await newOrder(user.id, { type: "DELIVERY" });
+    for (const status of ["ACCEPTED", "PREPARING", "READY", "OUT_FOR_DELIVERY"]) {
+      await patch(second.id, status);
+    }
     const staff = await withRole("STAFF");
     const closed = await api()
-      .patch(`/api/v1/admin/orders/${delivery.id}/status`)
+      .patch(`/api/v1/admin/orders/${second.id}/status`)
       .set(staff.headers)
       .send({ status: "COMPLETED" });
     expect(closed.status).toBe(200);

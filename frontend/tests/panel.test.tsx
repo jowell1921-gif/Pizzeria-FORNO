@@ -250,7 +250,10 @@ describe("kitchen rules", () => {
     expect(nextKitchenStep({ status: "READY", type: "DELIVERY" })).toMatchObject({
       to: "OUT_FOR_DELIVERY",
     });
-    expect(nextKitchenStep({ status: "OUT_FOR_DELIVERY", type: "DELIVERY" })).toBeNull();
+    expect(nextKitchenStep({ status: "OUT_FOR_DELIVERY", type: "DELIVERY" })).toMatchObject({
+      to: "COMPLETED",
+      label: "Entregado al cliente",
+    });
     expect(nextKitchenStep({ status: "COMPLETED", type: "PICKUP" })).toBeNull();
   });
 

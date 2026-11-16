@@ -32,6 +32,7 @@ const COLUMNS: Column[] = [
   { status: "ACCEPTED", title: "Aceptados", includes: ["ACCEPTED"] },
   { status: "PREPARING", title: "En preparación", includes: ["PREPARING"] },
   { status: "READY", title: "Listos", includes: ["READY"] },
+  { status: "OUT_FOR_DELIVERY", title: "En reparto", includes: ["OUT_FOR_DELIVERY"] },
   { status: "COMPLETED", title: "Completados", includes: ["COMPLETED"] },
 ];
 
@@ -49,6 +50,9 @@ export function nextKitchenStep(order: Pick<KitchenOrder, "status" | "type">) {
       return order.type === "PICKUP"
         ? { to: "COMPLETED" as const, label: "Entregado" }
         : { to: "OUT_FOR_DELIVERY" as const, label: "Entregado al repartidor" };
+    case "OUT_FOR_DELIVERY":
+      // El repartidor ya lo lleva: cuando llega al cliente, se cierra el pedido.
+      return { to: "COMPLETED" as const, label: "Entregado al cliente" };
     default:
       return null;
   }
@@ -204,7 +208,7 @@ export function KitchenBoard() {
       ) : !query.data ? (
         <p className="text-muted-foreground">Cargando pedidos…</p>
       ) : (
-        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid items-start gap-4 md:grid-cols-2 xl:grid-cols-6">
           {COLUMNS.map((column) => {
             const items = orders.filter((order) => column.includes.includes(order.status));
             return (

@@ -2,6 +2,10 @@
 
 ## [Sin publicar]
 
+### Cocina: pedidos a domicilio
+
+- La pantalla de cocina tiene una columna **«En reparto»** y permite cerrar el pedido («Entregado al cliente»). Antes, al entregarlo al repartidor desaparecía de la cocina y solo se podía cerrar desde el panel del personal, así que muchos pedidos a domicilio se quedaban sin completar (el panel de control los cuenta como «listos»).
+
 ### Despliegue en Railway
 
 - La compilación en Railway fallaba porque instala solo las dependencias de producción y `prisma.config.ts` pedía `dotenv`, y después porque `tsc` no encontraba los tipos de `express`, `cors` y `pdfkit`. `prisma.config.ts` carga el `.env` con la función de Node (sin `dotenv`, que se elimina) y `typescript`, `prisma` y los `@types/…` necesarios pasan a `dependencies`. Comprobado con `NODE_ENV=production npm ci && npm run build`.

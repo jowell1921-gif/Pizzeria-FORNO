@@ -30,13 +30,13 @@ web y la app Flutter las consumen y no las duplican. Cuando una regla cambia, ca
 `PENDING_PAYMENT → NEW → ACCEPTED → PREPARING → READY → (OUT_FOR_DELIVERY →) COMPLETED`, con
 `REJECTED` (solo desde `NEW`) y `CANCELLED` (desde casi cualquier estado; desde `COMPLETED` es una devolución con motivo).
 
-| Quién                   | Qué puede hacer                                                                                       |
-| ----------------------- | ----------------------------------------------------------------------------------------------------- |
-| Cliente                 | Cancelar su pedido mientras no esté aceptado                                                          |
-| Cocina (`KITCHEN`)      | Aceptar, preparar, marcar listo, entregar en el local (recogida) y entregar al repartidor (domicilio) |
-| Personal (`STAFF`)      | Todos los cambios de estado, con motivo en rechazos y devoluciones                                    |
-| Administrador (`ADMIN`) | Todo lo anterior, reembolsos, carta, promociones, FORNEA CLUB, ajustes del local, auditoría y correos |
-| Sistema                 | Confirmar un pago (webhook firmado de Stripe) y cancelar el pedido si el pago caduca                  |
+| Quién                   | Qué puede hacer                                                                                                                     |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Cliente                 | Cancelar su pedido mientras no esté aceptado                                                                                        |
+| Cocina (`KITCHEN`)      | Aceptar, preparar, marcar listo, entregar en el local (recogida), entregar al repartidor y cerrar la entrega al cliente (domicilio) |
+| Personal (`STAFF`)      | Todos los cambios de estado, con motivo en rechazos y devoluciones                                                                  |
+| Administrador (`ADMIN`) | Todo lo anterior, reembolsos, carta, promociones, FORNEA CLUB, ajustes del local, auditoría y correos                               |
+| Sistema                 | Confirmar un pago (webhook firmado de Stripe) y cancelar el pedido si el pago caduca                                                |
 
 Cada cambio queda en el historial de estados; los del personal, también en la auditoría. Las transiciones
 no permitidas responden `409 INVALID_TRANSITION`.

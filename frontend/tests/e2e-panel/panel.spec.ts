@@ -216,7 +216,14 @@ test.describe("kitchen", () => {
     const errors = consoleErrors(page);
     await page.goto("/kitchen");
     await expect(page.getByRole("heading", { level: 1, name: "Cocina" })).toBeVisible();
-    for (const column of ["Nuevos", "Aceptados", "En preparación", "Listos", "Completados"]) {
+    for (const column of [
+      "Nuevos",
+      "Aceptados",
+      "En preparación",
+      "Listos",
+      "En reparto",
+      "Completados",
+    ]) {
       await expect(page.getByRole("region", { name: column })).toBeVisible();
     }
     await expect(page.getByRole("button", { name: "Entregado al repartidor" })).toBeVisible();

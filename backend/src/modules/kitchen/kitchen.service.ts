@@ -9,15 +9,18 @@ import { changeOrderStatus } from "../orders/status.service.js";
 const COMPLETED_VISIBLE_MS = 3 * 60 * 60 * 1000;
 
 /**
- * Cambios que puede hacer la cocina: aceptar, preparar, marcar listo, entregar al cliente en el
- * local (recogida) o entregar al repartidor (domicilio). Rechazar, cancelar o devolver un pedido, o
- * cerrar uno a domicilio, es cosa del personal.
+ * Cambios que puede hacer la cocina: aceptar, preparar, marcar listo y entregar. En recogida, la
+ * entrega al cliente en el local cierra el pedido. En domicilio, primero sale con el repartidor y,
+ * cuando llega al cliente, se cierra desde la misma pantalla (antes solo lo cerraba el personal desde
+ * otra y muchos pedidos se quedaban «en reparto» para siempre). Rechazar, cancelar o devolver un
+ * pedido es cosa del personal.
  */
 const KITCHEN_TRANSITIONS: Record<string, readonly OrderStatus[]> = {
   NEW: ["ACCEPTED"],
   ACCEPTED: ["PREPARING"],
   PREPARING: ["READY"],
   READY: ["COMPLETED", "OUT_FOR_DELIVERY"],
+  OUT_FOR_DELIVERY: ["COMPLETED"],
 };
 
 export const kitchenStatusSchema = z
@@ -69,8 +72,8 @@ function kitchenView(order: KitchenRow) {
 }
 
 /**
- * Pedidos pendientes de cocina y los completados hace poco. Los que ya salieron con el repartidor
- * dejan de ser asunto de la cocina y no aparecen.
+ * Pedidos pendientes de cocina, los que están en reparto (hasta que se entregan) y los completados
+ * hace poco.
  */
 export async function listKitchenOrders(
   prisma: PrismaClient,
@@ -81,7 +84,7 @@ export async function listKitchenOrders(
     where: {
       ...(options.onlyUserId ? { userId: options.onlyUserId } : {}),
       OR: [
-        { status: { in: ["NEW", "ACCEPTED", "PREPARING", "READY"] } },
+        { status: { in: ["NEW", "ACCEPTED", "PREPARING", "READY", "OUT_FOR_DELIVERY"] } },
         {
           status: "COMPLETED",
           completedAt: { gte: new Date(now.getTime() - COMPLETED_VISIBLE_MS) },
@@ -117,9 +120,9 @@ export async function changeKitchenStatus(
   }
 
   const allowed = KITCHEN_TRANSITIONS[order.status] ?? [];
-  // Recogida: la cocina entrega al cliente. Domicilio: entrega al repartidor y el personal cierra el pedido.
+  // Recogida: la cocina entrega al cliente. Domicilio: sale con el repartidor y, al llegar al cliente, se cierra.
   const wrongType =
-    (status === "COMPLETED" && order.type === "DELIVERY") ||
+    (status === "COMPLETED" && order.type === "DELIVERY" && order.status !== "OUT_FOR_DELIVERY") ||
     (status === "OUT_FOR_DELIVERY" && order.type === "PICKUP");
   if (!allowed.includes(status) || wrongType) {
     throw forbidden("KITCHEN_TRANSITION_NOT_ALLOWED", "The kitchen cannot make this change");
