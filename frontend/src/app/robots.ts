@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin", "/kitchen", "/cuenta", "/pedido", "/auth"],
+      disallow: ["/admin", "/kitchen", "/cuenta", "/pedido", "/auth", "/confirmar-correo"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };

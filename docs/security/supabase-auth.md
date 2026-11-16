@@ -109,6 +109,8 @@ Los correos de Supabase usan, por defecto, su servidor de pruebas con un límite
 
 Sin cambiarlo también funciona (flujo por código), pero solo en el mismo navegador donde se pidió.
 
+Ese enlace no gasta el código al abrirse: lleva a `/confirmar-correo`, una página con un botón, y es el botón el que lo usa (`POST /auth/confirm`). Así los analizadores de enlaces de los clientes de correo y los antivirus no consumen el código de un solo uso antes de que la persona pulse («el enlace no es válido o ha caducado»).
+
 ### 4. Google
 
 1. En <https://console.cloud.google.com> crea un proyecto y, en **APIs y servicios → Pantalla de consentimiento de OAuth**, configura la pantalla (nombre «FORNEA», tu correo).

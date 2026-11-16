@@ -131,12 +131,23 @@ test.describe("authentication pages", () => {
     await expect(page).toHaveURL(/\/acceso\?error=callback$/);
     await expect(formAlert(page)).toContainText("No hemos podido completar el acceso");
 
-    await page.goto("/auth/confirm?token_hash=abc&type=recovery");
+    // El enlace del correo solo lleva a una página con un botón: un robot que lo abra no gasta el código.
+    await page.goto("/auth/confirm?token_hash=abc&type=recovery&next=/restablecer-contrasena");
+    await expect(page).toHaveURL(/\/confirmar-correo\?token_hash=abc&type=recovery/);
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Restablecer contraseña" }),
+    ).toBeVisible();
+    // Solo al pulsar se intenta usar el código; uno inventado se rechaza y vuelve al acceso.
+    await page.getByRole("button", { name: "Continuar" }).click();
     await expect(page).toHaveURL(/\/acceso\?error=confirm$/);
     await expect(formAlert(page)).toContainText("El enlace de confirmación no es válido");
 
     // Un tipo de enlace desconocido tampoco se acepta.
     await page.goto("/auth/confirm?token_hash=abc&type=hack");
+    await expect(page).toHaveURL(/\/acceso\?error=confirm$/);
+    await page.goto("/confirmar-correo?token_hash=abc&type=hack");
+    await expect(page).toHaveURL(/\/acceso\?error=confirm$/);
+    await page.goto("/auth/confirm");
     await expect(page).toHaveURL(/\/acceso\?error=confirm$/);
   });
 

@@ -11,4 +11,5 @@ export const PUBLIC_PAGES = [
   { path: "/registro", name: "registro" },
   { path: "/recuperar-contrasena", name: "recuperar-contrasena" },
   { path: "/restablecer-contrasena", name: "restablecer-contrasena" },
+  { path: "/confirmar-correo?token_hash=prueba&type=signup", name: "confirmar-correo" },
 ] as const;

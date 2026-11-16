@@ -18,7 +18,8 @@ export const metadata: Metadata = {
 const ERROR_MESSAGES: Record<string, string> = {
   callback:
     "No hemos podido completar el acceso. El enlace puede haber caducado: inténtalo de nuevo.",
-  confirm: "El enlace de confirmación no es válido o ha caducado. Solicita uno nuevo.",
+  confirm:
+    "El enlace de confirmación no es válido o ha caducado. Si ya confirmaste tu correo, inicia sesión; si no, solicita uno nuevo.",
 };
 
 async function LoginContent({ searchParams }: Pick<PageProps<"/acceso">, "searchParams">) {

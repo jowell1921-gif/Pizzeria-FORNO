@@ -2,6 +2,11 @@
 
 ## [Sin publicar]
 
+### Correos de acceso en producción
+
+- Los enlaces de confirmar registro y recuperar contraseña ya no se gastan al abrirse: llevan a `/confirmar-correo`, con un botón que usa el código. Evita el «el enlace no es válido o ha caducado» causado por analizadores de enlaces de los clientes de correo.
+- Logo FORNEA en los correos de Supabase, servido desde la propia web (`/image/logo-fornea-email.png`) en lugar de Supabase Storage.
+
 ### Auditoría técnica integral
 
 Informe completo en `docs/quality/auditoria.md`. No hubo problemas críticos. Cambios:
