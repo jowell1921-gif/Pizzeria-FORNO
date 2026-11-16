@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express";
+import type { Request, RequestHandler } from "express";
 
 import { orderEvents } from "../events/order-events.js";
 
@@ -13,8 +13,12 @@ const MAX_LIFETIME_MS = 15 * 60_000;
  * Solo viajan identificadores y estados. Cada 25 s se envía un comentario para mantener viva la
  * conexión, y a los 15 minutos se cierra: así una sesión revocada no sigue recibiendo avisos.
  */
-export function orderEventStream(): RequestHandler {
+export function orderEventStream(
+  onlyUserOf: (req: Request) => string | undefined = () => undefined,
+): RequestHandler {
   return (req, res) => {
+    // Si la persona solo puede ver sus propios pedidos, solo recibe los avisos de esos pedidos.
+    const onlyUserId = onlyUserOf(req);
     res.status(200);
     res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
     res.setHeader("Cache-Control", "no-cache, no-transform");
@@ -23,8 +27,8 @@ export function orderEventStream(): RequestHandler {
     res.setHeader("X-Accel-Buffering", "no");
     res.flushHeaders();
     res.write("retry: 5000\n\n");
-
-    const unsubscribe = orderEvents.subscribe((event) => {
+    const unsubscribe = orderEvents.subscribe(({ userId, ...event }) => {
+      if (onlyUserId && userId !== onlyUserId) return;
       res.write(`event: order\ndata: ${JSON.stringify(event)}\n\n`);
     });
     const heartbeat = setInterval(() => res.write(": ping\n\n"), HEARTBEAT_MS);

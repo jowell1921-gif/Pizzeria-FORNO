@@ -37,7 +37,7 @@ describe("legal documents", () => {
 
   it("states where delivery is available", () => {
     const { container } = render(<CondicionesDeCompra />);
-    expect(container.textContent).toContain("repartimos en toda la Comunidad de Madrid");
+    expect(container.textContent).toContain("se acepta cualquier código postal");
   });
 
   it("only declares the storage the site really uses (no analytics or advertising)", () => {

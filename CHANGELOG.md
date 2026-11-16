@@ -2,6 +2,14 @@
 
 ## [Sin publicar]
 
+### Pruebas finales en producción
+
+- **Cada visitante solo ve sus pedidos** en el panel y en la cocina (listado, detalle, cambios de estado, reembolsos, documentos, panel de control, avisos en directo, correos y puntos). La lista de clientes es solo del propietario. `GET /me` devuelve `ownDataOnly`.
+- **Pedidos que se quedaban en «Listo»:** las transacciones de la API tenían el plazo por defecto de Prisma (5 s) y, con la API en Estados Unidos y la base de datos en Europa, las más largas (completar un pedido) lo agotaban. Ahora tienen 30 s de margen (`transactionOptions`). Recomendado además: API y base de datos en la misma región.
+- Preguntas frecuentes de FORNEA CLUB más grandes.
+- Aviso de reparto: en la demostración se acepta cualquier código postal (se configura en el panel → Establecimiento → zonas).
+- Plantillas de correo: si el cliente bloquea las imágenes, se lee «FORNEA Pizzeria» en lugar de un icono roto.
+
 ### Correos de acceso en producción
 
 - Los enlaces de confirmar registro y recuperar contraseña ya no se gastan al abrirse: llevan a `/confirmar-correo`, con un botón que usa el código. Evita el «el enlace no es válido o ha caducado» causado por analizadores de enlaces de los clientes de correo.

@@ -4,10 +4,10 @@ import { describe, expect, it } from "vitest";
 import { DeliveryNotice } from "@/components/layout/delivery-notice";
 
 describe("DeliveryNotice", () => {
-  it("tells customers delivery covers the whole Comunidad de Madrid", () => {
+  it("tells customers any postal code is accepted in the demo", () => {
     render(<DeliveryNotice />);
     expect(screen.getByRole("note")).toHaveTextContent(
-      "Reparto a domicilio: Repartimos en toda la Comunidad de Madrid (códigos postales que empiezan por 28).",
+      "Reparto a domicilio: En esta demostración puedes pedir a domicilio con cualquier código postal.",
     );
   });
 });

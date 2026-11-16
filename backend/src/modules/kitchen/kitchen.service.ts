@@ -72,9 +72,14 @@ function kitchenView(order: KitchenRow) {
  * Pedidos pendientes de cocina y los completados hace poco. Los que ya salieron con el repartidor
  * dejan de ser asunto de la cocina y no aparecen.
  */
-export async function listKitchenOrders(prisma: PrismaClient, now = new Date()) {
+export async function listKitchenOrders(
+  prisma: PrismaClient,
+  now = new Date(),
+  options: { onlyUserId?: string | undefined } = {},
+) {
   const rows = await prisma.order.findMany({
     where: {
+      ...(options.onlyUserId ? { userId: options.onlyUserId } : {}),
       OR: [
         { status: { in: ["NEW", "ACCEPTED", "PREPARING", "READY"] } },
         {
@@ -98,14 +103,18 @@ export async function changeKitchenStatus(
   actorId: string,
   orderId: string,
   body: unknown,
+  options: { onlyUserId?: string | undefined } = {},
 ) {
   const { status } = kitchenStatusSchema.parse(body);
   if (!z.uuid().safeParse(orderId).success) throw notFound("Order not found");
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, status: true, type: true },
+    select: { id: true, status: true, type: true, userId: true },
   });
-  if (!order) throw notFound("Order not found");
+  // Un visitante de la demostración solo puede mover sus propios pedidos.
+  if (!order || (options.onlyUserId && order.userId !== options.onlyUserId)) {
+    throw notFound("Order not found");
+  }
 
   const allowed = KITCHEN_TRANSITIONS[order.status] ?? [];
   // Recogida: la cocina entrega al cliente. Domicilio: entrega al repartidor y el personal cierra el pedido.

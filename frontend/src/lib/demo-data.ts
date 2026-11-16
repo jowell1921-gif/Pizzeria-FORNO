@@ -24,9 +24,9 @@ export const DEMO_STORE = {
 
 /** Aviso de dónde se reparte. Debe coincidir con las zonas de reparto configuradas en el panel. */
 export const DELIVERY_NOTICE = {
-  short: "repartimos en toda la Comunidad de Madrid (códigos postales que empiezan por 28).",
+  short: "en esta demostración se acepta cualquier código postal.",
   title: "Reparto a domicilio",
-  text: "Repartimos en toda la Comunidad de Madrid (códigos postales que empiezan por 28).",
+  text: "En esta demostración puedes pedir a domicilio con cualquier código postal.",
 } as const;
 
 export const DEMO_OPENING_HOURS: OpeningPeriod[] = [

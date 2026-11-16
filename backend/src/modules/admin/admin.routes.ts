@@ -33,8 +33,12 @@ export function createAdminRouter(
 ): Router {
   const router = Router();
 
-  router.get("/dashboard", requirePermission("dashboard:read"), async (_req, res) => {
-    res.json({ data: await getDashboard(prisma) });
+  /** A quién se limita lo que ve la persona: solo a sus pedidos si es visitante de la demostración. */
+  const scope = (req: { auth?: { ownDataOnly: boolean; userId: string } }) =>
+    req.auth?.ownDataOnly ? req.auth.userId : undefined;
+
+  router.get("/dashboard", requirePermission("dashboard:read"), async (req, res) => {
+    res.json({ data: await getDashboard(prisma, new Date(), { onlyUserId: scope(req) }) });
   });
 
   router.get("/orders", requirePermission("orders:read:all"), async (req, res) => {
@@ -42,18 +46,20 @@ export function createAdminRouter(
     res.json(
       await listAdminOrders(prisma, req.query, paginationArgs(req.query), {
         includePayments: req.auth.permissions.includes("payments:read"),
+        onlyUserId: scope(req),
       }),
     );
   });
 
   // Antes de «/orders/:id» para que «stream» no se interprete como un identificador.
-  router.get("/stream", requirePermission("orders:read:all"), orderEventStream());
+  router.get("/stream", requirePermission("orders:read:all"), orderEventStream(scope));
 
   router.get("/orders/:id", requirePermission("orders:read:all"), async (req, res) => {
     if (!req.auth) throw unauthorized();
     res.json({
       data: await getAdminOrder(prisma, String(req.params["id"]), {
         includePayments: req.auth.permissions.includes("payments:read"),
+        onlyUserId: scope(req),
       }),
     });
   });
@@ -64,6 +70,11 @@ export function createAdminRouter(
     async (req, res) => {
       if (!req.auth) throw unauthorized();
       const { status, reason } = changeStatusSchema.parse(req.body);
+      // Comprueba antes que el pedido es suyo: un visitante no puede mover los pedidos de otros.
+      await getAdminOrder(prisma, String(req.params["id"]), {
+        includePayments: false,
+        onlyUserId: scope(req),
+      });
       await changeOrderStatus(prisma, {
         orderId: String(req.params["id"]),
         to: status,
@@ -73,6 +84,7 @@ export function createAdminRouter(
       res.json({
         data: await getAdminOrder(prisma, String(req.params["id"]), {
           includePayments: req.auth.permissions.includes("payments:read"),
+          onlyUserId: scope(req),
         }),
       });
     },
@@ -81,9 +93,11 @@ export function createAdminRouter(
   // Reembolso (total o parcial) de un pago online ya cobrado.
   router.post("/orders/:id/refund", requirePermission("payments:refund"), async (req, res) => {
     if (!req.auth) throw unauthorized();
-    if (!gateway) throw conflict("PAYMENTS_NOT_CONFIGURED", "Online payments are not available");
     const orderId = String(req.params["id"]);
     if (!z.uuid().safeParse(orderId).success) throw notFound("Order not found");
+    // Primero el pedido (un visitante no puede ni saber si el de otra persona existe).
+    await getAdminOrder(prisma, orderId, { includePayments: false, onlyUserId: scope(req) });
+    if (!gateway) throw conflict("PAYMENTS_NOT_CONFIGURED", "Online payments are not available");
     const body = refundSchema.parse(req.body);
     const payment = await prisma.payment.findFirst({
       where: { orderId, method: "ONLINE", status: { in: ["PAID", "PARTIALLY_REFUNDED"] } },
@@ -103,6 +117,10 @@ export function createAdminRouter(
     "/orders/:id/documents/:type",
     requirePermission("orders:read:all"),
     async (req, res) => {
+      await getAdminOrder(prisma, String(req.params["id"]), {
+        includePayments: false,
+        onlyUserId: scope(req),
+      });
       const { pdf, fileName } = await renderDocumentPdf(prisma, {
         orderId: String(req.params["id"]),
         type: documentTypeSchema.parse(req.params["type"]),
@@ -116,7 +134,11 @@ export function createAdminRouter(
 
   // Correos de pedido enviados o registrados.
   router.get("/notifications", requirePermission("settings:read"), async (req, res) => {
-    res.json(await listNotifications(prisma, req.query, paginationArgs(req.query)));
+    res.json(
+      await listNotifications(prisma, req.query, paginationArgs(req.query), {
+        onlyUserId: scope(req),
+      }),
+    );
   });
 
   router.use(createCatalogAdminRouter(prisma));

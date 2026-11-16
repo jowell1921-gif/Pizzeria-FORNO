@@ -144,11 +144,15 @@ export default function ClubPage() {
 
       <section aria-labelledby="club-faq" className="container-page section-y space-y-6">
         <SectionHeading id="club-faq" title="Preguntas frecuentes" />
-        <Accordion className="max-w-3xl">
+        <Accordion className="max-w-4xl">
           {FAQ.map((item) => (
             <AccordionItem key={item.question} value={item.question}>
-              <AccordionTrigger>{item.question}</AccordionTrigger>
-              <AccordionContent>{item.answer}</AccordionContent>
+              <AccordionTrigger className="py-5 text-lg font-semibold **:data-[slot=accordion-trigger-icon]:size-6 sm:text-xl">
+                {item.question}
+              </AccordionTrigger>
+              <AccordionContent className="pb-5 text-base leading-relaxed sm:text-lg">
+                {item.answer}
+              </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>

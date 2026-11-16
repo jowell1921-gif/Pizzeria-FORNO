@@ -175,6 +175,7 @@ export async function changeOrderStatus(
     }
     return {
       id: order.id,
+      userId: order.userId,
       orderNumber: order.orderNumber,
       from,
       status: change.to,
@@ -187,6 +188,7 @@ export async function changeOrderStatus(
     orderId: result.id,
     orderNumber: result.orderNumber,
     status: result.status,
+    userId: result.userId,
   });
   return result;
 }

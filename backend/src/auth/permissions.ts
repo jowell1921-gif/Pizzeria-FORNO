@@ -93,6 +93,9 @@ export function permissionsFor(
   }
   if (options.readOnlyContent) {
     for (const permission of CONTENT_EDIT_PERMISSIONS) all.delete(permission);
+    // El listado de clientes contiene datos personales de otras personas: un administrador que no es el
+    // propietario (visitante de la demostración) no lo ve. El personal y la cocina reales, sí.
+    if (roles.includes("ADMIN")) all.delete("customers:read");
   }
   return [...all].sort();
 }

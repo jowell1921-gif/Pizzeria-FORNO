@@ -8,13 +8,16 @@ import { changeKitchenStatus, listKitchenOrders } from "./kitchen.service.js";
 
 /** Pantalla de cocina. Montar detrás de `authenticate`. Solo ve y cambia lo imprescindible. */
 export function createKitchenRouter(prisma: PrismaClient): Router {
-  const router = Router();
+  const router =
+    Router(); /** Un visitante de la demostración solo ve los pedidos que ha hecho él mismo. */
+  const scope = (req: { auth?: { ownDataOnly: boolean; userId: string } }) =>
+    req.auth?.ownDataOnly ? req.auth.userId : undefined;
 
-  router.get("/orders", requirePermission("kitchen:orders:read"), async (_req, res) => {
-    res.json({ data: await listKitchenOrders(prisma) });
+  router.get("/orders", requirePermission("kitchen:orders:read"), async (req, res) => {
+    res.json({ data: await listKitchenOrders(prisma, new Date(), { onlyUserId: scope(req) }) });
   });
 
-  router.get("/stream", requirePermission("kitchen:orders:read"), orderEventStream());
+  router.get("/stream", requirePermission("kitchen:orders:read"), orderEventStream(scope));
 
   router.patch(
     "/orders/:id/status",
@@ -27,6 +30,7 @@ export function createKitchenRouter(prisma: PrismaClient): Router {
           req.auth.userId,
           String(req.params["id"]),
           req.body,
+          { onlyUserId: scope(req) },
         ),
       });
     },

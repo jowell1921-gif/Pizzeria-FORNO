@@ -15,9 +15,12 @@ export async function listNotifications(
   prisma: PrismaClient,
   query: unknown,
   paging: { page: number; pageSize: number; skip: number; take: number },
+  options: { onlyUserId?: string | undefined } = {},
 ) {
   const filters = notificationsQuerySchema.parse(query);
   const where: Prisma.NotificationLogWhereInput = {
+    // Un visitante de la demostración solo ve los avisos de sus propios pedidos.
+    ...(options.onlyUserId ? { order: { userId: options.onlyUserId } } : {}),
     ...(filters.status ? { status: filters.status } : {}),
     ...(filters.template ? { template: filters.template } : {}),
     ...(filters.q ? { recipient: { contains: filters.q, mode: "insensitive" } } : {}),

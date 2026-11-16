@@ -9927,6 +9927,9 @@
           "selfAdminAvailable": {
             "type": "boolean"
           },
+          "ownDataOnly": {
+            "type": "boolean"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -9944,6 +9947,7 @@
           "roles",
           "permissions",
           "selfAdminAvailable",
+          "ownDataOnly",
           "createdAt"
         ],
         "additionalProperties": false

@@ -51,10 +51,18 @@ export function createLoyaltyAdminRouter(prisma: PrismaClient): Router {
   });
 
   router.get("/loyalty/transactions", guard, async (req, res) => {
-    res.json(await listAdminTransactions(prisma, req.query, paginationArgs(req.query)));
+    res.json(
+      await listAdminTransactions(prisma, req.query, paginationArgs(req.query), {
+        onlyUserId: req.auth?.ownDataOnly ? req.auth.userId : undefined,
+      }),
+    );
   });
   router.get("/loyalty/redemptions", guard, async (req, res) => {
-    res.json(await listAdminRedemptions(prisma, req.query, paginationArgs(req.query)));
+    res.json(
+      await listAdminRedemptions(prisma, req.query, paginationArgs(req.query), {
+        onlyUserId: req.auth?.ownDataOnly ? req.auth.userId : undefined,
+      }),
+    );
   });
 
   // Ajuste con motivo: queda en el libro y en la auditoría; el saldo nunca se edita directamente.

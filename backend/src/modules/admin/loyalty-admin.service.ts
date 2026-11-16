@@ -285,12 +285,21 @@ export const transactionsQuerySchema = z.object({
 });
 
 /** Libro de movimientos de todos los clientes, con filtros y paginación. */
-export async function listAdminTransactions(prisma: PrismaClient, query: unknown, paging: Paging) {
+export async function listAdminTransactions(
+  prisma: PrismaClient,
+  query: unknown,
+  paging: Paging,
+  options: { onlyUserId?: string | undefined } = {},
+) {
   const filters = transactionsQuerySchema.parse(query);
   const where: Prisma.LoyaltyTransactionWhereInput = {
     ...(filters.type ? { type: filters.type } : {}),
     account: {
-      ...(filters.userId ? { userId: filters.userId } : {}),
+      ...(options.onlyUserId
+        ? { userId: options.onlyUserId }
+        : filters.userId
+          ? { userId: filters.userId }
+          : {}),
       ...(filters.q
         ? {
             user: {
@@ -341,9 +350,15 @@ export const redemptionsQuerySchema = z.object({
  * Canjes de recompensas de todos los clientes, más recientes primero, con filtro por estado y
  * paginación.
  */
-export async function listAdminRedemptions(prisma: PrismaClient, query: unknown, paging: Paging) {
+export async function listAdminRedemptions(
+  prisma: PrismaClient,
+  query: unknown,
+  paging: Paging,
+  options: { onlyUserId?: string | undefined } = {},
+) {
   const filters = redemptionsQuerySchema.parse(query);
   const where: Prisma.RewardRedemptionWhereInput = {
+    ...(options.onlyUserId ? { userId: options.onlyUserId } : {}),
     ...(filters.status ? { status: filters.status } : {}),
   };
   const [rows, total] = await Promise.all([

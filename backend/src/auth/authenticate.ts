@@ -13,6 +13,11 @@ export interface AuthContext {
   email: string;
   roles: RoleName[];
   permissions: Permission[];
+  /**
+   * Visitante de la demostración (administrador que no es el propietario): en el panel y en la cocina
+   * solo ve y toca los pedidos que ha hecho él mismo, no los de otras personas.
+   */
+  ownDataOnly: boolean;
 }
 
 declare module "express-serve-static-core" {
@@ -68,6 +73,9 @@ export function createAuthenticate({
         permissions: permissionsFor(profile.roles, {
           readOnlyContent: !canEditContent(profile.email, ownerEmail),
         }),
+        // Solo los administradores que no son el propietario (visitantes de la demostración). El personal y
+        // la cocina reales trabajan con todos los pedidos.
+        ownDataOnly: profile.roles.includes("ADMIN") && !canEditContent(profile.email, ownerEmail),
       };
       next();
     } catch (error) {

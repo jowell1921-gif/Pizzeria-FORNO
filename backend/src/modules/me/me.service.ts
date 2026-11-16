@@ -75,6 +75,8 @@ export async function getProfile(
       readOnlyContent: !canEditContent(profile.email, ownerEmail),
     }),
     selfAdminAvailable,
+    // Visitante de la demostración: en el panel solo ve sus propios pedidos.
+    ownDataOnly: roles.includes("ADMIN") && !canEditContent(profile.email, ownerEmail),
     createdAt: profile.createdAt.toISOString(),
   };
 }

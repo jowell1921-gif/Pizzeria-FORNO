@@ -181,8 +181,10 @@ export const Profile = z
     marketingConsent: z.boolean(),
     roles: z.array(z.enum(values(RoleName))),
     permissions: z.array(z.string()),
-    /** Si el servidor permite hacerse administrador desde la cuenta (solo demostración). */
-    selfAdminAvailable: z.boolean(),
+    /** Si el servidor permite hacerse administrador desde la cuenta (solo demostración). */ selfAdminAvailable:
+      z.boolean(),
+    /** Si en el panel y en la cocina solo ve sus propios pedidos (administrador que no es el propietario). */
+    ownDataOnly: z.boolean(),
     createdAt: isoDate,
   })
   .meta({ id: "Profile" });

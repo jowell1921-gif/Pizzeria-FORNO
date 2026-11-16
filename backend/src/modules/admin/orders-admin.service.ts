@@ -56,17 +56,21 @@ export async function storeTimeZone(prisma: Pick<PrismaClient, "storeSettings">)
   return settings?.timezone ?? "Europe/Madrid";
 }
 
+/** Filtro «solo los pedidos de esta persona» (vacío si no hay restricción). */
+export const ownOrders = (onlyUserId: string | undefined) =>
+  onlyUserId ? { userId: onlyUserId } : {};
+
 /** Lista de pedidos para el personal, con filtros y paginación (más recientes primero). */
 export async function listAdminOrders(
   prisma: PrismaClient,
   query: unknown,
   paging: { page: number; pageSize: number; skip: number; take: number },
-  options: { includePayments: boolean },
+  options: { includePayments: boolean; onlyUserId?: string | undefined },
 ) {
   const filters = adminOrdersQuerySchema.parse(query);
   const timeZone = await storeTimeZone(prisma);
-
   const where: Prisma.OrderWhereInput = {
+    ...ownOrders(options.onlyUserId),
     ...(filters.status ? { status: { in: filters.status } } : {}),
     ...(filters.type ? { type: filters.type } : {}),
     ...(filters.date
@@ -122,7 +126,7 @@ export async function listAdminOrders(
 export async function getAdminOrder(
   prisma: PrismaClient,
   orderId: string,
-  options: { includePayments: boolean },
+  options: { includePayments: boolean; onlyUserId?: string | undefined },
 ) {
   if (!z.uuid().safeParse(orderId).success) throw notFound("Order not found");
   const order = await prisma.order.findUnique({
@@ -136,9 +140,10 @@ export async function getAdminOrder(
         include: { changedBy: { select: { fullName: true } } },
       },
     },
-  });
-  if (!order) throw notFound("Order not found");
-
+  }); // Un visitante de la demostración no puede ver el pedido de otra persona (responde como si no existiera).
+  if (!order || (options.onlyUserId && order.userId !== options.onlyUserId)) {
+    throw notFound("Order not found");
+  }
   return {
     id: order.id,
     orderNumber: order.orderNumber,
@@ -210,7 +215,12 @@ export async function getAdminOrder(
 }
 
 /** Pedidos del día y su estado actual, para el panel de control. */
-export async function getDashboard(prisma: PrismaClient, now = new Date()) {
+export async function getDashboard(
+  prisma: PrismaClient,
+  now = new Date(),
+  options: { onlyUserId?: string | undefined } = {},
+) {
+  const own = ownOrders(options.onlyUserId);
   const timeZone = await storeTimeZone(prisma);
   const today = localTime(now, timeZone).date;
   const range = dayRange(today, timeZone);
@@ -218,7 +228,7 @@ export async function getDashboard(prisma: PrismaClient, now = new Date()) {
     new Date(Date.parse(`${today}T00:00:00Z`) - 6 * 86_400_000).toISOString().slice(0, 10),
     timeZone,
   ).start;
-  const todayWhere = { placedAt: { gte: range.start, lt: range.end } };
+  const todayWhere = { ...own, placedAt: { gte: range.start, lt: range.end } };
 
   const [byStatus, completedSales, activeSales, popular, recent] = await Promise.all([
     prisma.order.groupBy({ by: ["status"], where: todayWhere, _count: { _all: true } }),
@@ -233,13 +243,18 @@ export async function getDashboard(prisma: PrismaClient, now = new Date()) {
     prisma.orderItem.groupBy({
       by: ["productName"],
       where: {
-        order: { placedAt: { gte: weekStart }, status: { notIn: ["CANCELLED", "REJECTED"] } },
+        order: {
+          ...own,
+          placedAt: { gte: weekStart },
+          status: { notIn: ["CANCELLED", "REJECTED"] },
+        },
       },
       _sum: { quantity: true },
       orderBy: { _sum: { quantity: "desc" } },
       take: 5,
     }),
     prisma.order.findMany({
+      where: own,
       orderBy: { placedAt: "desc" },
       take: 8,
       select: {

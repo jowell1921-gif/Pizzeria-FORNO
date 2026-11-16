@@ -26,6 +26,8 @@ export const profileSchema = z.object({
   permissions: z.array(z.string()),
   /** El servidor permite hacerse administrador desde la cuenta (solo demostración). */
   selfAdminAvailable: z.boolean().default(false),
+  /** En el panel y en la cocina solo ve sus propios pedidos (visitante de la demostración). */
+  ownDataOnly: z.boolean().default(false),
   createdAt: z.string(),
 });
 

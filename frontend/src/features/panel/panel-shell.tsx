@@ -125,7 +125,18 @@ function Frame({ children }: { children: ReactNode }) {
             </Link>
           </div>
         ) : (
-          children
+          <div className="space-y-6">
+            {profile.ownDataOnly ? (
+              <p
+                role="note"
+                className="bg-cream-soft border-border rounded-xl border px-4 py-3 text-sm"
+              >
+                <strong>Modo demostración.</strong> Aquí solo ves los pedidos que haces tú. El
+                propietario de la web ve los de todos.
+              </p>
+            ) : null}
+            {children}
+          </div>
         )}
       </main>
     </div>

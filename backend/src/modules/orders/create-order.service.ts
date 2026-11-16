@@ -304,6 +304,7 @@ export async function createOrder(
       orderId,
       orderNumber: created.orderNumber,
       status: created.status,
+      userId,
     });
   }
   return created;

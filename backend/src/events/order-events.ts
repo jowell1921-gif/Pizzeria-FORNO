@@ -9,6 +9,11 @@ export interface OrderEvent {
   orderId: string;
   orderNumber: number;
   status: string;
+  /**
+   * Dueño del pedido. Solo se usa dentro del servidor para que cada visitante de la demostración reciba
+   * únicamente los avisos de sus pedidos; nunca se envía por SSE.
+   */
+  userId?: string;
 }
 
 /**
