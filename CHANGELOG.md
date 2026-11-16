@@ -2,6 +2,10 @@
 
 ## [Sin publicar]
 
+### Despliegue en Railway
+
+- La compilación en Railway fallaba porque instala solo las dependencias de producción y `prisma.config.ts` pedía `dotenv`, y después porque `tsc` no encontraba los tipos de `express`, `cors` y `pdfkit`. `prisma.config.ts` carga el `.env` con la función de Node (sin `dotenv`, que se elimina) y `typescript`, `prisma` y los `@types/…` necesarios pasan a `dependencies`. Comprobado con `NODE_ENV=production npm ci && npm run build`.
+
 ### Pruebas finales en producción
 
 - **Cada visitante solo ve sus pedidos** en el panel y en la cocina (listado, detalle, cambios de estado, reembolsos, documentos, panel de control, avisos en directo, correos y puntos). La lista de clientes es solo del propietario. `GET /me` devuelve `ownDataOnly`.

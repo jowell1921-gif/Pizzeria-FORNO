@@ -25,8 +25,9 @@ oficial si algo no coincide.
 3. Poner las variables de [`variables.md`](./variables.md) (`NODE_ENV=production`, `TRUST_PROXY=1`, etc.).
 4. Generar el dominio público de Railway (o conectar uno propio: [Dominio y HTTPS](#dominio-y-https)).
 5. Comprobar el primer despliegue: el registro debe decir `FORNEA API listening… (production)`, y `GET /api/v1/health/ready` debe responder `ready`.
-6. **Región:** elige la misma región que la base de datos de Supabase (por ejemplo, **EU West / Ámsterdam** si Supabase está en Irlanda). Con la API en Estados Unidos y la base de datos en Europa, cada consulta tarda ~150 ms de ida y vuelta y las operaciones con varias consultas (completar un pedido, crearlo) se vuelven lentas y pueden agotar el plazo. Se cambia en Settings → Deploy → Region.
-7. Mantener **una sola réplica** del servicio: el bus de eventos (cocina en directo y efectos de pedido) vive en memoria (decisiones 0009 y 0012). Con varias réplicas habría que moverlo a Redis o a `LISTEN/NOTIFY` de PostgreSQL.
+6. **Instalación solo de producción:** Railway instala únicamente las dependencias de producción, así que todo lo que necesitan la compilación (`tsc`) y las migraciones (`prisma migrate deploy`) está en `dependencies` del `package.json` del backend (`typescript`, `prisma` y los `@types/…` de `express`, `cors`, `pdfkit` y `node`). Si añades una librería con tipos propios aparte, ponla también en `dependencies`. Se puede comprobar en local con `NODE_ENV=production npm ci && npm run build`.
+7. **Región:** elige la misma región que la base de datos de Supabase (por ejemplo, **EU West / Ámsterdam** si Supabase está en Irlanda). Con la API en Estados Unidos y la base de datos en Europa, cada consulta tarda ~150 ms de ida y vuelta y las operaciones con varias consultas (completar un pedido, crearlo) se vuelven lentas y pueden agotar el plazo. Se cambia en Settings → Deploy → Region.
+8. Mantener **una sola réplica** del servicio: el bus de eventos (cocina en directo y efectos de pedido) vive en memoria (decisiones 0009 y 0012). Con varias réplicas habría que moverlo a Redis o a `LISTEN/NOTIFY` de PostgreSQL.
 
 ## Vercel (web)
 
