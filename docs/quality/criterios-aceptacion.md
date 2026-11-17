@@ -39,7 +39,7 @@ gastos del propietario, y está documentado:
 
 | Pendiente                                            | Qué hace falta                                                                                                                    | Dónde está explicado                                |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| Publicar en Vercel, Railway y Supabase de producción | Cuentas y variables del propietario; **no se ha publicado nada**                                                                  | `docs/deployment/`                                  |
+| Publicar en Vercel, Railway y Supabase de producción | **Hecho** (demostración publicada en forneapizzeria.es, ver `docs/deployment/produccion-actual.md`)                               | `docs/deployment/`                                  |
 | Cobrar con tarjeta de verdad                         | Activar la cuenta de Stripe y poner claves reales                                                                                 | `docs/deployment/servicios-externos.md`             |
 | Correos reales a los clientes                        | Dominio propio verificado en Resend                                                                                               | `docs/decisions/0012-pagos-correos-y-documentos.md` |
 | PizzAI con IA real                                   | Clave de API (con coste) del proveedor; no se ha probado contra el servicio real                                                  | `docs/decisions/0013-pizzai-ia.md`                  |

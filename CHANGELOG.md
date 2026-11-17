@@ -2,6 +2,12 @@
 
 ## [Sin publicar]
 
+### Cierre: producción, monitorización y copias
+
+- `docs/deployment/produccion-actual.md`: cómo está desplegada la demostración (servicios, DNS, variables por nombre, configuración, operaciones y los problemas que aparecieron con su solución).
+- Copias de seguridad: `scripts/backup-produccion.ps1` (copia del esquema `public` con el `pg_dump` del contenedor local, comprobada y con rotación; carpeta `backups/` ignorada por Git). El ensayo de restauración detectó que hay que crear `btree_gist` antes de restaurar.
+- Monitorización: procedimiento para un monitor externo de `/health/ready` y la web, que además evita que Supabase pause el proyecto.
+
 ### Cocina: pedidos a domicilio
 
 - La pantalla de cocina tiene una columna **«En reparto»** y permite cerrar el pedido («Entregado al cliente»). Antes, al entregarlo al repartidor desaparecía de la cocina y solo se podía cerrar desde el panel del personal, así que muchos pedidos a domicilio se quedaban sin completar (el panel de control los cuenta como «listos»).

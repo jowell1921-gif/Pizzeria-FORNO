@@ -4,9 +4,10 @@ Guía para publicar FORNEA en producción con la infraestructura prevista: **Ver
 **Railway** (API) y **Supabase** (PostgreSQL, autenticación y almacenamiento de imágenes), con
 **Stripe** para los pagos y **Resend** (opcional) para el correo.
 
-> **Estado:** todo está preparado y comprobado en local, pero **no se ha publicado nada ni se ha
-> modificado ningún servicio externo**. Cada paso de esta guía lo ejecuta el propietario, con sus
-> propias cuentas. Los nombres de los menús de Vercel, Railway, Supabase y Stripe cambian con
+> **Estado:** la demostración está **publicada** en https://forneapizzeria.es (Vercel + Railway +
+> Supabase, con Stripe en modo prueba). Cómo ha quedado de verdad, con sus valores y los problemas que
+> aparecieron: [`produccion-actual.md`](./produccion-actual.md). Esta guía es el camino genérico; cada paso lo
+> ejecuta el propietario, con sus propias cuentas. Los nombres de los menús de Vercel, Railway, Supabase y Stripe cambian con
 > frecuencia: ante una diferencia, manda la documentación oficial de cada plataforma.
 
 ## Qué hay preparado

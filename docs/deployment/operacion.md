@@ -10,9 +10,23 @@
 No uses `/health/ready` como comprobación de reinicio: un corte breve de la base de datos
 reiniciaría el servicio sin arreglar nada.
 
-**Monitor de disponibilidad.** Crea uno (por ejemplo, UptimeRobot, Better Stack o el de tu
-proveedor; los hay gratuitos) que consulte `https://api.fornea.ejemplo/api/v1/health/ready` cada
-1-5 minutos y avise por correo o móvil, y otro sobre la portada de la web.
+**Monitor de disponibilidad (obligatorio en la demostración).** Además de avisar si algo cae, mantiene
+activa la API y la base de datos: el plan gratuito de Supabase **pausa el proyecto tras una semana sin
+actividad** y, pausado, ni el login ni los pedidos funcionan hasta reactivarlo a mano. Con un monitor que
+consulta la API cada pocos minutos eso no ocurre. Configuración con UptimeRobot (hay otros equivalentes,
+gratuitos):
+
+| Monitor | Tipo    | URL                                                 | Comprobación               | Intervalo |
+| ------- | ------- | --------------------------------------------------- | -------------------------- | --------- |
+| API     | HTTP(s) | `https://api.forneapizzeria.es/api/v1/health/ready` | Responde 200 (503 = caído) | 5 min     |
+| Web     | HTTP(s) | `https://forneapizzeria.es`                         | Responde 200               | 5 min     |
+
+1. Crea la cuenta en [uptimerobot.com](https://uptimerobot.com) y, en _Integrations_, añade tu correo como
+   contacto de alertas.
+2. _Add New Monitor_ → tipo **HTTP(s)** para la API y para la web (la API devuelve 503 si la base de datos
+   no responde). Intervalo de 5 minutos (el mínimo del plan gratuito; compruébalo en su web).
+3. Prueba que avisa: pausa un monitor y comprueba que llega el correo de «down»/«up» al reanudarlo.
+4. Si Supabase llegara a pausarse: panel de Supabase → _Restore project_ (los datos se conservan).
 
 ## Registros (logs)
 
@@ -33,7 +47,7 @@ proveedor; los hay gratuitos) que consulte `https://api.fornea.ejemplo/api/v1/he
 | Cuándo                               | Qué                                                                                                                            |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
 | Cada día                             | Mirar pedidos pendientes y, si hay pagos online, que no haya pedidos «pendientes de pago» antiguos                             |
-| Cada semana                          | Registro de errores de Railway; panel → Auditoría; copia manual de la base de datos                                            |
+| Cada semana                          | Registro de errores de Railway; copia con `scripts/backup-produccion.ps1`; que el monitor siga en verde                        |
 | Cada mes                             | Actualizaciones de seguridad de dependencias (`npm audit`, Dependabot si se activa) y revisión de usuarios con rol en el panel |
 | Antes de un despliegue con migración | Copia manual de la base de datos                                                                                               |
 

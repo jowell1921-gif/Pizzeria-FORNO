@@ -58,3 +58,7 @@ AGENTS.md
 
 # Cliente de Prisma generado (se crea con npm run db:generate)
 backend/src/generated/
+
+# Copias de seguridad de la base de datos (contienen datos personales: nunca a Git)
+backups/
+*.dump
